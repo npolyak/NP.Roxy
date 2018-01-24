@@ -36,3 +36,5 @@
 /TESTS/RoxyTest/NP.Roxy.Tests.TypeImplTest/.vs/NP.Roxy.InterfaceImplTest/v15
 /TESTS/TestProj/obj/Debug
 /TESTS/TestProj/bin/Debug
+/TESTS/Demos/NP.Roxy.Demos.InterfaceImpl/obj/Debug
+/TESTS/Demos/NP.Roxy.Demos.InterfaceImpl/bin/Debug
