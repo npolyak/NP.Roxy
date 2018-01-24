@@ -496,7 +496,7 @@ namespace NP.Roxy.TypeConfigImpl
             RoslynAnalysisAndGenerationUtils.TheNamespaces =
                 roslynCodeBuilder.AllNamespaces;
 
-            RoslynAnalysisAndGenerationUtils.TheNamespaces.Add("NP.Paradigms.Extensions");
+            RoslynAnalysisAndGenerationUtils.TheNamespaces.Add("NP.Utilities");
             RoslynAnalysisAndGenerationUtils.TheNamespaces.Add("NP.Roxy");
             RoslynAnalysisAndGenerationUtils.TheNamespaces.Add("NP.Roxy.Attributes");
 
