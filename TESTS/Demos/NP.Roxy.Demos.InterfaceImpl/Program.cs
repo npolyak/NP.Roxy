@@ -32,19 +32,15 @@ namespace NP.Roxy.Demos.InterfaceImpl
     {
         static void Main(string[] args)
         {
-            ITypeConfig typeConfig =
-                Core.CreateOrFindTypeConfig<IMyInterface, WrapperInterface>("MyGeneratedClass");
+            IPerson person = Core.Concretize<IPerson>();
 
-            typeConfig.SetPropMap(nameof(WrapperInterface.TheClass), nameof(MyClass.MyInt), nameof(IMyInterface.TheInt));
-            typeConfig.SetPropMap(nameof(WrapperInterface.TheClass), nameof(MyClass.MyStr), nameof(IMyInterface.TheStr));
+            person.FirstName = "Joe";
 
-            typeConfig.ConfigurationCompleted();
+            person.LastName = "Doe";
 
-            IMyInterface myInterfaceObj = Core.GetInstanceOfGeneratedType<IMyInterface>(typeConfig.ClassName);
+            person.Age = 35;
 
-            myInterfaceObj.TheInt = 1234;
-            myInterfaceObj.TheStr = "Hello";
-            myInterfaceObj.MyMethod("blabla", 123);
+            Console.WriteLine($"Name='{person.FirstName} {person.LastName}'; Age='{person.Age}'");
         }
     }
 }

@@ -161,17 +161,17 @@ namespace NP.Roxy.TypeConfigImpl
             this.ClassName = ImplInterfaceTypeSymbol.GetClassName(this.ClassName);
 
             if (ImplInterfaceTypeSymbol.TypeKind != TypeKind.Interface)
-                throw new Exception($"Error: ImplementedInterface type '{ImplInterfaceTypeSymbol.Name}' is not interface");
+                throw new Exception($"Error: ImplementedInterface type '{ImplInterfaceTypeSymbol.Name}' is not interface.");
 
-            if (SuperClassTypeSymbol.TypeKind != TypeKind.Class)
-                throw new Exception($"Error: Class to extend type '{SuperClassTypeSymbol.Name}' is not a class");
+            if ( (SuperClassTypeSymbol.TypeKind != TypeKind.Class) && (SuperClassTypeSymbol.TypeKind != TypeKind.Interface)) 
+                throw new Exception($"Error: Class to extend type '{SuperClassTypeSymbol.Name}' is neither a class nor an interface.");
 
             if (WrapInterfaceTypeSymbol.TypeKind != TypeKind.Interface)
-                throw new Exception($"Error: WrappedInterface type '{WrapInterfaceTypeSymbol.Name}' is not interface");
+                throw new Exception($"Error: WrappedInterface type '{WrapInterfaceTypeSymbol.Name}' is not interface.");
 
             if ((!HasInterfaceToImplement) && (!HasClassToExtend))
             {
-                throw new Exception($"Error: there is neither interface to implement, no class to extend - no public members");
+                throw new Exception($"Error: there is neither interface to implement, no class to extend - no public members.");
             }
 
             IEnumerable<ISymbol> props =
