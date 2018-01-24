@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("NP.Roxy")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyDescription("Roslyn based IoC Container and Proxy Generator")]
+[assembly: AssemblyConfiguration("Release")]
+[assembly: AssemblyCompany("Nick Polyak")]
 [assembly: AssemblyProduct("NP.Roxy")]
 [assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]

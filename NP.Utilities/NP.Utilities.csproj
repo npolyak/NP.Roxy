@@ -7,8 +7,8 @@
     <ProjectGuid>{503D6544-570D-4E07-9101-0F574624CB49}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NP.Utils</RootNamespace>
-    <AssemblyName>NP.Utils</AssemblyName>
+    <RootNamespace>NP.Utilities</RootNamespace>
+    <AssemblyName>NP.Utilities</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
