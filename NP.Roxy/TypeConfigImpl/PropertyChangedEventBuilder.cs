@@ -20,7 +20,7 @@ namespace NP.Roxy.TypeConfigImpl
 
             roslynCodeBuilder.AddLine("protected void OnPropertyChanged(string propName)");
             roslynCodeBuilder.Push();
-            roslynCodeBuilder.AddLine($"this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propName))", true);
+            roslynCodeBuilder.AddLine($"this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName))", true);
             roslynCodeBuilder.Pop();
         }
     }
