@@ -995,6 +995,13 @@ namespace NP.Roxy
             return foundMethods.FirstOrDefault();
         }
 
+        public static string GetTypeAdapterClassName(this Type fromType, Type toType)
+        {
+            string className = $"{fromType.Name}_To_{toType.Name}_Adapter";
+
+            return className;
+        }
+
         public static void SaveProj(this Project proj, string path)
         {
             if (!Directory.Exists(path))

@@ -594,7 +594,8 @@ namespace NP.Roxy.TypeConfigImpl
         // adds the class to compilation.
         public void ConfigurationCompleted()
         {
-            this.GenerateCode();
+            if (TheSelfTypeSymbol != null)
+                return;
 
             TheCore.AddAssembliesToReference(this.ReferencedAssemblies);
 

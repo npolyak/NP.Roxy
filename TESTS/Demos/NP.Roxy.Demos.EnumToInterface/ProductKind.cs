@@ -30,7 +30,7 @@ namespace NP.Roxy.Demos.EnumToInterface
             return null;
         }
 
-        public static string GetDescription(this ProductKind productKind)
+        private static string GetDescription(this ProductKind productKind)
         {
             switch (productKind)
             {

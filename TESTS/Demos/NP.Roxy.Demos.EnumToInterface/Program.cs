@@ -23,24 +23,17 @@ using TestProj;
 
 namespace NP.Roxy.Demos.EnumToInterface
 {
-    public interface ProductWrapperInterface
-    {
-        ProductKind TheProductKind { get; }
-    }
-
     class Program
     {
         static void Main(string[] args)
         {
             Core.SetSaveOnErrorPath("GeneratedCode");
 
-            ITypeConfig productTypeConfig = Core.FindOrCreateTypeConfig<IProduct, ProductWrapperInterface>("ProductImpl");
+            Core.CreateEnumerationAdapter<IProduct, ProductKind>(typeof(ProductKindExtensions));
 
-            productTypeConfig.AddStaticUtilsClass(nameof(ProductWrapperInterface.TheProductKind), typeof(ProductKindExtensions));
-
-            productTypeConfig.ConfigurationCompleted();
-
-            IProduct product = Core.GetInstanceOfGeneratedType<IProduct>("ProductImpl", ProductKind.FinancialInstrument);
+            IProduct product =
+                Core.CreateEnumWrapper<IProduct, ProductKind>(ProductKind.FinancialInstrument);
+                
 
             Console.WriteLine($"product: {product.GetDisplayName()}; Description: {product.GetDescription()}");
 

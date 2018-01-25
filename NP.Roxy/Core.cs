@@ -20,6 +20,11 @@ using System.Threading.Tasks;
 
 namespace NP.Roxy
 {
+    public interface SingleWrapperInterface<WrappedType>
+    {
+        WrappedType TheWrappedType { get; }
+    }
+
     public class Core : CoreBase
     {
         internal static Core TheCore { get; } =
@@ -118,7 +123,7 @@ namespace NP.Roxy
                             &&
                             (
                                 (wrapperType == typeof(NoInterface)) ||
-                                tConfig.WrapInterfaceTypeSymbol.Matches(type, this.TheCompilation)
+                                tConfig.WrapInterfaceTypeSymbol.Matches(wrapperType, this.TheCompilation)
                             )
                             &&
                             ((className == null) ||
@@ -393,7 +398,6 @@ namespace NP.Roxy
             return GetInstanceOfType<T>(typeConfig);
         }
 
-
         public TypeToImplement WrapWithNonPublicMembers<TypeToImplement, TWrapper>(string className)
         {
             ITypeConfig typeConfig = FindTypeConfig<TypeToImplement, TWrapper>(className);
@@ -433,6 +437,61 @@ namespace NP.Roxy
             }
 
             return GetInstanceOfType<TClass>(typeConfig, args);
+        }
+
+        public ITypeConfig FindOrCreateEnumWrapperTypeConfig<T, EnumType>(Type staticEnumExtensionsType, bool allowNonPublic)
+        {
+            string className = typeof(EnumType).GetTypeAdapterClassName(typeof(T));
+
+            ITypeConfig enumWrapperTypeConfig =
+                this.FindOrCreateTypeConfByTypeToImpl<T, SingleWrapperInterface<EnumType>>(className);
+
+            if (!enumWrapperTypeConfig.ConfigurationHasBeenCompleted)
+            {
+                enumWrapperTypeConfig.AddStaticUtilsClass
+                (
+                    nameof(SingleWrapperInterface<EnumType>.TheWrappedType),
+                    staticEnumExtensionsType
+                );
+
+                if (allowNonPublic)
+                {
+                    enumWrapperTypeConfig.SetAllowNonPublicForAllMembers();
+                }
+            }
+
+            return enumWrapperTypeConfig;
+        }
+
+        public void CreateEnumAdaptor<T, EnumType>(Type staticEnumExtensionsType, bool allowNonPublic = true)
+        {
+            ITypeConfig adapterTypeConfig = 
+                FindOrCreateEnumWrapperTypeConfig<T, EnumType>(staticEnumExtensionsType, allowNonPublic);
+
+            adapterTypeConfig.ConfigurationCompleted();
+        }
+
+        public static void CreateEnumerationAdapter<T, EnumType>(Type staticEnumExtensionsType, bool allowNonPublic = true)
+        {
+            TheCore.CreateEnumAdaptor<T, EnumType>(staticEnumExtensionsType, allowNonPublic);
+        }
+
+        public T BuildEnumWrapper<T, EnumType>(EnumType enumVal)
+            where EnumType : struct
+        {
+            string className = typeof(EnumType).GetTypeAdapterClassName(typeof(T));
+            ITypeConfig enumWrapperTypeConfig = FindTypeConfig<T, SingleWrapperInterface<EnumType>>(className);
+
+            if (enumWrapperTypeConfig == null)
+                throw new Exception($"Roxy Usage Error: Adapter {className} has not been created. You should call CreateEnumAdaptor method first.");
+
+            return GetInstOfGeneratedType<T>(className, enumVal);
+        }
+
+        public static T CreateEnumWrapper<T, EnumType>(EnumType enumVal, bool allowNonPublic = true)
+            where EnumType : struct
+        {
+            return TheCore.BuildEnumWrapper<T, EnumType>(enumVal);
         }
 
 
