@@ -27,6 +27,8 @@ namespace NP.Roxy.Demos.InterfaceImpl
     {
         static void Main(string[] args)
         {
+            Core.SetSaveOnErrorPath("GeneratedCode");
+
             IPerson person = Core.Concretize<IPerson>();
 
             person.FirstName = "Joe";

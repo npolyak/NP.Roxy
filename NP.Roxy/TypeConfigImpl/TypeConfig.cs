@@ -511,12 +511,12 @@ namespace NP.Roxy.TypeConfigImpl
 
         void AddWrappedObjsConstructor(RoslynCodeBuilder roslynCodeBuilder)
         {
-            roslynCodeBuilder.PushRegion("Wrappers Constructor");
-
             string paramsLine = GetWrappedObjConstructorParamStr();
 
             if (paramsLine.IsNullOrEmpty())
                 return;
+            
+            roslynCodeBuilder.PushRegion("Wrappers Constructor");
 
             roslynCodeBuilder.AddLine($"public {this.ClassName}({paramsLine})");
             roslynCodeBuilder.Push();
