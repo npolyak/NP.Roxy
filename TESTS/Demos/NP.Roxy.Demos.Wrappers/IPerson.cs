@@ -16,5 +16,7 @@ namespace NP.Roxy.Demos.Wrappers
         int Age { get; set; }
 
         string Profession { get; set; }
+
+        string GetFullNameAndProfession();
     }
 }

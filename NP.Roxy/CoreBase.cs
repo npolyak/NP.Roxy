@@ -188,7 +188,7 @@ namespace NP.Roxy
         }
 
         string _pathToSaveToOnError = null;
-        public void SaveToPathOneCompilationError(string pathToSaveToOnError)
+        public void SaveToPathOnCompilationError(string pathToSaveToOnError)
         {
             _pathToSaveToOnError = pathToSaveToOnError;
         }

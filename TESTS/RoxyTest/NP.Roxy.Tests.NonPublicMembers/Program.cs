@@ -44,7 +44,7 @@ namespace NP.Roxy.Tests.NonPublicMembers
             ITypeConfig<IMyData, NoClass, WrapperInterface> typeConfig =
                 Core.FindOrCreateTypeConfig<IMyData, NoClass, WrapperInterface>("MyType");
 
-            typeConfig.SetPropMap
+            typeConfig.SetMemberMap
             (
                 nameof(WrapperInterface.TheClass),
                 "TheLastName",

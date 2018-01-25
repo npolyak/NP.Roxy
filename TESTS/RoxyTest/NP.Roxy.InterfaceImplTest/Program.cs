@@ -35,8 +35,8 @@ namespace NP.Roxy.InterfaceImplTest
             ITypeConfig typeConfig =
                 Core.FindOrCreateTypeConfig<IMyInterface, WrapperInterface>("MyGeneratedClass");
 
-            typeConfig.SetPropMap(nameof(WrapperInterface.TheClass), nameof(MyClass.MyInt), nameof(IMyInterface.TheInt));
-            typeConfig.SetPropMap(nameof(WrapperInterface.TheClass), nameof(MyClass.MyStr), nameof(IMyInterface.TheStr));
+            typeConfig.SetMemberMap(nameof(WrapperInterface.TheClass), nameof(MyClass.MyInt), nameof(IMyInterface.TheInt));
+            typeConfig.SetMemberMap(nameof(WrapperInterface.TheClass), nameof(MyClass.MyStr), nameof(IMyInterface.TheStr));
 
             typeConfig.ConfigurationCompleted();
 

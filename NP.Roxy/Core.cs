@@ -101,9 +101,11 @@ namespace NP.Roxy
             return typeConfig;
         }
 
-        public T GetInstOfGeneratedType<T>(string className = null)
+
+        public ITypeConfig FindTypeConfig<T, TWrapper>(string className = null)
         {
             Type type = typeof(T);
+            Type wrapperType = typeof(TWrapper);
 
             ITypeConfig typeConfig =
                 this.AllTypesAddedToCompilation
@@ -114,8 +116,20 @@ namespace NP.Roxy
                              tConfig.SuperClassTypeSymbol.Matches(type, this.TheCompilation)
                             )
                             &&
+                            (
+                                (wrapperType == typeof(NoInterface)) ||
+                                tConfig.WrapInterfaceTypeSymbol.Matches(type, this.TheCompilation)
+                            )
+                            &&
                             ((className == null) ||
                               (tConfig.ClassName == className))).FirstOrDefault();
+
+            return typeConfig;
+        }
+
+        public T GetInstOfGeneratedType<T, TWrapper>(string className = null)
+        {
+            ITypeConfig typeConfig = FindTypeConfig<T, TWrapper>(className);
 
             if (typeConfig.TheGeneratedType == null)
             {
@@ -124,6 +138,9 @@ namespace NP.Roxy
 
             return GetInstanceOfType<T>(typeConfig);
         }
+
+        public T GetInstOfGeneratedType<T>(string className = null) =>
+            GetInstOfGeneratedType<T, NoInterface>();
 
         void CheckAlreadyHasType(string className)
         {
@@ -169,6 +186,20 @@ namespace NP.Roxy
             this.AllCreatedTypes.Add(result);
 
             return result;
+        }
+
+        public ITypeConfig
+            CreateTypeConf<TypeToImplement, WrappedInterface>(string className = null)
+        {
+            Type typeToImplement = typeof(TypeToImplement);
+            if (typeToImplement.IsInterface)
+                return CreateTypeConf<TypeToImplement, NoClass, WrappedInterface>(className);
+            else if (typeToImplement.IsClass)
+            {
+                return CreateTypeConf<NoInterface, TypeToImplement, WrappedInterface>(className);
+            }
+
+            throw new Exception($"Roxy Usage Error: type '{typeToImplement.Name}' is neither class no interface");
         }
 
 
@@ -363,7 +394,33 @@ namespace NP.Roxy
         }
 
 
-        public TClass FindOrCreateClassObj<TClass>(string className)
+        public TypeToImplement WrapWithNonPublicMembers<TypeToImplement, TWrapper>(string className)
+        {
+            ITypeConfig typeConfig = FindTypeConfig<TypeToImplement, TWrapper>(className);
+
+            if (typeConfig == null)
+            {
+                typeConfig = this.CreateTypeConf<TypeToImplement, TWrapper>(className);
+            }
+
+            typeConfig.SetAllowNonPublicForAllMembers();
+
+            typeConfig.ConfigurationCompleted();
+
+            if (typeConfig.TheGeneratedType == null)
+            {
+                RegenerateAssembly();
+            }
+
+            return GetInstanceOfType<TypeToImplement>(typeConfig);
+        }
+
+        public static TypeToImplement CreateWrapperWithNonPublicMembers<TypeToImplement, TWrapper>(string className)
+        {
+            return TheCore.WrapWithNonPublicMembers<TypeToImplement, TWrapper>(className);
+        }
+
+        public TClass CreateClassObj<TClass>(string className)
         {
             ITypeConfig typeConfig = FindTypeConfigOfGeneratedType(className);
 
@@ -389,6 +446,10 @@ namespace NP.Roxy
             TheCore.SaveToPath(path);
         }
 
+        public static void SetSaveOnErrorPath(string savePath)
+        {
+            TheCore.SaveToPathOnCompilationError(savePath);
+        }
     }
 
     internal static class CoreUtils

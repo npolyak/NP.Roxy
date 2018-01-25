@@ -23,29 +23,34 @@ using TestProj;
 
 namespace NP.Roxy.Demos.Wrappers
 {
-    public interface WrapperInterface
+    public interface PersonImplementationWrapperInterface
     {
-        MyClass TheClass { get; }
+        PersonImpl ThePersonImplementation { get; }
     }
 
     class Program
     {
         static void Main(string[] args)
         {
-            ITypeConfig typeConfig = Core.FindOrCreateTypeConfigByTypeToImpl<IPerson>("Person");
+            Core.SetSaveOnErrorPath("GeneratedCode");
 
-            typeConfig.SetEventBuilder(PropertyChangedEventBuilder.ThePropertyChangedEventBuilder, "PropertyChanged");
+            ITypeConfig typeConfig =
+                Core.FindOrCreateTypeConfig<IPerson, PersonImplementationWrapperInterface>("MyPersonImplementation");
 
-            typeConfig.SetPropBuilder
+            typeConfig.SetAllowNonPublicForAllMembers(nameof(PersonImplementationWrapperInterface.ThePersonImplementation));
+
+            typeConfig.SetMemberMap
             (
-                PropertyChangedPropBuilder.ThePropertyChangedPropBuilder,
-                nameof(IPerson.Age),
+                nameof(PersonImplementationWrapperInterface.ThePersonImplementation),
+                "TheProfession",
                 nameof(IPerson.Profession)
             );
 
             typeConfig.ConfigurationCompleted();
 
-            IPerson person = Core.GetInstanceOfGeneratedType<IPerson>("Person");
+            IPerson person = Core.GetInstanceOfGeneratedType<IPerson>("MyPersonImplementation");
+
+            //IPerson person = Core.CreateWrapperWithNonPublicMembers<IPerson, PersonImplementationWrapperInterface>("MyPersonImplementation");
 
             person.FirstName = "Joe";
 
@@ -53,9 +58,9 @@ namespace NP.Roxy.Demos.Wrappers
 
             person.Age = 35;
 
-            person.Profession = "Plumber";
+            person.Profession = "Astronaut";
 
-            Console.WriteLine($"Name='{person.FirstName} {person.LastName}'; Age='{person.Age}'; Profession='{person.Profession}'");
+            Console.WriteLine($"Name/Profession='{person.GetFullNameAndProfession()}'; Age='{person.Age}'");
 
             Core.Save("GeneratedCode");
         }

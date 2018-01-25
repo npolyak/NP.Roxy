@@ -30,6 +30,8 @@ namespace NP.Roxy.TypeConfigImpl
 
         INamedTypeSymbol SuperClassTypeSymbol { get; }
 
+        INamedTypeSymbol WrapInterfaceTypeSymbol { get; }
+
         INamedTypeSymbol TheSelfTypeSymbol { get; }
 
         IEnumerable<Assembly> ReferencedAssemblies { get; }
@@ -52,16 +54,18 @@ namespace NP.Roxy.TypeConfigImpl
             Type staticMethodsContainerClass
         );
 
+        void SetAllowNonPublicForAllMembers();
+
         void SetAllowNonPublicForAllMembers(string wrappedObjPropName);
 
-        void SetPropMap
+        void SetMemberMap
         (
             string wrappedObjPropName, 
             string wrappedMemberName, 
             string wrapperMemberName, 
             bool? allowNonPublic = null);
 
-        void SetPropMapAllowNonPublic
+        void SetMemberMapAllowNonPublic
         (
             string wrappedObjPropName,
             params string[] wrapperMemberNames // we pass wrapper member names (not wrapped)
@@ -258,8 +262,16 @@ namespace NP.Roxy.TypeConfigImpl
             wrappedObjInfo.AllowNonPublicForAllMemberMaps = true;
         }
 
+        public void SetAllowNonPublicForAllMembers()
+        {
+            foreach(WrappedObjInfo wrappedObjInfo in this._wrappedObjInfos)
+            {
+                wrappedObjInfo.AllowNonPublicForAllMemberMaps = true;
+            }
+        }
 
-        public void SetPropMap
+
+        public void SetMemberMap
         (
             string wrappedObjPropName, 
             string wrappedMemberName, 
@@ -275,7 +287,7 @@ namespace NP.Roxy.TypeConfigImpl
         }
 
 
-        public void SetPropMapAllowNonPublic
+        public void SetMemberMapAllowNonPublic
         (
             string wrappedObjPropName, 
             params string[] wrapperMemberNames // we pass wrapper member names (not wrapped)
@@ -286,7 +298,7 @@ namespace NP.Roxy.TypeConfigImpl
             WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjPropName);
 
             wrapperMemberNames
-                .DoForEach(wrapperMemberName => SetPropMap(wrappedObjPropName, null, wrapperMemberName, true));
+                .DoForEach(wrapperMemberName => SetMemberMap(wrappedObjPropName, null, wrapperMemberName, true));
         }
 
         protected Compilation TheCompilation => TheCore.TheCompilation;

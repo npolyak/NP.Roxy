@@ -23,11 +23,6 @@ using TestProj;
 
 namespace NP.Roxy.Demos.InterfaceImpl
 {
-    public interface WrapperInterface
-    {
-        MyClass TheClass { get; }
-    }
-
     class Program
     {
         static void Main(string[] args)
@@ -40,7 +35,7 @@ namespace NP.Roxy.Demos.InterfaceImpl
 
             person.Age = 35;
 
-            person.Profession = "Plumber";
+            person.Profession = "Astronaut";
 
             Console.WriteLine($"Name='{person.FirstName} {person.LastName}'; Age='{person.Age}'; Profession='{person.Profession}'");
 

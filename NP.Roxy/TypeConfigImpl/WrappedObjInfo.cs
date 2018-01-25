@@ -366,7 +366,7 @@ namespace NP.Roxy.TypeConfigImpl
                 .AddAssignmentLine
                 (
                     this.WrappedObjPropName,
-                    $"TheCore.FindOrCreateClassObj<{WrappedObjNamedTypeSymbol.GetFullTypeString()}>(\"{ConcreteWrappedObjClassName}\")"
+                    $"TheCore.CreateClassObj<{WrappedObjNamedTypeSymbol.GetFullTypeString()}>(\"{ConcreteWrappedObjClassName}\")"
                     //$"new {this.WrappedObjNamedTypeSymbol.GetFullTypeString()}()"
                 );
         }

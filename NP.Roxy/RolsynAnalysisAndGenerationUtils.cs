@@ -1009,6 +1009,7 @@ namespace NP.Roxy
                 using (TextWriter textWriter = new StreamWriter(path + "/" + fileName))
                 {
                     docText.Write(textWriter);
+                    textWriter.Close();
                 }
             }
         }
