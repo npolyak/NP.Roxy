@@ -42,7 +42,7 @@ namespace NP.Roxy.Tests.NonPublicMembers
         {
             #region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
             ITypeConfig<IMyData, NoClass, WrapperInterface> typeConfig =
-                Core.CreateOrFindTypeConfig<IMyData, NoClass, WrapperInterface>("MyType");
+                Core.FindOrCreateTypeConfig<IMyData, NoClass, WrapperInterface>("MyType");
 
             typeConfig.SetPropMap
             (

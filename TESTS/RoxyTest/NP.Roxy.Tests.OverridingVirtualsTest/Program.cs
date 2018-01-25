@@ -42,7 +42,7 @@ namespace NP.Roxy.Tests.OverridingVirtualsTest
         {
             #region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
             ITypeConfig<IMyData, MyData, WrapperInterface> typeConfig =
-                Core.CreateOrFindTypeConfig<IMyData, MyData, WrapperInterface>("MyType");
+                Core.FindOrCreateTypeConfig<IMyData, MyData, WrapperInterface>("MyType");
 
             typeConfig.SetOverrideVirtual(nameof(MyData.GetFullName), false);
 

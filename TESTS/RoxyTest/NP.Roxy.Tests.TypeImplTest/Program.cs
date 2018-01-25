@@ -42,7 +42,7 @@ namespace NP.Roxy.TypeImplTest
         static void Main(string[] args)
         {
             ITypeConfig typeConfig =
-                Core.CreateOrFindTypeConfig<IMyInterface, WrapperInterface>("MyGeneratedClass");
+                Core.FindOrCreateTypeConfig<IMyInterface, WrapperInterface>("MyGeneratedClass");
 
             typeConfig.SetPropBuilder(nameof(IMyInterface.TheStr), DelegatePropBuilder.TheDelegatePropBuilder);
 

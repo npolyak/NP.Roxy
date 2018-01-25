@@ -44,7 +44,7 @@ namespace NP.Roxy.Tests.SelectableDataTest
         static void Main(string[] args)
         {
             ITypeConfig removableTypeConfig =
-                Core.CreateOrFindTypeConfig<IRemovableData, NoClass, IRemovableWrapper>();
+                Core.FindOrCreateTypeConfig<IRemovableData, NoClass, IRemovableWrapper>();
 
             string className = removableTypeConfig.ClassName;
 
@@ -84,7 +84,7 @@ namespace NP.Roxy.Tests.SelectableDataTest
             #region dynamically creating an observable collection class with removableCollectionBehavior inside
 
             ITypeConfig<NoInterface, ObservableCollection<IRemovableData>, IRemovableBehaviorCollectionWrapper> collectionTypeConfig =
-                Core.CreateOrFindTypeConfig<NoInterface, ObservableCollection<IRemovableData>, IRemovableBehaviorCollectionWrapper>("CollectionWithRemovableBehavior");
+                Core.FindOrCreateTypeConfig<NoInterface, ObservableCollection<IRemovableData>, IRemovableBehaviorCollectionWrapper>("CollectionWithRemovableBehavior");
 
             collectionTypeConfig.UnInitAction =
                 (intrfc, superClass, collWrapper) =>

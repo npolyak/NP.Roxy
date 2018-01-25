@@ -66,7 +66,7 @@ namespace NP.Roxy.Tests.EmbeddingConcretization
             #endregion WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
 
             ITypeConfig<IMyData, NoClass, WrapperInterface1> typeConfig1 =
-                Core.CreateOrFindTypeConfig<IMyData, WrapperInterface1>("MyType1");
+                Core.FindOrCreateTypeConfig<IMyData, WrapperInterface1>("MyType1");
 
             typeConfig1.ConfigurationCompleted();
 

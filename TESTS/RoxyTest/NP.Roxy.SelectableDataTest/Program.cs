@@ -39,7 +39,7 @@ namespace NP.Roxy.SelectableDataTest
         static void Main(string[] args)
         {
             ITypeConfig typeConfig =
-                Core.CreateOrFindTypeConfig<ISelectableData, MyData, WrapperInterface>();
+                Core.FindOrCreateTypeConfig<ISelectableData, MyData, WrapperInterface>();
 
             typeConfig.SetEventArgThisIdx(nameof(ISelectableData.IsSelectedChanged), 0);
 

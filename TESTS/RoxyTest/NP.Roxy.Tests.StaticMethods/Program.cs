@@ -42,7 +42,7 @@ namespace NP.Roxy.Tests.StaticMethods
         {
             #region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
             ITypeConfig<IMyData, NoClass, WrapperInterface> typeConfig =
-                Core.CreateOrFindTypeConfig<IMyData, WrapperInterface>("MyType");
+                Core.FindOrCreateTypeConfig<IMyData, WrapperInterface>("MyType");
 
             typeConfig.AddStaticUtilsClass
             (

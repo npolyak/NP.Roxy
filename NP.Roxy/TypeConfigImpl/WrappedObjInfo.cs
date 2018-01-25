@@ -335,7 +335,7 @@ namespace NP.Roxy.TypeConfigImpl
             {
                 // here, the concretization is created
                 this.ConcreteWrappedObjNamedTypeSymbol =
-                    this.TheCore.GetOrCreateConcretizationTypeConf(this.WrappedObjNamedTypeSymbol).TheSelfTypeSymbol;
+                    this.TheCore.FindOrCreateConcretizationTypeConf(this.WrappedObjNamedTypeSymbol).TheSelfTypeSymbol;
             }
 
             roslynCodeBuilder.AddPropWithBackingStore
