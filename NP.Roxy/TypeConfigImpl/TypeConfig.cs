@@ -163,8 +163,8 @@ namespace NP.Roxy.TypeConfigImpl
             if (ImplInterfaceTypeSymbol.TypeKind != TypeKind.Interface)
                 throw new Exception($"Error: ImplementedInterface type '{ImplInterfaceTypeSymbol.Name}' is not interface.");
 
-            if ( (SuperClassTypeSymbol.TypeKind != TypeKind.Class) && (SuperClassTypeSymbol.TypeKind != TypeKind.Interface)) 
-                throw new Exception($"Error: Class to extend type '{SuperClassTypeSymbol.Name}' is neither a class nor an interface.");
+            if ( (SuperClassTypeSymbol.TypeKind != TypeKind.Class) ) 
+                throw new Exception($"Error: Class to extend type '{SuperClassTypeSymbol.Name}' is not a class.");
 
             if (WrapInterfaceTypeSymbol.TypeKind != TypeKind.Interface)
                 throw new Exception($"Error: WrappedInterface type '{WrapInterfaceTypeSymbol.Name}' is not interface.");

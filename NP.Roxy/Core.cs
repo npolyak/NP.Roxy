@@ -34,7 +34,7 @@ namespace NP.Roxy
             typeof(NoInterface).GetTypeSymbol(TheCompilation);
 
         INamedTypeSymbol NoClassSymbol =>
-            typeof(NoInterface).GetTypeSymbol(TheCompilation);
+            typeof(NoClass).GetTypeSymbol(TheCompilation);
 
         internal List<ITypeConfig> AllCreatedTypes { get; } = new List<ITypeConfig>();
 
@@ -250,10 +250,24 @@ namespace NP.Roxy
             return TheCore.GetInstOfGeneratedType<T>(className);
         }
 
-        public ITypeConfig GetOrCreateConcretizationTypeConf(INamedTypeSymbol classTypeSymbol)
+        public ITypeConfig GetOrCreateConcretizationTypeConf(INamedTypeSymbol typeToConcretizeSymbol, string concreteClassName = null)
         {
+            concreteClassName = concreteClassName ?? typeToConcretizeSymbol.Name.GetConcretizationName();
+
+            INamedTypeSymbol implInterfaceSymbol, superClassSymbol;
+            if (typeToConcretizeSymbol.TypeKind == TypeKind.Interface)
+            {
+                implInterfaceSymbol = typeToConcretizeSymbol;
+                superClassSymbol = NoClassSymbol;
+            }
+            else
+            {
+                implInterfaceSymbol = NoInterfaceSymbol;
+                superClassSymbol = typeToConcretizeSymbol;
+            }
+
             ITypeConfig typeConfig =
-                CreateOrFindTypeConf(classTypeSymbol.Name.GetConcretizationName(), NoInterfaceSymbol, classTypeSymbol, NoInterfaceSymbol);
+                CreateOrFindTypeConf(concreteClassName, implInterfaceSymbol, superClassSymbol, NoInterfaceSymbol);
 
             if (typeConfig.TheGeneratedCode == null)
             {
@@ -266,13 +280,13 @@ namespace NP.Roxy
             return typeConfig;
         }
 
-        public ITypeConfig GetOrCreateConcretizationTypeConf<TClass>()
+        public ITypeConfig GetOrCreateConcretizationTypeConf<T>(string concreteClassName = null)
         {
-            AddAssembliesToReference((new[] { typeof(TClass), typeof(NoInterface)}).GetAllReferencedAssemblies());
+            AddAssembliesToReference((new[] { typeof(T), typeof(NoInterface)}).GetAllReferencedAssemblies());
 
-            INamedTypeSymbol classSymbol = typeof(TClass).GetTypeSymbol(this.TheCompilation);
+            INamedTypeSymbol typeSymbol = typeof(T).GetTypeSymbol(this.TheCompilation);
 
-            return GetOrCreateConcretizationTypeConf(classSymbol);
+            return GetOrCreateConcretizationTypeConf(typeSymbol, concreteClassName);
         }
 
         public static ITypeConfig GetOrCreateConcretizationTypeConfig(INamedTypeSymbol classTypeSymbol)
@@ -280,9 +294,9 @@ namespace NP.Roxy
             return TheCore.GetOrCreateConcretizationTypeConf(classTypeSymbol);
         }
 
-        public static ITypeConfig GetOrCreateConcretizationTypeConfig<TClass>()
+        public static ITypeConfig GetOrCreateConcretizationTypeConfig<T>()
         {
-            return TheCore.GetOrCreateConcretizationTypeConf<TClass>();
+            return TheCore.GetOrCreateConcretizationTypeConf<T>();
         }
 
         internal static INamedTypeSymbol GetConcreteTypeSymbol(INamedTypeSymbol classTypeSymbol)
@@ -292,9 +306,9 @@ namespace NP.Roxy
             return typeConfig.TheSelfTypeSymbol;
         }
 
-        internal static INamedTypeSymbol GetConcreteTypeSymbol<TClass>()
+        internal static INamedTypeSymbol GetConcreteTypeSymbol<T>()
         {
-            ITypeConfig typeConfig = GetOrCreateConcretizationTypeConfig<TClass>();
+            ITypeConfig typeConfig = GetOrCreateConcretizationTypeConfig<T>();
 
             return typeConfig.TheSelfTypeSymbol;
         }

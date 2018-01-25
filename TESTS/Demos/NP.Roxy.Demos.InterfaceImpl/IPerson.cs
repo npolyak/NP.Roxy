@@ -13,5 +13,7 @@ namespace NP.Roxy.Demos.InterfaceImpl
         string LastName { get; set; }
 
         int Age { get; set; }
+
+        string Profession { get; set; }
     }
 }

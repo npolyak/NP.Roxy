@@ -40,7 +40,9 @@ namespace NP.Roxy.Demos.InterfaceImpl
 
             person.Age = 35;
 
-            Console.WriteLine($"Name='{person.FirstName} {person.LastName}'; Age='{person.Age}'");
+            person.Profession = "Plumber";
+
+            Console.WriteLine($"Name='{person.FirstName} {person.LastName}'; Age='{person.Age}'; Profession='{person.Profession}'");
         }
     }
 }
