@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("NP.Roxy.Demos.PropChangedInterfaceImpl")]
+[assembly: AssemblyTitle("NP.Roxy.Demos.Wrappers")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Nick Polyak")]
-[assembly: AssemblyProduct("NP.Roxy.Demos.PropChangedInterfaceImpl")]
+[assembly: AssemblyProduct("NP.Roxy.Demos.Wrappers")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
