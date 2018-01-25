@@ -45,6 +45,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NP.Roxy.Demos.PropChangedIn
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NP.Roxy.Demos.Wrappers", "TESTS\Demos\NP.Roxy.Demos.Wrappers\NP.Roxy.Demos.Wrappers.csproj", "{B5D014DE-8C67-4763-BB49-776476AC3B2D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NP.Roxy.Demos.EnumToInterface", "TESTS\Demos\NP.Roxy.Demos.EnumToInterface\NP.Roxy.Demos.EnumToInterface.csproj", "{0F9859D5-B29A-4E54-B5A0-67952B0D7BA2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -119,6 +121,10 @@ Global
 		{B5D014DE-8C67-4763-BB49-776476AC3B2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5D014DE-8C67-4763-BB49-776476AC3B2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B5D014DE-8C67-4763-BB49-776476AC3B2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F9859D5-B29A-4E54-B5A0-67952B0D7BA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F9859D5-B29A-4E54-B5A0-67952B0D7BA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F9859D5-B29A-4E54-B5A0-67952B0D7BA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F9859D5-B29A-4E54-B5A0-67952B0D7BA2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -142,6 +148,7 @@ Global
 		{74F87CCF-9CC8-498E-B17F-15429C420FAB} = {236C19D0-2D7D-4F05-B915-A4EEE892B0A7}
 		{440BAFD5-AD39-49E0-AC2A-E803F9C5A2A5} = {236C19D0-2D7D-4F05-B915-A4EEE892B0A7}
 		{B5D014DE-8C67-4763-BB49-776476AC3B2D} = {236C19D0-2D7D-4F05-B915-A4EEE892B0A7}
+		{0F9859D5-B29A-4E54-B5A0-67952B0D7BA2} = {236C19D0-2D7D-4F05-B915-A4EEE892B0A7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {63B2F242-8654-4FBD-A762-D369E201F590}

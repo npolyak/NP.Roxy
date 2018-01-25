@@ -138,6 +138,18 @@ namespace NP.Utilities
             return str.Substring(startIdx, endIdx - startIdx);
         }
 
+        public static string FirstCharToLowerCase(this string str, bool checkForChange = false)
+        {
+            char firstChar = str[0];
+
+            char lowerFirstChar = Char.ToLowerInvariant(firstChar);
+
+            if ( (firstChar == lowerFirstChar) && checkForChange)
+                throw new Exception($"Error: {str} does not start with a lower case char");
+
+            return lowerFirstChar + str.Substring(1);
+        }
+
 
         public static string StrConcat<T>
         (
@@ -146,6 +158,9 @@ namespace NP.Utilities
             string separator = COMMA_SEPARATOR
         )
         {
+            if (items.IsNullOrEmpty())
+                return null;
+
             if (toStr == null)
             {
                 toStr = (item) => item.ToString();

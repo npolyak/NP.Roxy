@@ -87,9 +87,9 @@ namespace NP.Roxy
             }
         }
 
-        internal static T GetInstanceOfType<T>(ITypeConfig typeConfig)
+        internal static T GetInstanceOfType<T>(ITypeConfig typeConfig, params object[] args)
         {
-            return (T)Activator.CreateInstance(typeConfig.TheGeneratedType);
+            return (T)Activator.CreateInstance(typeConfig.TheGeneratedType, args);
         }
 
         internal ITypeConfig FindTypeConfigOfGeneratedType(string className)
@@ -127,7 +127,7 @@ namespace NP.Roxy
             return typeConfig;
         }
 
-        public T GetInstOfGeneratedType<T, TWrapper>(string className = null)
+        public T GetInstOfGeneratedType<T, TWrapper>(string className = null, params object[] args)
         {
             ITypeConfig typeConfig = FindTypeConfig<T, TWrapper>(className);
 
@@ -136,11 +136,11 @@ namespace NP.Roxy
                 this.RegenerateAssembly();
             }
 
-            return GetInstanceOfType<T>(typeConfig);
+            return GetInstanceOfType<T>(typeConfig, args);
         }
 
-        public T GetInstOfGeneratedType<T>(string className = null) =>
-            GetInstOfGeneratedType<T, NoInterface>();
+        public T GetInstOfGeneratedType<T>(string className = null, params object[] args) =>
+            GetInstOfGeneratedType<T, NoInterface>(className, args);
 
         void CheckAlreadyHasType(string className)
         {
@@ -322,9 +322,9 @@ namespace NP.Roxy
             return core.FindOrCreateTypeConf<TImplementedInterface, NoClass, TWrappedInterface>(className);
         }
 
-        public static T GetInstanceOfGeneratedType<T>(string className = null)
+        public static T GetInstanceOfGeneratedType<T>(string className = null, params object[] args)
         {
-            return TheCore.GetInstOfGeneratedType<T>(className);
+            return TheCore.GetInstOfGeneratedType<T>(className, args);
         }
 
         public ITypeConfig FindOrCreateConcretizationTypeConf
@@ -420,19 +420,19 @@ namespace NP.Roxy
             return TheCore.WrapWithNonPublicMembers<TypeToImplement, TWrapper>(className);
         }
 
-        public TClass CreateClassObj<TClass>(string className)
+        public TClass CreateClassObj<TClass>(string className, params object[] args)
         {
             ITypeConfig typeConfig = FindTypeConfigOfGeneratedType(className);
 
             if (typeConfig == null)
-                return Activator.CreateInstance<TClass>();
+                return (TClass) Activator.CreateInstance(typeof(TClass), args);
 
             if (typeConfig.TheGeneratedType == null)
             {
                 RegenerateAssembly();
             }
 
-            return GetInstanceOfType<TClass>(typeConfig);
+            return GetInstanceOfType<TClass>(typeConfig, args);
         }
 
 

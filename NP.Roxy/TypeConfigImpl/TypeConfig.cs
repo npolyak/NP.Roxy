@@ -490,7 +490,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         private void AddDefaultConstructor(RoslynCodeBuilder roslynCodeBuilder)
         {
-            roslynCodeBuilder.PushRegion("Constructor");
+            roslynCodeBuilder.PushRegion("Default Constructor");
 
             roslynCodeBuilder.AddDefaultConstructorOpening(this.ClassName);
 
@@ -500,6 +500,35 @@ namespace NP.Roxy.TypeConfigImpl
             }
 
             roslynCodeBuilder.Pop();
+
+            roslynCodeBuilder.PopRegion();
+        }
+
+        private string GetWrappedObjConstructorParamStr()
+        {
+            return _wrappedObjInfos.StrConcat((wrappedObjInfo) => $"{wrappedObjInfo.WrappedObjClassName} {wrappedObjInfo.WrappedObjClassName.FirstCharToLowerCase(true)}");
+        }
+
+        void AddWrappedObjsConstructor(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            roslynCodeBuilder.PushRegion("Wrappers Constructor");
+
+            string paramsLine = GetWrappedObjConstructorParamStr();
+
+            if (paramsLine.IsNullOrEmpty())
+                return;
+
+            roslynCodeBuilder.AddLine($"public {this.ClassName}({paramsLine})");
+            roslynCodeBuilder.Push();
+
+            foreach(WrappedObjInfo wrapObjInfo in _wrappedObjInfos)
+            {
+                string assignmentLine =
+                    $"{wrapObjInfo.WrappedObjPropName} = {wrapObjInfo.WrappedObjClassName.FirstCharToLowerCase(true)}";
+
+                roslynCodeBuilder.AddLine(assignmentLine, true);
+            }
+            roslynCodeBuilder.Pop(true);
 
             roslynCodeBuilder.PopRegion();
         }
@@ -548,6 +577,8 @@ namespace NP.Roxy.TypeConfigImpl
             AddWrappedClasses(roslynCodeBuilder);
 
             AddDefaultConstructor(roslynCodeBuilder);
+
+            AddWrappedObjsConstructor(roslynCodeBuilder);
 
             AddPropWraps(roslynCodeBuilder);
 

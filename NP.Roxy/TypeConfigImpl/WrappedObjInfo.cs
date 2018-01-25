@@ -362,6 +362,12 @@ namespace NP.Roxy.TypeConfigImpl
 
         public void AddDefaultConstructor(RoslynCodeBuilder roslynCodeBuilder)
         {
+            //if (!WrappedObjNamedTypeSymbol.HasPublicDefaultConstructor())
+            //    return;
+
+            if (WrappedObjNamedTypeSymbol.TypeKind == TypeKind.Enum)
+                return;
+
             roslynCodeBuilder
                 .AddAssignmentLine
                 (

@@ -1013,6 +1013,19 @@ namespace NP.Roxy
                 }
             }
         }
+
+        public static IMethodSymbol GetPublicDefaultConstructor(this INamedTypeSymbol typeSymbol)
+        {
+            IMethodSymbol result =
+                typeSymbol.InstanceConstructors
+                          .Where(constr => constr.DeclaredAccessibility == Accessibility.Public)
+                          .FirstOrDefault(constr => constr.Parameters.Count() == 0);
+
+            return result;
+        }
+
+        public static bool HasPublicDefaultConstructor(this INamedTypeSymbol typeSymbol) =>
+            typeSymbol.GetPublicDefaultConstructor() != null;
     }
 
     public class SymbolByNameComparer : IEqualityComparer<ISymbol>
