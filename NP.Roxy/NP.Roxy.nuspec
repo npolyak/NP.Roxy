@@ -6,8 +6,8 @@
     <title>$title$</title>
     <authors>$author$</authors>
     <owners>$author$</owners>
-    <licenseUrl>https://github.com/npolyak/NP.Roxy/blob/version_0.9.0.0/LICENSE</licenseUrl>
-    <projectUrl>https://github.com/npolyak/NP.Roxy/tree/version_0.9.0.0</projectUrl>
+    <licenseUrl>https://github.com/npolyak/NP.Roxy/blob/version_0.9/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/npolyak/NP.Roxy/tree/version_0.9</projectUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>$description$</description>
     <summary>$description$</summary>
