@@ -38,9 +38,11 @@ namespace NP.Roxy.TypeConfigImpl
 
         void SetEventArgThisIdx(string eventName, int idx);
 
-        void SetPropBuilder(string propName, IMemberCodeBuilder<IPropertySymbol> propBuilder);
+        void SetEventBuilder(IMemberCodeBuilder<IEventSymbol> propBuilder, params string[] propNames);
 
-        void SetMethodBuilder(string propName, IMemberCodeBuilder<IMethodSymbol> propBuilder);
+        void SetPropBuilder(IMemberCodeBuilder<IPropertySymbol> propBuilder, params string[] propNames);
+
+        void SetMethodBuilder(IMemberCodeBuilder<IMethodSymbol> propBuilder, params string[] propNames);
 
         void SetOverrideVirtual(string memberName, bool includeBase = false);
 
@@ -119,24 +121,43 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
-        public void SetPropBuilder(string propName, IMemberCodeBuilder<IPropertySymbol> propBuilder)
+        public void SetEventBuilder(IMemberCodeBuilder<IEventSymbol> propBuilder, params string[] eventNames)
         {
             ThrowErrorIfCompleted();
 
-            PropertyWrapperMemberBuilderInfo propBuilderInfo =
-                this.PropBuilderInfos.Single(builderInfo => builderInfo.WrapperSymbolName == propName);
+            foreach (string eventName in eventNames)
+            {
+                EventWrapperMemberBuilderInfo eventBuilderInfo =
+                    this.EventBuilderInfos.Single(builderInfo => builderInfo.WrapperSymbolName == eventName);
 
-            propBuilderInfo.TheCodeBuilder = propBuilder;
+                eventBuilderInfo.TheCodeBuilder = propBuilder;
+            }
         }
 
-        public void SetMethodBuilder(string methodName, IMemberCodeBuilder<IMethodSymbol> methodBuilder)
+        public void SetPropBuilder(IMemberCodeBuilder<IPropertySymbol> propBuilder, params string[] propNames)
         {
             ThrowErrorIfCompleted();
 
-            MethodWrapperMemberBuilderInfo methodBuilderInfo =
+            foreach(string propName in propNames)
+            {
+                PropertyWrapperMemberBuilderInfo propBuilderInfo =
+                    this.PropBuilderInfos.Single(builderInfo => builderInfo.WrapperSymbolName == propName);
+
+                propBuilderInfo.TheCodeBuilder = propBuilder;
+            }
+        }
+
+        public void SetMethodBuilder(IMemberCodeBuilder<IMethodSymbol> methodBuilder, params string[] methodNames)
+        {
+            ThrowErrorIfCompleted();
+
+            foreach (string methodName in methodNames)
+            {
+                MethodWrapperMemberBuilderInfo methodBuilderInfo =
                 this.MethodBuilderInfos.Single(builderInfo => builderInfo.WrapperSymbolName == methodName);
 
-            methodBuilderInfo.TheCodeBuilder = methodBuilder;
+                methodBuilderInfo.TheCodeBuilder = methodBuilder;
+            }
         }
 
         internal List<WrappedObjInfo> _wrappedObjInfos = new List<WrappedObjInfo>();

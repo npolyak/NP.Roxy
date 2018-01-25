@@ -172,6 +172,9 @@
     <Compile Include="TypeConfigImpl\IMemberBuilderSetter.cs" />
     <Compile Include="TypeConfigImpl\IMemberCodeBuilder.cs" />
     <Compile Include="TypeConfigImpl\MemberMapInfo.cs" />
+    <Compile Include="TypeConfigImpl\PropertyChangedEventBuilder.cs" />
+    <Compile Include="TypeConfigImpl\PropertyChangedPropBuilder.cs" />
+    <Compile Include="TypeConfigImpl\SimpleEventBuilder.cs" />
     <Compile Include="TypeConfigImpl\TypeConfig.cs" />
     <Compile Include="CompilationResult.cs" />
     <Compile Include="RolsynAnalysisAndGenerationUtils.cs" />

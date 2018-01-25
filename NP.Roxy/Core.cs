@@ -193,7 +193,7 @@ namespace NP.Roxy
         }
 
 
-        public ITypeConfig FindOrCreateTypeConfTypeToImpl
+        public ITypeConfig FindOrCreateTypeConfByTypeToImpl
         (
             string className,
             INamedTypeSymbol typeToImplSymbol, // can be either an interface or a class
@@ -262,6 +262,11 @@ namespace NP.Roxy
             return this.FindOrCreateTypeConfByTypeToImpl<TypeToImpl, NoInterface>(className);
         }
 
+        public static ITypeConfig FindOrCreateTypeConfigByTypeToImpl<TypeToImpl>(string className)
+        {
+            return TheCore.FindOrCreateTypeConfByTypeToImpl<TypeToImpl>(className);
+        }
+
         public static ITypeConfig<TImplementedInterface, TSuperClass, TWrappedInterface>
             FindOrCreateTypeConfig<TImplementedInterface, TSuperClass, TWrappedInterface>
             (
@@ -299,7 +304,7 @@ namespace NP.Roxy
             concreteClassName = concreteClassName ?? typeToConcretizeSymbol.Name.GetConcretizationName();
 
             ITypeConfig typeConfig =
-                TheCore.FindOrCreateTypeConfTypeToImpl(concreteClassName, typeToConcretizeSymbol);
+                TheCore.FindOrCreateTypeConfByTypeToImpl(concreteClassName, typeToConcretizeSymbol);
 
             if (typeConfig.TheGeneratedCode == null)
             {

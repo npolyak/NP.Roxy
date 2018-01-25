@@ -582,12 +582,45 @@ namespace NP.Roxy
         (
             string propName,
             INamedTypeSymbol propType,
-            Accessibility accessibility = Accessibility.Public
+            Accessibility accessibility = Accessibility.Public,
+            string addBeforeSetter = null,
+            string addAfterSetter = null,
+            Accessibility setterAccessibility = Accessibility.NotApplicable
         )
         {
             string fieldName = propName.PropToFieldName();
 
-            AddPropWithBackingStore(propName, fieldName, propType, accessibility);
+            AddPropWithBackingStore
+            (
+                propName, 
+                fieldName, 
+                propType, 
+                accessibility, 
+                addBeforeSetter, 
+                addAfterSetter, 
+                setterAccessibility);
+        }
+
+        public void AddPropWithBackingStore
+        (
+            IPropertySymbol propSymbol,
+            string addBeforeSetter = null,
+            string addAfterSetter = null,
+            Accessibility setterAccessibility = Accessibility.NotApplicable
+        )
+        {
+            string propName = propSymbol.Name;
+            INamedTypeSymbol propType = propSymbol.Type as INamedTypeSymbol;
+            string fieldName = propName.PropToFieldName();
+
+            AddPropWithBackingStore
+            (
+                propName,
+                propType,
+                propSymbol.DeclaredAccessibility,
+                addBeforeSetter,
+                addAfterSetter,
+                setterAccessibility);
         }
 
         public void AddMethodWrapper
@@ -656,6 +689,23 @@ namespace NP.Roxy
             );
         }
 
+        public void AddEventDefinition(IEventSymbol eventSymbol, string newName = null)
+        {
+            Accessibility accessibility = eventSymbol.DeclaredAccessibility;
+
+            string eventName =
+                newName ?? eventSymbol.Name;
+
+            string result =
+                accessibility.ConvertAccessabilityToString() +
+                " event " +
+                (eventSymbol.Type as INamedTypeSymbol).GetFullTypeString() +
+                " " +
+                eventName;
+
+            AddLine(result, true);
+        }
+
         public void AddEventDefinitionAndEventInvocationMethod
         (
             IEventSymbol eventSymbol,
@@ -663,19 +713,10 @@ namespace NP.Roxy
             string newName = null
         )
         {
-            Accessibility accessibility = eventSymbol.DeclaredAccessibility;
-
-            string eventName = 
+            string eventName =
                 newName ?? eventSymbol.Name;
 
-            string result =
-                accessibility.ConvertAccessabilityToString() + 
-                " event " + 
-                (eventSymbol.Type as INamedTypeSymbol).GetFullTypeString() + 
-                " " + 
-                eventName;
-
-            AddLine(result, true);
+            AddEventDefinition(eventSymbol, newName);
 
             AddEmptyLine();
 

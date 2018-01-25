@@ -75,11 +75,12 @@ namespace NP.Roxy.TypeConfigImpl
 
         internal IMemberCodeBuilder<TSymbol> DefaultCodeBuilder { get; set; } = null;
 
-        internal protected abstract void BuildImpl
+        protected abstract void BuildImpl
         (
             TSymbol wrapperSymbol, 
             RoslynCodeBuilder roslynCodeBuilder
         );
+
 
         internal void Build(RoslynCodeBuilder roslynCodeBuilder)
         {
@@ -117,9 +118,10 @@ namespace NP.Roxy.TypeConfigImpl
             IEventSymbol wrapperSymbol
         ) : base(wrapperSymbol)
         {
+            this.DefaultCodeBuilder = new SimpleEventBuilder();
         }
 
-        protected internal override void BuildImpl(IEventSymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
+        protected override void BuildImpl(IEventSymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
             roslynCodeBuilder.AddEventDefinitionAndEventInvocationMethod
             (
@@ -139,7 +141,7 @@ namespace NP.Roxy.TypeConfigImpl
             this.DefaultCodeBuilder = AutoPropBuilder.TheAutoPropBuilder;
         }
 
-        internal protected override void BuildImpl(IPropertySymbol propertyWrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
+        protected override void BuildImpl(IPropertySymbol propertyWrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
             Accessibility propAccessibility = propertyWrapperSymbol.DeclaredAccessibility;
 
@@ -234,7 +236,7 @@ namespace NP.Roxy.TypeConfigImpl
         {
         }
 
-        internal protected override void BuildImpl(IMethodSymbol methodWrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
+        protected override void BuildImpl(IMethodSymbol methodWrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
             roslynCodeBuilder.AddMethodOpeningFromSymbolOnly(methodWrapperSymbol);
 

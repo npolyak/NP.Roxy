@@ -44,7 +44,7 @@ namespace NP.Roxy.Demos.InterfaceImpl
 
             Console.WriteLine($"Name='{person.FirstName} {person.LastName}'; Age='{person.Age}'; Profession='{person.Profession}'");
 
-            Core.Save("MyProj");
+            Core.Save("GeneratedCode");
         }
     }
 }
