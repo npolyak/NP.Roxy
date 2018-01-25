@@ -38,3 +38,5 @@
 /TESTS/TestProj/bin/Debug
 /TESTS/Demos/NP.Roxy.Demos.InterfaceImpl/obj/Debug
 /TESTS/Demos/NP.Roxy.Demos.InterfaceImpl/bin/Debug
+/TESTS/Demos/NP.Roxy.Demos.PropChangedInterfaceImpl/bin/Debug
+/TESTS/Demos/NP.Roxy.Demos.PropChangedInterfaceImpl/obj/Debug

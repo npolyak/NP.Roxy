@@ -141,8 +141,16 @@ namespace NP.Roxy
             CreateProject();
         }
 
-        public void SaveToPath(string path)
+        public void SaveToPath(string path = null)
         {
+            if (path == null)
+                path = _pathToSaveToOnError;
+
+            if (path == null)
+            {
+                throw new Exception("Roxy Usage Error: No path is given to save the generated classes");
+            }
+
             this.TheProj.SaveProj(path);
         }
 
@@ -152,7 +160,7 @@ namespace NP.Roxy
 
         protected abstract void OnRegeneratingAssembly();
 
-        protected void RegenerateAssembly()
+        public void RegenerateAssembly()
         {
             OnRegeneratingAssembly();
 
@@ -163,13 +171,26 @@ namespace NP.Roxy
                 TheCompilation.GetCompilationResult();
 
             if (!compilationResult.Success)
+            {
+                if (!_pathToSaveToOnError.IsNullOrEmpty())
+                {
+                    this.SaveToPath(_pathToSaveToOnError);
+                }
+
                 throw new Exception($"Compilation Error: {compilationResult.TheErrors.StrConcat(null, "\n\n")}");
+            }
 
             TheGeneratedAssembly = Assembly.Load(compilationResult.TheResult);
 
             OnAssemblyRegenerated();
 
             GeneratedAssemblyUpToDate = true;
+        }
+
+        string _pathToSaveToOnError = null;
+        public void SaveToPathOneCompilationError(string pathToSaveToOnError)
+        {
+            _pathToSaveToOnError = pathToSaveToOnError;
         }
 
         private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
