@@ -91,7 +91,6 @@ namespace NP.Roxy
             TheWorkspace = new RoslynWorkspaceBase(_host, "Generated");
             TheProjId = ProjectId.CreateNewId(ProjName);
 
-
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
         }
 
@@ -129,6 +128,8 @@ namespace NP.Roxy
             Document newDoc =
                 TheWorkspace.AddDocument(docName, code);
 
+            this.TheProj = TheWorkspace.CurrentProj;
+
             SyntaxTree syntaxTree =
                 newDoc.GetSyntaxTreeAsync().Result;
 
@@ -138,6 +139,11 @@ namespace NP.Roxy
         protected void StartProj()
         {
             CreateProject();
+        }
+
+        public void SaveToPath(string path)
+        {
+            this.TheProj.SaveProj(path);
         }
 
         internal bool GeneratedAssemblyUpToDate { get; set; } = false;

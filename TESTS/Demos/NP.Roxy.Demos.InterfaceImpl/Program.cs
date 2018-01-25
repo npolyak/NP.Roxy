@@ -43,6 +43,8 @@ namespace NP.Roxy.Demos.InterfaceImpl
             person.Profession = "Plumber";
 
             Console.WriteLine($"Name='{person.FirstName} {person.LastName}'; Age='{person.Age}'; Profession='{person.Profession}'");
+
+            Core.Save("MyProj");
         }
     }
 }

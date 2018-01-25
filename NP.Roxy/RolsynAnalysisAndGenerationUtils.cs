@@ -11,9 +11,11 @@
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Text;
 using NP.Utilities;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -991,6 +993,24 @@ namespace NP.Roxy
                 throw new Exception($"Error: this Roxy version cannot deal with overloaded methods at this point. Static method {staticMethodsContainer.Name}.{name} is overloaded.");
 
             return foundMethods.FirstOrDefault();
+        }
+
+        public static void SaveProj(this Project proj, string path)
+        {
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            foreach(Document doc in proj.Documents)
+            {
+                SourceText docText = doc.GetTextAsync().Result;
+
+                string fileName = doc.Name + ".cs";
+
+                using (TextWriter textWriter = new StreamWriter(path + "/" + fileName))
+                {
+                    docText.Write(textWriter);
+                }
+            }
         }
     }
 

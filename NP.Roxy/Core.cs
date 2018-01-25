@@ -179,8 +179,10 @@ namespace NP.Roxy
             INamedTypeSymbol superClassTypeSymbol,
             INamedTypeSymbol wrapInterfaceTypeSymbol
         )
-        {
+        {   
+            // if null - take the name of the interface without first letter 'I'
             className = implInterfaceTypeSymbol.GetClassName(className);
+
             ITypeConfig result =
                  AllCreatedTypes.FirstOrDefault(typeConfig => typeConfig.ClassName == className);
 
@@ -191,7 +193,39 @@ namespace NP.Roxy
         }
 
 
-        internal ITypeConfig<TImplementedInterface, TSuperClass, TWrappedInterface>
+        public ITypeConfig FindOrCreateTypeConfTypeToImpl
+        (
+            string className,
+            INamedTypeSymbol typeToImplSymbol, // can be either an interface or a class
+            INamedTypeSymbol wrappedInterfaceSymbol = null
+        )
+        {
+            INamedTypeSymbol implInterfaceSymbol, superClassSymbol;
+            if (typeToImplSymbol.TypeKind == TypeKind.Interface)
+            {
+                implInterfaceSymbol = typeToImplSymbol;
+                superClassSymbol = NoClassSymbol;
+            }
+            else if (typeToImplSymbol.TypeKind == TypeKind.Class)
+            {
+                implInterfaceSymbol = NoInterfaceSymbol;
+                superClassSymbol = typeToImplSymbol;
+            }
+            else
+            {
+                throw new Exception($"Roxy Usage Error: Symbol '{typeToImplSymbol.Name}' is neither a class nor an interface");
+            }
+
+            if (wrappedInterfaceSymbol == null)
+                wrappedInterfaceSymbol = NoInterfaceSymbol;
+
+            ITypeConfig typeConfig =
+                this.FindOrCreateTypeConf(className, implInterfaceSymbol, superClassSymbol, wrappedInterfaceSymbol);
+
+            return typeConfig;
+        }
+
+        public ITypeConfig<TImplementedInterface, TSuperClass, TWrappedInterface>
              FindOrCreateTypeConf<TImplementedInterface, TSuperClass, TWrappedInterface>(string className = null)
         {
             // if null - take the name of the interface without first letter 'I'
@@ -207,18 +241,25 @@ namespace NP.Roxy
             return result;
         }
 
-        internal static ITypeConfig<TImplementedInterface, TSuperClass, TWrappedInterface>
-            CreateTypeConfig<TImplementedInterface, TSuperClass, TWrappedInterface>(string className = null, Core core = null)
+        public ITypeConfig FindOrCreateTypeConfByTypeToImpl<TypeToImpl, TWrapperInterface>(string className)
         {
-            core = core.GetCore();
+            Type typeToImpl = typeof(TypeToImpl);
 
-            return core.CreateTypeConf<TImplementedInterface, TSuperClass, TWrappedInterface>(className);
+            if (typeToImpl.IsInterface)
+            {
+                return this.FindOrCreateTypeConf<TypeToImpl, NoClass, TWrapperInterface>(className);
+            }
+            else if (typeToImpl.IsClass)
+            {
+                return this.FindOrCreateTypeConf<NoInterface, TypeToImpl, TWrapperInterface>(className);
+            }
+
+            throw new Exception($"Type '{typeToImpl.Name}' is neither a class, no an interface");
         }
 
-        internal static ITypeConfig<TImplementedInterface, NoClass, TWrappedInterface>
-            CreateTypeConfig<TImplementedInterface, TWrappedInterface>(string className = null, Core core = null)
+        public ITypeConfig FindOrCreateTypeConfByTypeToImpl<TypeToImpl>(string className)
         {
-            return CreateTypeConfig<TImplementedInterface, NoClass, TWrappedInterface>(className, core);
+            return this.FindOrCreateTypeConfByTypeToImpl<TypeToImpl, NoInterface>(className);
         }
 
         public static ITypeConfig<TImplementedInterface, TSuperClass, TWrappedInterface>
@@ -250,24 +291,15 @@ namespace NP.Roxy
             return TheCore.GetInstOfGeneratedType<T>(className);
         }
 
-        public ITypeConfig FindOrCreateConcretizationTypeConf(INamedTypeSymbol typeToConcretizeSymbol, string concreteClassName = null)
+        public ITypeConfig FindOrCreateConcretizationTypeConf
+        (
+            INamedTypeSymbol typeToConcretizeSymbol, 
+            string concreteClassName = null)
         {
             concreteClassName = concreteClassName ?? typeToConcretizeSymbol.Name.GetConcretizationName();
 
-            INamedTypeSymbol implInterfaceSymbol, superClassSymbol;
-            if (typeToConcretizeSymbol.TypeKind == TypeKind.Interface)
-            {
-                implInterfaceSymbol = typeToConcretizeSymbol;
-                superClassSymbol = NoClassSymbol;
-            }
-            else
-            {
-                implInterfaceSymbol = NoInterfaceSymbol;
-                superClassSymbol = typeToConcretizeSymbol;
-            }
-
             ITypeConfig typeConfig =
-                FindOrCreateTypeConf(concreteClassName, implInterfaceSymbol, superClassSymbol, NoInterfaceSymbol);
+                TheCore.FindOrCreateTypeConfTypeToImpl(concreteClassName, typeToConcretizeSymbol);
 
             if (typeConfig.TheGeneratedCode == null)
             {
@@ -346,6 +378,12 @@ namespace NP.Roxy
         {
             return TheCore.ConcretizeType<T>();
         }
+
+        public static void Save(string path)
+        {
+            TheCore.SaveToPath(path);
+        }
+
     }
 
     internal static class CoreUtils
