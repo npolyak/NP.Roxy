@@ -26,6 +26,7 @@ namespace NP.Roxy.Demos.EnumToInterface
 
     public static class ProductKindExtensions
     {
+        // returns a displayable short name for the ProductKind
         public static string GetDisplayName(this ProductKind productKind)
         {
             switch(productKind)
@@ -41,6 +42,8 @@ namespace NP.Roxy.Demos.EnumToInterface
             return null;
         }
 
+        // returns the full description of the ProductKind
+        // note that the method is private
         private static string GetDescription(this ProductKind productKind)
         {
             switch (productKind)

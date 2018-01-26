@@ -29,12 +29,17 @@ namespace NP.Roxy.Demos.EnumToInterface
         {
             Core.SetSaveOnErrorPath("GeneratedCode");
 
+            // we create an adaptor adapting ProductKind enumeration
+            // to IProduct interface using extension methods from the static 
+            // ProductKindExtensions class
             Core.CreateEnumerationAdapter<IProduct, ProductKind>(typeof(ProductKindExtensions));
 
+            // enumeration value ProductKind.FinancialInstrument is converted into
+            // IProduct interface
             IProduct product =
                 Core.CreateEnumWrapper<IProduct, ProductKind>(ProductKind.FinancialInstrument);
                 
-
+            // we test the methods of the resulting object that implements IProduct interface.
             Console.WriteLine($"product: {product.GetDisplayName()}; Description: {product.GetDescription()}");
 
             Core.Save("GeneratedCode");
