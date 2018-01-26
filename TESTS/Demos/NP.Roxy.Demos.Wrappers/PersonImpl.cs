@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 
 namespace NP.Roxy.Demos.Wrappers
 {
+    // Class to wrap
     public class PersonImpl
     {
         public string FirstName { get; set; }

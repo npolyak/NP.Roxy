@@ -18,7 +18,8 @@ using System.Threading.Tasks;
 
 namespace NP.Roxy.Demos.Wrappers
 {
-    public interface IPerson : INotifyPropertyChanged
+    // interface to implement
+    public interface IPerson
     {
         string FirstName { get; set; }
 

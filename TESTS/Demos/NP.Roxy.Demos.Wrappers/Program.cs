@@ -34,11 +34,21 @@ namespace NP.Roxy.Demos.Wrappers
         {
             Core.SetSaveOnErrorPath("GeneratedCode");
 
+            #region create the generated type configuration object
+            // get the type configuration object. The class that it is going to generate
+            // will be called "MyPersonImplementation"
             ITypeConfig typeConfig =
                 Core.FindOrCreateTypeConfig<IPerson, PersonImplementationWrapperInterface>("MyPersonImplementation");
 
-            typeConfig.SetAllowNonPublicForAllMembers(nameof(PersonImplementationWrapperInterface.ThePersonImplementation));
+            // allow access to non-public members of 
+            // PersonImplementationWrapperInterface.ThePersonImplementation object.
+            typeConfig.SetAllowNonPublicForAllMembers
+            (
+                nameof(PersonImplementationWrapperInterface.ThePersonImplementation)
+            );
 
+            // map TheProfession property of the wrapped object
+            // into Profession property of the IPerson interface.
             typeConfig.SetMemberMap
             (
                 nameof(PersonImplementationWrapperInterface.ThePersonImplementation),
@@ -46,12 +56,19 @@ namespace NP.Roxy.Demos.Wrappers
                 nameof(IPerson.Profession)
             );
 
+            // Signal that the configuration is completed, 
+            // after ConfigurationCompleted() method is called
+            // TypeConfig object for this class cannot be modified.
             typeConfig.ConfigurationCompleted();
+            #endregion create the generated type configuration object
 
-            IPerson person = Core.GetInstanceOfGeneratedType<IPerson>("MyPersonImplementation");
+            // get the instance of the generated type "MyPersonImplementation"
+            IPerson person = 
+                Core.GetInstanceOfGeneratedType<IPerson>("MyPersonImplementation");
 
             //IPerson person = Core.CreateWrapperWithNonPublicMembers<IPerson, PersonImplementationWrapperInterface>("MyPersonImplementation");
 
+            // set the properties
             person.FirstName = "Joe";
 
             person.LastName = "Doe";
@@ -60,6 +77,7 @@ namespace NP.Roxy.Demos.Wrappers
 
             person.Profession = "Astronaut";
 
+            // test that the wrapped properties and the method work
             Console.WriteLine($"Name/Profession='{person.GetFullNameAndProfession()}'; Age='{person.Age}'");
 
             Core.Save("GeneratedCode");

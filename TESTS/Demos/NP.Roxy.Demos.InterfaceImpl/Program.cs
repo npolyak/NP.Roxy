@@ -26,9 +26,17 @@ namespace NP.Roxy.Demos.InterfaceImpl
     class Program
     {
         static void Main(string[] args)
-        {
+        {            
+            // if there is a compiler error
+            // all the generated code will be dumped
+            // into "GeneratedCode" folder located within 
+            // the directory containing the executable
             Core.SetSaveOnErrorPath("GeneratedCode");
 
+            // get default implementation of IPerson
+            // interface containing only propertys
+            // the default property implementatio
+            // is the auto property
             IPerson person = Core.Concretize<IPerson>();
 
             person.FirstName = "Joe";
@@ -39,8 +47,12 @@ namespace NP.Roxy.Demos.InterfaceImpl
 
             person.Profession = "Astronaut";
 
+            // test that the properties have indeed been assigned. 
             Console.WriteLine($"Name='{person.FirstName} {person.LastName}'; Age='{person.Age}'; Profession='{person.Profession}'");
 
+            // dump all the generated code into 
+            // "GeneratedCode" folder located within 
+            // the directory containing the executable
             Core.Save("GeneratedCode");
         }
     }
