@@ -1,4 +1,4 @@
-# NP.Roxy New Powerful Roxy IoC container and Code Generator**
+# NP.Roxy New Powerful Roxy IoC container and Code Generator
 
 **Name Explanation**
 
