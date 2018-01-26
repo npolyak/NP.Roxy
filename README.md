@@ -1,7 +1,31 @@
 # NP.Roxy
-**Roxy IoC container and Code Generator**
+**New Powerful Roxy IoC container and Code Generator**
 
-I plan to publish a number of articles on the codeproject.com describing Roxy usage in detail. 
+**Name Explanation**
+The name of the package "Roxy" is a mix of two words: "Roslyn" and "Proxy" (even though I intend to make this package much more than a just a proxy generator).
+
+**Why and What is Roxy**
+The main purpose of Roxy is to introduce a better separation of concerns and correspondingly simplify the code.
+
+Here are the tasks that the Roxy package addresses now and in the future.
+
+Now:
+
+* Converting an interface into a class using built-in conversion or easily created custom conversion mechanisms.
+* Creating adaptors that adapt multiple classes to an interface or an abstract class or both.
+* Achieving a greater separation of concerns by mixing behaviors with the objects that they modify.
+* Easily accessing non-public properties and methods of 3rd party components.
+* Creating smart mixins and allowing to easily swap implementations of the wrapped parts. This greatly enhances testing - e.g. you will be able to easily swap the real backend connection for a mock one.
+
+In the future I plan to make Roxy a full blown IoC container. In particular it will allow:
+* Resolving interfaces and abstract classes to concrete pre-specified (or generated) types.
+* Producing singleton objects.
+* Easily replacing interface or abstract class implementation with a different one.
+Also, in the future I plan to remove some of the current Roxy limitations:
+* Allowing to generate generic (not fully resolved) classes for generic interfaces.
+* Allowing to deal with classes and interface that use method overloading.
+
+I plan to publish a number of articles on the codeproject.com describing Roxy usage in much more detail. 
 Below are a few samples previewing what one can do with Roxy:
 
 **Creating a default implementation for an interface:**
