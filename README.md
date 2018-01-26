@@ -2,9 +2,11 @@
 **New Powerful Roxy IoC container and Code Generator**
 
 **Name Explanation**
+
 The name of the package "Roxy" is a mix of two words: "Roslyn" and "Proxy" (even though I intend to make this package much more than a just a proxy generator).
 
 **Why and What is Roxy**
+
 The main purpose of Roxy is to introduce a better separation of concerns and correspondingly simplify the code.
 
 Here are the tasks that the Roxy package addresses now and in the future.
