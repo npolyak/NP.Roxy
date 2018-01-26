@@ -27,6 +27,8 @@ Also, in the future I plan to remove some of the current Roxy limitations:
 * Allowing to deal with classes and interface that use method overloading.
 
 I plan to publish a number of articles on the codeproject.com describing Roxy usage in much more detail. 
+Here is the first article of the series [Introducing Roxy: Powerful Proxy Generation and IoC Container Package](https://www.codeproject.com/Articles/1227242/Introducing-Roxy-Powerful-Proxy-Generation-and)
+
 Below are a few samples previewing what one can do with Roxy:
 
 **Creating a default implementation for an interface:**
