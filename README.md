@@ -6,7 +6,8 @@ The name of the package "Roxy" is a mix of two words: "Roslyn" and "Proxy" (even
 
 **Cloning the Repository**
 
-I started using the submodules, so, in order to clone the repository, you need to use the following command
+I started using the submodules, so, in order to clone the repository, you need to use the following command:
+
 git clone https://github.com/npolyak/NP.Roxy.git --recursive -b version_0.9 NP.Roxy
 
 **Why and What is Roxy**
