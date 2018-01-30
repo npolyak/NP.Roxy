@@ -29,7 +29,7 @@ namespace NP.Roxy.Tests.EmbeddingConcretization
 
     public interface WrapperInterface1
     {
-        //MyData MyData { get; }
+        MyData MyData { get; }
         MyDataImplementorClass TheClass { get; }
     }
 
@@ -78,6 +78,13 @@ namespace NP.Roxy.Tests.EmbeddingConcretization
             Core.Save("GeneratedCode");
 
             Console.WriteLine(myData1.GetFullName());
+
+            ITypeConfig<IMyData, MyData, WrapperInterface> typeConfig2 =
+                Core.FindOrCreateTypeConfig<IMyData, MyData, WrapperInterface>("MyType2");
+
+            typeConfig2.ConfigurationCompleted();
+
+            IMyData myData2 = Core.GetInstanceOfGeneratedType<IMyData>("MyType2");
         }
     }
 }

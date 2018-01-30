@@ -23,7 +23,7 @@ namespace NP.Roxy.Tests.EmbeddingConcretization
 
         string FirstName { get; set; }
 
-        //int Age { get; set; }
+        int Age { get; set; }
 
         string GetFullName();
     }
