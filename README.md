@@ -4,6 +4,10 @@
 
 The name of the package "Roxy" is a mix of two words: "Roslyn" and "Proxy" (even though I intend to make this package much more than a just a proxy generator).
 
+**Cloning the Repository**
+I started using the submodules, so, in order to clone the repository, you need to use the following command
+git clone https://github.com/npolyak/NP.Roxy.git --recursive -b version_0.9 NP.Roxy
+
 **Why and What is Roxy**
 
 The main purpose of Roxy is to introduce a better separation of concerns and correspondingly simplify the code.
