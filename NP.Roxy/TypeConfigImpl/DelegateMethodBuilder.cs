@@ -20,7 +20,7 @@ namespace NP.Roxy.TypeConfigImpl
 {
     public class DelegateMethodBuilder : IMemberCodeBuilder<IMethodSymbol>
     {
-        public static DelegateMethodBuilder TheDelegatePropBuilder { get; } =
+        public static DelegateMethodBuilder TheDelegateMethodBuilder { get; } =
             new DelegateMethodBuilder();
 
         public void Build(IMethodSymbol symbol, RoslynCodeBuilder roslynCodeBuilder)

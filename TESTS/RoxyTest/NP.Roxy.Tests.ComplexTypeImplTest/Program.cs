@@ -48,13 +48,16 @@ namespace NP.Roxy.TypeImplTest
                 DelegatePropBuilder.TheDelegatePropBuilder,
                 nameof(MyDataImplementorClass.FirstName),
                 nameof(MyDataImplementorClass.LastName),
-                nameof(MyDataImplementorClass.Age),
-                nameof(MyDataImplementorClass.DoSmth)
+                nameof(MyDataImplementorClass.Age)
              );
+
+            typeConfig.SetMethodBuilder(DelegateMethodBuilder.TheDelegateMethodBuilder, nameof(MyDataImplementorClass.DoSmth));
 
             typeConfig.ConfigurationCompleted();
 
             MyDataImplementorClass dataImplementor = Core.GetInstanceOfGeneratedType<MyDataImplementorClass>();
+
+            Core.Save("GeneratedCode");
         }
     }
 }

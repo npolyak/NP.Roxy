@@ -29,7 +29,7 @@ namespace NP.Roxy.Tests.EmbeddingConcretization
 
     public interface WrapperInterface1
     {
-        MyData MyData { get; }
+        //MyData MyData { get; }
         MyDataImplementorClass TheClass { get; }
     }
 
@@ -49,7 +49,7 @@ namespace NP.Roxy.Tests.EmbeddingConcretization
         {
             #region CONCRETIZATION SAMPLE
             //MyDataImplementorClass classConcretization =
-            //    Core.GetClassConcretization<MyDataImplementorClass>();
+            //    Core.Concretize<MyDataImplementorClass>();
             #endregion CONCRETIZATION SAMPLE
 
             #region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
@@ -74,6 +74,8 @@ namespace NP.Roxy.Tests.EmbeddingConcretization
 
             myData1.FirstName = "Joe";
             myData1.LastName = "Doe";
+
+            Core.Save("GeneratedCode");
 
             Console.WriteLine(myData1.GetFullName());
         }

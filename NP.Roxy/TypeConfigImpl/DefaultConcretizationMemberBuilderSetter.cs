@@ -28,7 +28,7 @@ namespace NP.Roxy.TypeConfigImpl
         {
             if (methodSymbol.IsAbstract)
             {
-                return DelegateMethodBuilder.TheDelegatePropBuilder;
+                return DelegateMethodBuilder.TheDelegateMethodBuilder;
             }
 
             return null;

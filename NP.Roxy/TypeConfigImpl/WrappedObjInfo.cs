@@ -320,6 +320,13 @@ namespace NP.Roxy.TypeConfigImpl
 
         public void AddWrappedClass(RoslynCodeBuilder roslynCodeBuilder)
         {
+            if (this.WrappedObjNamedTypeSymbol.IsAbstract)
+            {
+                // here, the concretization is created
+                this.ConcreteWrappedObjNamedTypeSymbol =
+                    this.TheCore.FindOrCreateConcretizationTypeConf(this.WrappedObjNamedTypeSymbol).TheSelfTypeSymbol;
+            }
+
             string beforeSetterStr = BuildWrapperInit(EventWrappedMemberNameMaps, false);
 
             string afterSetterStr = BuildWrapperInit(EventWrappedMemberNameMaps.Reverse(), true);
@@ -329,13 +336,6 @@ namespace NP.Roxy.TypeConfigImpl
             if (this.WrappedObjPropSymbol.SetMethod != null)
             {
                 setterAccessibility = this.WrappedObjPropSymbol.GetMethod.DeclaredAccessibility;
-            }
-
-            if (this.WrappedObjNamedTypeSymbol.IsAbstract)
-            {
-                // here, the concretization is created
-                this.ConcreteWrappedObjNamedTypeSymbol =
-                    this.TheCore.FindOrCreateConcretizationTypeConf(this.WrappedObjNamedTypeSymbol).TheSelfTypeSymbol;
             }
 
             roslynCodeBuilder.AddPropWithBackingStore

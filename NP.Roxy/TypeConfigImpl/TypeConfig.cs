@@ -40,11 +40,11 @@ namespace NP.Roxy.TypeConfigImpl
 
         void SetEventArgThisIdx(string eventName, int idx);
 
-        void SetEventBuilder(IMemberCodeBuilder<IEventSymbol> propBuilder, params string[] propNames);
+        void SetEventBuilder(IMemberCodeBuilder<IEventSymbol> eventBuilder, params string[] propNames);
 
         void SetPropBuilder(IMemberCodeBuilder<IPropertySymbol> propBuilder, params string[] propNames);
 
-        void SetMethodBuilder(IMemberCodeBuilder<IMethodSymbol> propBuilder, params string[] propNames);
+        void SetMethodBuilder(IMemberCodeBuilder<IMethodSymbol> methodBuilder, params string[] propNames);
 
         void SetOverrideVirtual(string memberName, bool includeBase = false);
 
