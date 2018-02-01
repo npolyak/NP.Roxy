@@ -1,0 +1,4 @@
+[submodule "NP.Utilities"]
+	path = NP.Utilities
+	url = https://github.com/npolyak/NP.Utilities.git
+	branch = master
