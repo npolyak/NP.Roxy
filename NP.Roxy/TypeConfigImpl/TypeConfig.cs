@@ -201,7 +201,7 @@ namespace NP.Roxy.TypeConfigImpl
 
             IEnumerable<ISymbol> props =
                 WrapInterfaceTypeSymbol
-                    .GetMembers()
+                    .GetAllMembers()
                     .Where(symbol => symbol is IPropertySymbol);
 
             foreach (ISymbol prop in props)
@@ -506,7 +506,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         private string GetWrappedObjConstructorParamStr()
         {
-            return _wrappedObjInfos.StrConcat((wrappedObjInfo) => $"{wrappedObjInfo.WrappedObjClassName} {wrappedObjInfo.WrappedObjClassName.FirstCharToLowerCase(true)}");
+            return _wrappedObjInfos.StrConcat((wrappedObjInfo) => $"{wrappedObjInfo.ConcreteWrappedObjNamedTypeSymbol.GetFullTypeString()} {wrappedObjInfo.WrappedObjClassName.FirstCharToLowerCase(true)}");
         }
 
         void AddWrappedObjsConstructor(RoslynCodeBuilder roslynCodeBuilder)

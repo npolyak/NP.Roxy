@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MultiConcernsRoxyTest.RoxyViewModels;
+using NP.Roxy;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +25,11 @@ namespace MultiConcernsRoxyTest
         public MainWindow()
         {
             InitializeComponent();
+
+            RoxyModelAssembler.AssembleSelectableRemovablePerson();
+
+            ISelectableRemovablePerson selectableRemovablePerson =
+                Core.GetInstanceOfGeneratedType<ISelectableRemovablePerson>();
         }
     }
 }

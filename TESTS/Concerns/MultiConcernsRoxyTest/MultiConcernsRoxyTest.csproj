@@ -177,6 +177,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="RoxyViewModels\BusinessGroupDataVM.cs" />
+    <Compile Include="RoxyViewModels\PersonDataVM.cs" />
+    <Compile Include="RoxyViewModels\RoxyModelAssembler.cs" />
     <Compile Include="ViewModels\BusinessGroupsVM.cs" />
     <Compile Include="ViewModels\BusinessGroupVM.cs" />
     <Compile Include="ViewModels\PersonVM.cs" />
@@ -235,5 +238,6 @@
       <Name>NP.Utilities</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
