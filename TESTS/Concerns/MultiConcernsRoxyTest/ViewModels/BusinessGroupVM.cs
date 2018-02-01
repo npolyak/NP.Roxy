@@ -61,6 +61,10 @@ namespace MultiConcernsRoxyTest.ViewModels
 
         #endregion Selectable_Concern_Region
 
+
+        ParentChildSelectionBehavior<BusinessGroupVM, PersonVM> _parentChildSelectionBehavior =
+            new ParentChildSelectionBehavior<BusinessGroupVM, PersonVM>();
+
         IDisposable _behaviorsDisposable;
         public BusinessGroupVM()
         {
@@ -69,36 +73,15 @@ namespace MultiConcernsRoxyTest.ViewModels
                 (
                     (person) => person.RemoveEvent += Person_RemoveEvent,
                     (person) => person.RemoveEvent -= Person_RemoveEvent
-                )
-                .AddBehavior // select behavior
-                (
-                    (person) => person.IsSelectedChanged += Person_IsSelectedChanged,
-                    (person) => person.IsSelectedChanged -= Person_IsSelectedChanged
                 );
 
-            this.IsSelectedChanged += BusinessGroupVM_IsSelectedChanged;
+            _parentChildSelectionBehavior.Parent = this;
+            _parentChildSelectionBehavior.Children = this.People;
         }
 
         private void Person_RemoveEvent(IRemovable person)
         {
             this.People.Remove((PersonVM) person);
-        }
-
-        private void BusinessGroupVM_IsSelectedChanged(ISelectableItem<BusinessGroupVM> businessGroup)
-        {
-            if (!this.IsSelected)
-            {
-                // this will also set all the 
-                // all the Person objects within 
-                // People collection into not-selected state.
-                this.People.TheSelectedItem = null;
-            }
-        }
-
-        private void Person_IsSelectedChanged(ISelectableItem<PersonVM> person)
-        {
-            if (person.IsSelected)
-                this.IsSelected = true;
         }
     }
 }
