@@ -719,7 +719,6 @@ namespace NP.Roxy
             return result;
         }
 
-
         public static IEnumerable<Assembly> GetAllReferencedAssemblies(this IEnumerable<Type> types)
         {
             return types.Where(type => type != null)
@@ -733,6 +732,31 @@ namespace NP.Roxy
         public static MetadataReference ToRef(this Assembly assembly)
         {
             return MetadataReference.CreateFromFile(assembly.Location);
+        }
+
+        public static IEnumerable<IAssemblySymbol> GetReferencedAssemblies(this IAssemblySymbol assemblySymbol)
+        {
+            return assemblySymbol.Modules.SelectMany(module => module.ReferencedAssemblySymbols).ToList();
+        }
+
+        public static IEnumerable<IAssemblySymbol> GetAssemblyAndReferencedAssemblies(this IAssemblySymbol assemblySymbol)
+        {
+            return assemblySymbol.ToCollection().Union(assemblySymbol.GetReferencedAssemblies()).ToList();
+        }
+
+        public static IEnumerable<IAssemblySymbol> GetAllReferencedAssemblies(this ITypeSymbol type)
+        {
+            return type.ContainingAssembly.GetAssemblyAndReferencedAssemblies();
+        }
+
+        public static IEnumerable<IAssemblySymbol>  GetAllReferencedAssemblies(this IEnumerable<ITypeSymbol> types)
+        {
+            return types.SelectMany(type => type.GetAllReferencedAssemblies()).Distinct().ToList();
+        }
+
+        public static MetadataReference ToRef(this IAssemblySymbol assembly)
+        {
+            return assembly.GetMetadata().GetReference();
         }
 
         public static string MemberConcat(params string[] strs) =>

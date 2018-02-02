@@ -15,12 +15,12 @@ namespace MultiConcernsRoxyTest.RoxyViewModels
         string FullName { get; }
     }
 
-    public class PersonDataVM : IPersonDataVM
-    {
-        public string FirstName { get; set; }
+    //public class PersonDataVM : IPersonDataVM
+    //{
+    //    public string FirstName { get; set; }
 
-        public string LastName { get; set; }
+    //    public string LastName { get; set; }
 
-        public string FullName => FirstName + " " + LastName;
-    }
+    //    public string FullName => FirstName + " " + LastName;
+    //}
 }

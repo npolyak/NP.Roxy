@@ -1,8 +1,10 @@
 ﻿using MultiConcernsRoxyTest.RoxyViewModels;
 using NP.Roxy;
+using NP.Utilities.Behaviors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,6 +24,15 @@ namespace MultiConcernsRoxyTest
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static void Set<TObj, TPart>(Expression<Func<TObj, TPart>> expression)
+        {
+            System.Linq.Expressions.Expression body = expression.Body;
+
+            ParameterExpression parameterExpression = body as ParameterExpression;
+
+            MemberExpression memberExpression = body as MemberExpression;
+        }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -30,6 +41,9 @@ namespace MultiConcernsRoxyTest
 
             ISelectableRemovablePerson selectableRemovablePerson =
                 Core.GetInstanceOfGeneratedType<ISelectableRemovablePerson>();
+
+            Set<ISelectableRemovablePersonWrapper, ISelectableRemovablePersonWrapper>((personWrapper => personWrapper));
+            Set<ISelectableRemovablePersonWrapper, SelectableItem<ISelectableRemovablePerson>>((personWrapper => personWrapper.Selectable));
         }
     }
 }

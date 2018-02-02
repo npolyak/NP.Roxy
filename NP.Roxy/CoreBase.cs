@@ -79,6 +79,11 @@ namespace NP.Roxy
                 (CSharpCompilationOptions) TheAssemblyCompilationsOptions.CallMethod("WithMetadataImportOptions", true, false, (byte) 2);
         }
 
+        public INamedTypeSymbol GetTypeSymbol(Type type)
+        {
+            return type.GetTypeSymbol(this.TheCompilation);
+        }
+
         protected CoreBase()
         {
             CompositionHost compositionContext =
@@ -106,7 +111,6 @@ namespace NP.Roxy
                     ProjName,
                     AssemblerNames.GENERATED_NAMESPACE_NAME,
                     LanguageNames.CSharp,
-                    metadataReferences: AllMetadataReferences,
                     parseOptions: TheParseOptions,
                     compilationOptions: TheAssemblyCompilationsOptions
                 );
@@ -116,12 +120,6 @@ namespace NP.Roxy
             TheCompilation =
                 TheWorkspace.CurrentProj.GetCompilationAsync().Result;
         }
-
-        internal HashSet<Assembly> AllReferencedAssemblies { get; } =
-            new HashSet<Assembly>();
-
-        internal IEnumerable<MetadataReference> AllMetadataReferences =>
-            AllReferencedAssemblies.Select(assmbly => assmbly.ToRef());
 
         protected void UpdateCompilation(string docName, string code)
         {
@@ -199,26 +197,53 @@ namespace NP.Roxy
         }
 
 
-        internal void AddAssembliesToReference(IEnumerable<Assembly> assemblies)
+        internal void AddAssembliesToReference<T>(IEnumerable<T> assemblyInfos, Func<T, AssemblyIdentity> toId, Func<T, MetadataReference> toMDReference)
         {
-            IEnumerable<Assembly> newAssemblies =
-                assemblies.Except(this.AllReferencedAssemblies);
+            IEnumerable<AssemblyIdentity> newAssemblyIds =  
+                assemblyInfos.Select(assemblySymbol => toId(assemblySymbol)).Except(TheCompilation.ReferencedAssemblyNames).ToList();
+
+            IEnumerable<T> newAssemblies =
+                assemblyInfos.Where(aSymbol => newAssemblyIds.Contains(toId(aSymbol))).ToList();
 
             if (newAssemblies.IsNullOrEmpty())
                 return;
 
-            newAssemblies.DoForEach(assembly => AllReferencedAssemblies.Add(assembly));
+            IEnumerable<MetadataReference> allMetadataReferences =
+                TheCompilation.References.Union(newAssemblies.Select(assemblySymbol => toMDReference(assemblySymbol))).ToList();
 
-            MetadataReference[] newReferences = 
-                newAssemblies.Select(assmbly => assmbly.ToRef()).ToArray();
+            TheProj = TheProj.WithMetadataReferences(allMetadataReferences);
 
-            MetadataReference[] allReferences =
-                AllReferencedAssemblies.Select(assmbly => assmbly.ToRef()).ToArray();
-
-            TheProj = TheProj.WithMetadataReferences(allReferences);
-
-            TheCompilation = TheCompilation.WithReferences(allReferences);
+            TheCompilation = TheCompilation.WithReferences(allMetadataReferences);
         }
 
+        internal void AddAssembliesToReference(IEnumerable<Assembly> assemblies)
+        {
+            AddAssembliesToReference
+            (
+                assemblies,
+                (assembly) => AssemblyIdentity.FromAssemblyDefinition(assembly),
+                (assembly) => assembly.ToRef()
+            );
+        }
+
+        internal void AddTypesToReference(IEnumerable<Type> types)
+        {
+            AddAssembliesToReference(types.SelectMany(type => type.Assembly.GetAssemblyAndReferencedAssemblies()));
+        }
+
+        internal void AddAssemblySymbolsToReference(IEnumerable<IAssemblySymbol> assemblySymbols)
+        {
+            AddAssembliesToReference
+            (
+                assemblySymbols,
+                (assemblySymbol) => assemblySymbol.Identity,
+                (assemblySymbol) => assemblySymbol.ToRef()
+            );
+        }
+
+        internal void AddTypeSymbolsToReference(IEnumerable<ITypeSymbol> typeSymbols)
+        {
+            AddAssemblySymbolsToReference(typeSymbols.SelectMany(typeSymbol => typeSymbol.ContainingAssembly.GetAssemblyAndReferencedAssemblies()));
+        }
     }
 }

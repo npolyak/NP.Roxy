@@ -34,8 +34,6 @@ namespace NP.Roxy.TypeConfigImpl
 
         INamedTypeSymbol TheSelfTypeSymbol { get; }
 
-        IEnumerable<Assembly> ReferencedAssemblies { get; }
-
         string TheGeneratedCode { get; }
 
         void SetEventArgThisIdx(string eventName, int idx);
@@ -84,6 +82,14 @@ namespace NP.Roxy.TypeConfigImpl
         IMemberBuilderSetter TheBuilderSetter { get; set; }
 
         bool ConfigurationHasBeenCompleted { get; }
+
+        void SetActions<TObj1, TPart1, TObj2, TPart2>
+        (
+            Expression<Func<TObj1, TPart1>> property1Expression,
+            Expression<Func<TObj2, TPart2>> property2Expression,
+            Action<TPart1, TPart2> setAction,
+            Action<TPart1, TPart2> unsetAction = null
+        );
     }
 
     public interface ITypeConfig<TImplementedInterface, TSuperClass, TWrappedInterface> : ITypeConfig
@@ -110,6 +116,9 @@ namespace NP.Roxy.TypeConfigImpl
         public INamedTypeSymbol SuperClassTypeSymbol { get; private set; }
 
         public INamedTypeSymbol WrapInterfaceTypeSymbol { get; private set; }
+
+        protected IEnumerable<INamedTypeSymbol> AllImplementedTypesSymbols =>
+            new[] { ImplInterfaceTypeSymbol, SuperClassTypeSymbol, WrapInterfaceTypeSymbol };
 
         public bool HasInterfaceToImplement =>
             ImplInterfaceTypeSymbol.Name != nameof(NoInterface);
@@ -182,6 +191,8 @@ namespace NP.Roxy.TypeConfigImpl
             this.ImplInterfaceTypeSymbol = implInterfaceTypeSymbol;
             this.SuperClassTypeSymbol = superClassTypeSymbol;
             this.WrapInterfaceTypeSymbol = wrapInterfaceTypeSymbol;
+
+            TheCore.AddTypeSymbolsToReference(AllImplementedTypesSymbols);
 
             this.ClassName = ImplInterfaceTypeSymbol.GetClassName(this.ClassName);
 
@@ -597,8 +608,6 @@ namespace NP.Roxy.TypeConfigImpl
             if (TheSelfTypeSymbol != null)
                 return;
 
-            TheCore.AddAssembliesToReference(this.ReferencedAssemblies);
-
             this.GenerateCode();
 
             TheCore.AddClass(this);
@@ -673,7 +682,25 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
-        public virtual IEnumerable<Assembly> ReferencedAssemblies => Enumerable.Empty<Assembly>();
+        void TestObjPartTypes<TObj, TPart>()
+        {
+            INamedTypeSymbol objSymbol = typeof(TObj).GetTypeSymbol(TheCompilation);
+            
+            //if (this.WrapInterfaceTypeSymbol)
+
+            //INamedTypeSymbol partSymbol = typeof(TPart).GetTypeSymbol(TheCompilation);
+        }
+
+        public void SetActions<TObj1, TPart1, TObj2, TPart2>
+        (
+            Expression<Func<TObj1, TPart1>> property1Expression,
+            Expression<Func<TObj2, TPart2>> property2Expression,
+            Action<TPart1, TPart2> setAction,
+            Action<TPart1, TPart2> unsetAction = null
+        )
+        {
+            
+        }
     }
 
     internal class TypeConfig : TypeConfigBySymbols
@@ -698,7 +725,7 @@ namespace NP.Roxy.TypeConfigImpl
             SuperClassType = superClassType.GetClassType();
             WrapInterfaceType = wrapInterfaceType.GetInterfaceType();
 
-            this.TheCore.AddAssembliesToReference(this.ReferencedAssemblies);
+            this.TheCore.AddTypesToReference(ReferencedTypes);
 
             base.SetFromSymbols
             (
@@ -708,9 +735,8 @@ namespace NP.Roxy.TypeConfigImpl
             );
         }
 
-        public override IEnumerable<Assembly> ReferencedAssemblies =>
-            new[] { ImplInterfaceType, SuperClassType, WrapInterfaceType }.GetAllReferencedAssemblies();
-
+        internal Type[] ReferencedTypes =>
+            new[] { ImplInterfaceType, SuperClassType, WrapInterfaceType };
     }
 
     internal class TypeConfig<TImplementedInterface, TSuperClass, TWrappedInterface> :

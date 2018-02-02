@@ -355,7 +355,7 @@ namespace NP.Roxy
 
         public ITypeConfig FindOrCreateConcretizationTypeConf<T>(string concreteClassName = null)
         {
-            AddAssembliesToReference((new[] { typeof(T), typeof(NoInterface)}).GetAllReferencedAssemblies());
+            AddTypesToReference((new[] { typeof(T), typeof(NoInterface)}));
 
             INamedTypeSymbol typeSymbol = typeof(T).GetTypeSymbol(this.TheCompilation);
 

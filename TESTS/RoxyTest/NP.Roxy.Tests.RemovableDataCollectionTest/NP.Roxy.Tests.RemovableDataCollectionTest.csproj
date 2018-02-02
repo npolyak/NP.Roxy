@@ -164,12 +164,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IMyData.cs" />
-    <Compile Include="IRemovable.cs" />
     <Compile Include="MyData.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Removable.cs" />
-    <Compile Include="RemovableCollectionBehavior.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
