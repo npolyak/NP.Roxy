@@ -553,6 +553,7 @@ namespace NP.Roxy
             Pop();
         }
 
+
         public void AddPropWithBackingStore
         (
             string propName,
@@ -578,6 +579,13 @@ namespace NP.Roxy
             );
         }
 
+        public void AddPropBackingField(IPropertySymbol propertySymbol)
+        {
+            string fieldName = propertySymbol.Name.PropToFieldName();
+
+            AddField(fieldName, propertySymbol.Type.AsNamed());
+        }
+
         public void AddPropWithBackingStore
         (
             string propName,
@@ -600,6 +608,8 @@ namespace NP.Roxy
                 addAfterSetter, 
                 setterAccessibility);
         }
+
+
 
         public void AddPropWithBackingStore
         (
@@ -737,6 +747,22 @@ namespace NP.Roxy
             result += "\n" + base.ToString();
 
             return result;
+        }
+
+        public void AddAssignCoreObj(string propName, INamedTypeSymbol typeSymbol, string typeName = null)
+        {
+            string typeNameInsert = "";
+
+            if (typeName != null)
+            {
+                typeNameInsert = $"\"{typeName}\"";
+            }
+
+            AddAssignmentLine
+            (
+                propName, 
+                $"TheCore.CreateClassObj<{typeSymbol.GetFullTypeString()}>({typeNameInsert})"
+            );
         }
     }
 }

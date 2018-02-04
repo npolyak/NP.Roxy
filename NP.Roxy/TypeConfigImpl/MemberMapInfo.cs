@@ -134,5 +134,16 @@ namespace NP.Roxy.TypeConfigImpl
 
             return result;
         }
+
+        public string GetPropAssignmentStr(bool setOrUnset)
+        {
+            string assignmentStr =
+                setOrUnset ?
+                    WrapperMemberName : $"default({(TheWrappedSymbol as IPropertySymbol).Type.AsNamed().GetFullTypeString()})";
+            string result =
+                $"{WrappedClassMemberFullName} = {assignmentStr}";
+
+            return result;
+        }
     }
 }

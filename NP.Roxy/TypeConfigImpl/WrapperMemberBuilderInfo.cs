@@ -143,6 +143,25 @@ namespace NP.Roxy.TypeConfigImpl
 
     internal class PropertyWrapperMemberBuilderInfo : WrapperMemberBuilderInfo<IPropertySymbol>
     {
+        public INamedTypeSymbol WrapperTypeSymbol =>
+            WrapperSymbol.Type as INamedTypeSymbol;
+
+        public bool ForceCreateSetter { get; private set; } = false;
+
+        public INamedTypeSymbol TheInitTypeSymbol { get; private set; } = null;
+
+        public bool HasInit => TheInitTypeSymbol != null;
+
+        public bool AddBackingField { get; private set; } = false;
+
+        public void AddInit(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            if (!HasInit)
+                return;
+
+            roslynCodeBuilder.AddAssignCoreObj(WrapperSymbolName, TheInitTypeSymbol);
+        }
+
         public PropertyWrapperMemberBuilderInfo
         (
             IPropertySymbol wrapperSymbol
@@ -151,8 +170,32 @@ namespace NP.Roxy.TypeConfigImpl
             this.DefaultCodeBuilder = AutoPropBuilder.TheAutoPropBuilder;
         }
 
+        public void SetInit
+        (
+            INamedTypeSymbol initTypeSymbol, 
+            Compilation compilation
+        )
+        {
+            ForceCreateSetter = true;
+
+            if (!compilation.CanBeConvertedImplicitly(initTypeSymbol, this.WrapperTypeSymbol))
+            {
+                throw new Exception($"Roxy Usage Error: Cannot initialize property '{WrapperSymbol.Name}' to type '{initTypeSymbol.GetFullTypeString()}'");
+            }
+
+            TheInitTypeSymbol = initTypeSymbol;
+
+            this.AddBackingField = true;
+        }
+
         protected override void BuildImpl(IPropertySymbol propertyWrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
+            string backingFieldName = propertyWrapperSymbol.Name.PropToFieldName();
+            if (this.AddBackingField)
+            {
+                roslynCodeBuilder.AddPropBackingField(propertyWrapperSymbol);
+            }
+
             Accessibility propAccessibility = propertyWrapperSymbol.DeclaredAccessibility;
 
             roslynCodeBuilder.AddPropOpening
@@ -172,35 +215,48 @@ namespace NP.Roxy.TypeConfigImpl
 
                 roslynCodeBuilder.OpenPropGetter(getterAccessibility);
 
-                MemberMapInfo firstMemberMap = 
-                    this.WrappedMembers
-                        .FirstOrDefault(member => (!member.IsNonPublic) );
-
-                if (firstMemberMap == null)
+                if (AddBackingField)
                 {
-                    firstMemberMap = this.WrappedMembers.First();
-                }
-
-                if (firstMemberMap.IsNonPublic)
-                {
-                    if (firstMemberMap.AllowNonPublic)
-                    {
-                        string returnType = (propertyWrapperSymbol.Type as INamedTypeSymbol).GetFullTypeString();
-                        roslynCodeBuilder.AddLine($"return ({returnType}) {firstMemberMap.WrappedObjPropName}.GetPropValue(\"{firstMemberMap.WrappedMemberName}\", true)", true);
-                    }
+                    roslynCodeBuilder.AddReturnVar(backingFieldName);
                 }
                 else
                 {
-                    string wrappedMemberStr = firstMemberMap.WrappedClassMemberFullName;
+                    MemberMapInfo firstMemberMap =
+                        this.WrappedMembers
+                            .FirstOrDefault(member => (!member.IsNonPublic));
 
-                    roslynCodeBuilder.AddReturnVar(wrappedMemberStr);
+                    if (firstMemberMap == null)
+                    {
+                        firstMemberMap = this.WrappedMembers.First();
+                    }
+
+                    if (firstMemberMap.IsNonPublic)
+                    {
+                        if (firstMemberMap.AllowNonPublic)
+                        {
+                            string returnType = (propertyWrapperSymbol.Type as INamedTypeSymbol).GetFullTypeString();
+                            roslynCodeBuilder.AddLine($"return ({returnType}) {firstMemberMap.WrappedObjPropName}.GetPropValue(\"{firstMemberMap.WrappedMemberName}\", true)", true);
+                        }
+                    }
+                    else
+                    {
+                        string wrappedMemberStr = firstMemberMap.WrappedClassMemberFullName;
+
+                        roslynCodeBuilder.AddReturnVar(wrappedMemberStr);
+                    }
                 }
                 roslynCodeBuilder.Pop();
             }
 
-            if (propertyWrapperSymbol.SetMethod != null)
+            if ((propertyWrapperSymbol.SetMethod != null) || ForceCreateSetter || AddBackingField)
             {
-                Accessibility setterAccessibility = propertyWrapperSymbol.SetMethod.DeclaredAccessibility;
+                Accessibility setterAccessibility = Accessibility.Private;
+
+                if (propertyWrapperSymbol.SetMethod != null)
+                {
+                    setterAccessibility =
+                        propertyWrapperSymbol.SetMethod.DeclaredAccessibility;
+                }
 
                 if (setterAccessibility == propAccessibility)
                 {
@@ -208,6 +264,11 @@ namespace NP.Roxy.TypeConfigImpl
                 }
 
                 roslynCodeBuilder.OpenPropSetter(setterAccessibility);
+
+                if (AddBackingField)
+                {
+                    roslynCodeBuilder.AddSettingValue(backingFieldName);
+                }
 
                 if (this.IncludeBaseVirtualInOverride)
                 {

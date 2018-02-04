@@ -154,7 +154,7 @@ namespace NP.Roxy
 
         public static Accessibility GetPropPartAccessibility
         (
-            this Accessibility propPartAccessibility, 
+            this Accessibility propPartAccessibility,
             Accessibility propAccessibility)
         {
             if (propPartAccessibility == propAccessibility)
@@ -510,7 +510,7 @@ namespace NP.Roxy
                 }
             }
 
-            result += includeParenthesis? ")" : "";
+            result += includeParenthesis ? ")" : "";
 
 
             if ((indexParamToReplaceByThis >= 0) && includeTypes)
@@ -624,7 +624,7 @@ namespace NP.Roxy
 
         private static string GetPropDelegate(this INamedTypeSymbol propType, string delegateName, bool isGetter)
         {
-            string delegateKind = isGetter.GetDelegateKind() ;
+            string delegateKind = isGetter.GetDelegateKind();
 
             return $"internal {delegateKind}<{propType.GetFullTypeString()}> {delegateName} {{ get; set; }}";
         }
@@ -702,7 +702,7 @@ namespace NP.Roxy
 
             string argList = "";
 
-            if ( (methodSymbol.Parameters.Count() > 0) || returns)
+            if ((methodSymbol.Parameters.Count() > 0) || returns)
             {
                 List<INamedTypeSymbol> allTypes =
                     methodSymbol.Parameters
@@ -710,7 +710,7 @@ namespace NP.Roxy
 
                 allTypes.AddRange(returnType.ToCollection());
 
-                argList = "<" +  allTypes
+                argList = "<" + allTypes
                                 .StrConcat((type) => type.GetFullTypeString()) + ">";
             }
 
@@ -749,7 +749,7 @@ namespace NP.Roxy
             return type.ContainingAssembly.GetAssemblyAndReferencedAssemblies();
         }
 
-        public static IEnumerable<IAssemblySymbol>  GetAllReferencedAssemblies(this IEnumerable<ITypeSymbol> types)
+        public static IEnumerable<IAssemblySymbol> GetAllReferencedAssemblies(this IEnumerable<ITypeSymbol> types)
         {
             return types.SelectMany(type => type.GetAllReferencedAssemblies()).Distinct().ToList();
         }
@@ -802,8 +802,8 @@ namespace NP.Roxy
         }
 
         public static bool ShouldOverride(this ISymbol symbol)
-        {   
-            return (symbol.IsAbstract && (symbol.ContainingType.TypeKind != TypeKind.Interface) ) || 
+        {
+            return (symbol.IsAbstract && (symbol.ContainingType.TypeKind != TypeKind.Interface)) ||
                     symbol.IsVirtual;
         }
 
@@ -814,7 +814,7 @@ namespace NP.Roxy
             if (typeSymbol.BaseType == null)
                 yield break;
 
-            foreach(INamedTypeSymbol baseTypeSymbol in typeSymbol.BaseType.GetSelfAndAllBaseTypes())
+            foreach (INamedTypeSymbol baseTypeSymbol in typeSymbol.BaseType.GetSelfAndAllBaseTypes())
             {
                 yield return baseTypeSymbol;
             }
@@ -902,7 +902,7 @@ namespace NP.Roxy
 
             return result;
         }
-        
+
         public static IEnumerable<ISymbol> GetAllPublicMembers
         (
             this ITypeSymbol typeSymbol,
@@ -968,7 +968,7 @@ namespace NP.Roxy
 
             return className ?? throw new Exception($"Class name cannot be null");
         }
-        
+
         internal static string GetClassName(this Type implInterfaceType, string className)
         {
             return GetClassName(implInterfaceType.Name, className);
@@ -989,6 +989,16 @@ namespace NP.Roxy
             INamedTypeSymbol typeSymbolToCompare = type.GetTypeSymbol(compilation);
 
             return typeSymbol.Equals(typeSymbolToCompare);
+        }
+
+        public static bool CanBeConvertedImplicitly
+        (
+            this Compilation compilation,
+            ITypeSymbol sourceType,
+            ITypeSymbol targetType
+        )
+        {
+            return compilation.ClassifyConversion(sourceType, targetType).IsImplicit;
         }
 
         public static bool FirstParamMatches(this Compilation compilation, IMethodSymbol methodSymbol, INamedTypeSymbol typeToMatch)

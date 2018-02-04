@@ -42,6 +42,11 @@ namespace MultiConcernsRoxyTest
             ISelectableRemovablePerson selectableRemovablePerson =
                 Core.GetInstanceOfGeneratedType<ISelectableRemovablePerson>();
 
+            RoxyModelAssembler.AssembleSelectableRemovableBusinessGroup();
+
+            ISelectableRemovableBusinessGroup businessGroup = 
+                Core.GetInstanceOfGeneratedType<ISelectableRemovableBusinessGroup>();
+
             Set<ISelectableRemovablePersonWrapper, ISelectableRemovablePersonWrapper>((personWrapper => personWrapper));
             Set<ISelectableRemovablePersonWrapper, SelectableItem<ISelectableRemovablePerson>>((personWrapper => personWrapper.Selectable));
         }

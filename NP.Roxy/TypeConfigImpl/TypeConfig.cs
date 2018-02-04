@@ -83,6 +83,10 @@ namespace NP.Roxy.TypeConfigImpl
 
         bool ConfigurationHasBeenCompleted { get; }
 
+        void SetInit(string propName, INamedTypeSymbol typeSymbol);
+
+        void SetInit<TInit>(string propName);
+
         void SetActions<TObj1, TPart1, TObj2, TPart2>
         (
             Expression<Func<TObj1, TPart1>> property1Expression,
@@ -107,6 +111,8 @@ namespace NP.Roxy.TypeConfigImpl
 
         internal const string CALL_STATIC_UNINIT_METHOD = "___Call__StaticUnInit";
         internal const string CALL_STATIC_INIT_METHOD = "___Call__StaticInit";
+
+        internal const string INIT_METHOD_NAME = "__Init";
     }
 
     public class TypeConfigBySymbols : TypeConfigBase, ITypeConfig
@@ -147,6 +153,14 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
+        internal PropertyWrapperMemberBuilderInfo GetPropWrapperMemberBuilderInfo(string propName)
+        {
+            PropertyWrapperMemberBuilderInfo propBuilderInfo =
+                this.PropBuilderInfos.Single(builderInfo => builderInfo.WrapperSymbolName == propName);
+
+            return propBuilderInfo;
+        }
+
         public void SetPropBuilder(IMemberCodeBuilder<IPropertySymbol> propBuilder, params string[] propNames)
         {
             ThrowErrorIfCompleted();
@@ -154,7 +168,7 @@ namespace NP.Roxy.TypeConfigImpl
             foreach(string propName in propNames)
             {
                 PropertyWrapperMemberBuilderInfo propBuilderInfo =
-                    this.PropBuilderInfos.Single(builderInfo => builderInfo.WrapperSymbolName == propName);
+                    GetPropWrapperMemberBuilderInfo(propName);
 
                 propBuilderInfo.TheCodeBuilder = propBuilder;
             }
@@ -499,6 +513,20 @@ namespace NP.Roxy.TypeConfigImpl
             roslynCodeBuilder.PopRegion();
         }
 
+        private void AddInit(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            roslynCodeBuilder.PushRegion("Init Method");
+
+            roslynCodeBuilder.AddLine($"void {INIT_METHOD_NAME}()");
+            roslynCodeBuilder.Push();
+
+            this.PropBuilderInfos.DoForEach(propBuilderInfo => propBuilderInfo.AddInit(roslynCodeBuilder));
+
+            roslynCodeBuilder.Pop();
+
+            roslynCodeBuilder.PopRegion();
+        }
+
         private void AddDefaultConstructor(RoslynCodeBuilder roslynCodeBuilder)
         {
             roslynCodeBuilder.PushRegion("Default Constructor");
@@ -509,6 +537,8 @@ namespace NP.Roxy.TypeConfigImpl
             {
                 wrappedObj.AddDefaultConstructor(roslynCodeBuilder);
             }
+
+            roslynCodeBuilder.AddLine($"{INIT_METHOD_NAME}()", true);
 
             roslynCodeBuilder.Pop();
 
@@ -532,13 +562,16 @@ namespace NP.Roxy.TypeConfigImpl
             roslynCodeBuilder.AddLine($"public {this.ClassName}({paramsLine})");
             roslynCodeBuilder.Push();
 
-            foreach(WrappedObjInfo wrapObjInfo in _wrappedObjInfos)
+            foreach (WrappedObjInfo wrapObjInfo in _wrappedObjInfos)
             {
                 string assignmentLine =
                     $"{wrapObjInfo.WrappedObjPropName} = {wrapObjInfo.WrappedObjClassName.FirstCharToLowerCase(true)}";
 
                 roslynCodeBuilder.AddLine(assignmentLine, true);
             }
+
+            roslynCodeBuilder.AddLine($"{INIT_METHOD_NAME}()", true);
+
             roslynCodeBuilder.Pop(true);
 
             roslynCodeBuilder.PopRegion();
@@ -581,11 +614,13 @@ namespace NP.Roxy.TypeConfigImpl
 
             AddStaticCoreReference(roslynCodeBuilder);
 
-            AddStaticInitLambda(roslynCodeBuilder);
+            //AddStaticInitLambda(roslynCodeBuilder);
 
             ImplementEvents(roslynCodeBuilder);
 
             AddWrappedClasses(roslynCodeBuilder);
+
+            AddInit(roslynCodeBuilder);
 
             AddDefaultConstructor(roslynCodeBuilder);
 
@@ -700,6 +735,25 @@ namespace NP.Roxy.TypeConfigImpl
         )
         {
             
+        }
+
+        public void SetInit
+        (
+            string propName, 
+            INamedTypeSymbol typeSymbol
+        )
+        {
+            PropertyWrapperMemberBuilderInfo propertyWrapperMemberBuilder = 
+                GetPropWrapperMemberBuilderInfo(propName);
+
+            propertyWrapperMemberBuilder.SetInit(typeSymbol, this.TheCompilation);
+        }
+
+        public void SetInit<TInit>(string propName)
+        {
+            INamedTypeSymbol typeSymbol = typeof(TInit).GetTypeSymbol(this.TheCompilation);
+
+            SetInit(propName, typeSymbol);
         }
     }
 

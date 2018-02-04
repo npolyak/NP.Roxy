@@ -131,6 +131,8 @@ namespace NP.Roxy.TypeConfigImpl
         public IEnumerable<MemberMapInfo> EventWrappedMemberNameMaps =>
             WrappedMemberNameMaps.Where(memberMap => memberMap.TheWrappedSymbol is IEventSymbol);
 
+        public IEnumerable<MemberMapInfo> PropWrappedMemberNameMaps =>
+            WrappedMemberNameMaps.Where(memberMap => memberMap.TheWrappedSymbol is IPropertySymbol);
 
         public void SetFromParentSymbol(INamedTypeSymbol parentTypeSymbol)
         {
@@ -282,7 +284,12 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
-        string BuildWrapperInit(IEnumerable<MemberMapInfo> memberMaps, bool addOrRemove)
+        string BuildWrapperInit
+        (
+            IEnumerable<MemberMapInfo> eventMemberMaps, 
+            IEnumerable<MemberMapInfo> propMemberMaps,
+            bool addOrRemove
+        )
         {
             RoslynCodeBuilder wrapperInitBuilder = new RoslynCodeBuilder();
 
@@ -298,17 +305,27 @@ namespace NP.Roxy.TypeConfigImpl
             {
                 SetOrUnsetConcretizationDelegates(wrapperInitBuilder, false);
 
-                wrapperInitBuilder.AddLine($"{TypeConfigBase.CALL_STATIC_UNINIT_METHOD}()", true);
+                //wrapperInitBuilder.AddLine($"{TypeConfigBase.CALL_STATIC_UNINIT_METHOD}()", true);
+
+                foreach(MemberMapInfo propMemberMap in propMemberMaps)
+                {
+                    wrapperInitBuilder.AddLine($"{propMemberMap.GetPropAssignmentStr(addOrRemove)}", true);
+                }
             }
 
-            foreach (MemberMapInfo eventMemberMap in memberMaps)
+            foreach (MemberMapInfo eventMemberMap in eventMemberMaps)
             {
                 wrapperInitBuilder.AddLine(eventMemberMap.GetEventHandlerAssignmentStr(addOrRemove), true);
             }
 
             if (addOrRemove)
             {
-                wrapperInitBuilder.AddLine($"{TypeConfigBase.CALL_STATIC_INIT_METHOD}()", true);
+                foreach (MemberMapInfo propMemberMap in propMemberMaps)
+                {
+                    wrapperInitBuilder.AddLine($"{propMemberMap.GetPropAssignmentStr(addOrRemove)}", true);
+                }
+
+                //wrapperInitBuilder.AddLine($"{TypeConfigBase.CALL_STATIC_INIT_METHOD}()", true);
 
                 SetOrUnsetConcretizationDelegates(wrapperInitBuilder, true);
             }
@@ -327,9 +344,9 @@ namespace NP.Roxy.TypeConfigImpl
                     this.TheCore.FindOrCreateConcretizationTypeConf(this.WrappedObjNamedTypeSymbol).TheSelfTypeSymbol;
             }
 
-            string beforeSetterStr = BuildWrapperInit(EventWrappedMemberNameMaps, false);
+            string beforeSetterStr = BuildWrapperInit(EventWrappedMemberNameMaps, PropWrappedMemberNameMaps, false);
 
-            string afterSetterStr = BuildWrapperInit(EventWrappedMemberNameMaps.Reverse(), true);
+            string afterSetterStr = BuildWrapperInit(EventWrappedMemberNameMaps.Reverse(), PropWrappedMemberNameMaps.Reverse(), true);
 
             Accessibility setterAccessibility = Accessibility.Private;
 
@@ -368,13 +385,12 @@ namespace NP.Roxy.TypeConfigImpl
             if (WrappedObjNamedTypeSymbol.TypeKind == TypeKind.Enum)
                 return;
 
-            roslynCodeBuilder
-                .AddAssignmentLine
-                (
-                    this.WrappedObjPropName,
-                    $"TheCore.CreateClassObj<{WrappedObjNamedTypeSymbol.GetFullTypeString()}>(\"{ConcreteWrappedObjClassName}\")"
-                    //$"new {this.WrappedObjNamedTypeSymbol.GetFullTypeString()}()"
-                );
+            roslynCodeBuilder.AddAssignCoreObj
+            (
+                this.WrappedObjPropName, 
+                WrappedObjNamedTypeSymbol, 
+                ConcreteWrappedObjClassName
+            );
         }
     }
 }

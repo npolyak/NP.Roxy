@@ -112,9 +112,12 @@ namespace NP.Roxy
             Type type = typeof(T);
             Type wrapperType = typeof(TWrapper);
 
-            ITypeConfig typeConfig =
-                this.AllTypesAddedToCompilation
-                    .Where
+            ITypeConfig typeConfig = null;
+
+            if (className.IsNullOrEmpty())
+            {
+                typeConfig = this.AllTypesAddedToCompilation
+                    .FirstOrDefault
                     (
                         tConfig =>
                             (tConfig.ImplInterfaceTypeSymbol.Matches(type, this.TheCompilation) ||
@@ -124,13 +127,18 @@ namespace NP.Roxy
                             (
                                 (wrapperType == typeof(NoInterface)) ||
                                 tConfig.WrapInterfaceTypeSymbol.Matches(wrapperType, this.TheCompilation)
-                            )
-                            &&
-                            ((className == null) ||
-                              (tConfig.ClassName == className))).FirstOrDefault();
+                            ));
+            }
+            else
+            {
+                typeConfig = this.AllTypesAddedToCompilation.FirstOrDefault(tConfig => tConfig.ClassName == className);
+            }
 
             return typeConfig;
         }
+
+        public ITypeConfig FindTypeConfig<T>(string className = null)
+            => FindTypeConfig<T, NoInterface>(className);
 
         public T GetInstOfGeneratedType<T, TWrapper>(string className = null, params object[] args)
         {
@@ -424,9 +432,9 @@ namespace NP.Roxy
             return TheCore.WrapWithNonPublicMembers<TypeToImplement, TWrapper>(className);
         }
 
-        public TClass CreateClassObj<TClass>(string className, params object[] args)
+        public TClass CreateClassObj<TClass>(string className = null, params object[] args)
         {
-            ITypeConfig typeConfig = FindTypeConfigOfGeneratedType(className);
+            ITypeConfig typeConfig = FindTypeConfig<TClass>(className);
 
             if (typeConfig == null)
                 return (TClass) Activator.CreateInstance(typeof(TClass), args);

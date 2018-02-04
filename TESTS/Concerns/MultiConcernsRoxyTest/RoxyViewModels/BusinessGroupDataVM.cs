@@ -12,14 +12,14 @@ namespace MultiConcernsRoxyTest.RoxyViewModels
     {
         string Name { get; set; }
 
-        ObservableCollection<ISelectableRemovablePerson> People { get; }
+        SingleSelectionObservableCollection<ISelectableRemovablePerson> People { get; }
     }
 
     public class BusinessGroupDataVM : IBusinessGroup
     {
         public string Name { get; set; }
 
-        public ObservableCollection<ISelectableRemovablePerson> People { get; } =
+        public SingleSelectionObservableCollection<ISelectableRemovablePerson> People { get; } =
             new SingleSelectionObservableCollection<ISelectableRemovablePerson>();
     }
 }
