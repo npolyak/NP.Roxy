@@ -11,6 +11,7 @@
 
 using Microsoft.CodeAnalysis;
 using NP.Utilities;
+using NP.Utilities.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -118,6 +119,15 @@ namespace NP.Roxy.TypeConfigImpl
             IEventSymbol wrapperSymbol
         ) : base(wrapperSymbol)
         {
+            AttributeData attrData = WrapperSymbol.GetAttrSymbol(typeof(EventThisIdxAttribute));
+
+            if (attrData != null)
+            {
+                int idx = (int) attrData.ConstructorArguments.First().Value;
+
+                this.IndexInputParamToReplaceByThis = idx;
+            }
+
             this.DefaultCodeBuilder = new SimpleEventBuilder();
         }
 

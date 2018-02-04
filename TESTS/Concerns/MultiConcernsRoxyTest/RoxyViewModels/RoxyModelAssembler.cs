@@ -64,9 +64,6 @@ namespace MultiConcernsRoxyTest.RoxyViewModels
             ITypeConfig typeConfig =
                 Core.FindOrCreateTypeConfig<ISelectableRemovablePerson, ISelectableRemovablePersonWrapper>();
 
-            typeConfig.SetEventArgThisIdx(nameof(ISelectableRemovablePerson.IsSelectedChanged), 0);
-            typeConfig.SetEventArgThisIdx(nameof(ISelectableRemovablePerson.RemoveEvent), 0);
-
             typeConfig.ConfigurationCompleted();
         }
 
@@ -83,11 +80,10 @@ namespace MultiConcernsRoxyTest.RoxyViewModels
 
         public static void AssembleSelectableRemovableBusinessGroup()
         {
-            ITypeConfig typeConfig =
+            ITypeConfig<ISelectableRemovableBusinessGroup, BusinessGroupDataVM, ISelectableRemovableBusinessGroupWrapper> typeConfig =
                 Core.FindOrCreateTypeConfig<ISelectableRemovableBusinessGroup, BusinessGroupDataVM, ISelectableRemovableBusinessGroupWrapper>();
 
-            typeConfig.SetEventArgThisIdx(nameof(ISelectableRemovablePerson.IsSelectedChanged), 0);
-            typeConfig.SetEventArgThisIdx(nameof(ISelectableRemovablePerson.RemoveEvent), 0);
+            //typeConfig.InitAction = ()
 
             //typeConfig.SetActions
             //(
