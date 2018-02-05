@@ -66,6 +66,8 @@ namespace MultiConcernsRoxyTest.RoxyViewModels
 
             typeConfig.SetInit<SingleSelectionObservableCollection<ISelectableRemovablePerson>>(nameof(IBusinessGroup.People));
 
+            Type t= typeof(ParentChildSelectionBehavior<,>);
+
             typeConfig.SetMemberMap
             (
                 nameof(ISelectableRemovableBusinessGroupWrapper.TheParentChildSelectionBehavior),

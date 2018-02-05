@@ -14,12 +14,4 @@ namespace MultiConcernsRoxyTest.RoxyViewModels
 
         SingleSelectionObservableCollection<ISelectableRemovablePerson> People { get; }
     }
-
-    public class BusinessGroupDataVM : IBusinessGroup
-    {
-        public string Name { get; set; }
-
-        public SingleSelectionObservableCollection<ISelectableRemovablePerson> People { get; } =
-            new SingleSelectionObservableCollection<ISelectableRemovablePerson>();
-    }
 }
