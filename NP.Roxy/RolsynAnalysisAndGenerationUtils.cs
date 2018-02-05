@@ -865,7 +865,15 @@ namespace NP.Roxy
             where TSymbol : class, ISymbol
         {
 
-            return typeSymbol.GetMembersByName<TSymbol>(name, allowNonPublic).FirstOrDefault();
+            IEnumerable<TSymbol> results = typeSymbol.GetMembersByName<TSymbol>(name, allowNonPublic);
+
+            if (results.IsNullOrEmpty())
+                return null;
+
+            // prefer non-abstract symbols, but if none - return abstract
+            TSymbol result = results.FirstOrDefault(symb => !symb.IsAbstract) ?? results.FirstOrDefault();
+
+            return result;
         }
 
         private static IEnumerable<ISymbol> GetSelfSymbols(this ITypeSymbol typeSymbol, string name = null)
