@@ -45,6 +45,7 @@ namespace MultiConcernsRoxyTest
             RoxyModelAssembler.AssembleSelectableRemovableBusinessGroup();
 
             ISelectableRemovableBusinessGroup businessGroup = 
-                Core.GetInstanceOfGeneratedType<ISelectableRemovableBusinessGroup>();        }
+                Core.GetInstanceOfGeneratedType<ISelectableRemovableBusinessGroup>();
+        }
     }
 }

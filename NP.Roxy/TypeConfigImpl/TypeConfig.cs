@@ -98,20 +98,10 @@ namespace NP.Roxy.TypeConfigImpl
 
     public interface ITypeConfig<TImplementedInterface, TSuperClass, TWrappedInterface> : ITypeConfig
     {
-        Action<TImplementedInterface, TSuperClass, TWrappedInterface> UnInitAction { get; set; }
-
-        Action<TImplementedInterface, TSuperClass, TWrappedInterface> InitAction { get; set; }
     }
 
     public class TypeConfigBase
     {
-        internal const string STATIC_UNINIT_LAMBDA_NAME = "___StaticUnInit";
-
-        internal const string STATIC_INIT_LAMBDA_NAME = "___StaticInit";
-
-        internal const string CALL_STATIC_UNINIT_METHOD = "___Call__StaticUnInit";
-        internal const string CALL_STATIC_INIT_METHOD = "___Call__StaticInit";
-
         internal const string INIT_METHOD_NAME = "__Init";
     }
 
@@ -801,48 +791,5 @@ namespace NP.Roxy.TypeConfigImpl
             base(core, className, typeof(TImplementedInterface), typeof(TSuperClass), typeof(TWrappedInterface))
         {
         }
-
-        public Action<TImplementedInterface, TSuperClass, TWrappedInterface> UnInitAction { get; set; } = null;
-        public Action<TImplementedInterface, TSuperClass, TWrappedInterface> InitAction { get; set; } = null;
-
-        void AddStaticInitLambdaImpl(RoslynCodeBuilder roslynCodeBuilder, string lambdaName, string callLambdaName)
-        {
-            roslynCodeBuilder.AddLine($"public static Action<{ImplInterfaceTypeSymbol.GetFullTypeStringWithNoInterface()}, {SuperClassTypeSymbol.GetFullTypeStringWithNoClass()}, {WrapInterfaceTypeSymbol.GetFullTypeStringWithNoInterface()}> {lambdaName} {{ get; set; }} = null;");
-
-            roslynCodeBuilder.AddEmptyLine();
-
-            roslynCodeBuilder.AddLine($"private void {callLambdaName}()");
-            roslynCodeBuilder.Push();
-
-            roslynCodeBuilder.AddLine($"if ({lambdaName} != null)");
-            roslynCodeBuilder.Push();
-            roslynCodeBuilder.AddLine($"{lambdaName}(this, this, this)", true);
-            roslynCodeBuilder.Pop();
-
-            roslynCodeBuilder.Pop();
-        }
-
-        protected override void PostTypeSet()
-        {
-            base.PostTypeSet();
-
-            if (this.UnInitAction != null)
-            {
-                TheGeneratedType.SetStaticPropValue(STATIC_UNINIT_LAMBDA_NAME, this.UnInitAction);
-            }
-
-            if (this.InitAction != null)
-            {
-                TheGeneratedType.SetStaticPropValue(STATIC_INIT_LAMBDA_NAME, this.InitAction);
-            }
-        }
-
-        protected override void AddStaticInitLambda(RoslynCodeBuilder roslynCodeBuilder)
-        {
-            AddStaticInitLambdaImpl(roslynCodeBuilder, STATIC_INIT_LAMBDA_NAME, CALL_STATIC_INIT_METHOD);
-
-            AddStaticInitLambdaImpl(roslynCodeBuilder, STATIC_UNINIT_LAMBDA_NAME, CALL_STATIC_UNINIT_METHOD);
-        }
-
     }
 }
