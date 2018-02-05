@@ -135,15 +135,28 @@ namespace NP.Roxy.TypeConfigImpl
             return result;
         }
 
-        public string GetPropAssignmentStr(bool setOrUnset)
+        public void AddAssignWrappedProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder)
+        {
+            if (this.IsNonPublic)
+            {
+                if (this.AllowNonPublic)
+                {
+                    roslynCodeBuilder.AddLine($"{this.WrappedObjPropName}.SetPropValue(\"{this.WrappedMemberName}\", {assignmentStr}, true)", true);
+                }
+            }
+            else
+            {
+                roslynCodeBuilder.AddAssignmentLine(WrappedClassMemberFullName, assignmentStr);
+            }
+        }
+
+        public void AddPropAssignmentStr(bool setOrUnset, RoslynCodeBuilder roslynCodeBuilder)
         {
             string assignmentStr =
                 setOrUnset ?
                     WrapperMemberName : $"default({(TheWrappedSymbol as IPropertySymbol).Type.AsNamed().GetFullTypeString()})";
-            string result =
-                $"{WrappedClassMemberFullName} = {assignmentStr}";
 
-            return result;
+            AddAssignWrappedProp(assignmentStr, roslynCodeBuilder);
         }
     }
 }

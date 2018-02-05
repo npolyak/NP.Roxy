@@ -989,6 +989,9 @@ namespace NP.Roxy
 
         internal static string GetClassName<TImplInterface, TBaseClass>(this string className)
         {
+            if (!className.IsNullOrEmpty())
+                return className;
+
             Type interfaceType = typeof(TImplInterface);
 
             Type baseClassType = typeof(TBaseClass);

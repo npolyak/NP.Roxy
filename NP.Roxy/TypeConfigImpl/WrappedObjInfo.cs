@@ -304,11 +304,9 @@ namespace NP.Roxy.TypeConfigImpl
             {
                 SetOrUnsetConcretizationDelegates(wrapperInitBuilder, false);
 
-                //wrapperInitBuilder.AddLine($"{TypeConfigBase.CALL_STATIC_UNINIT_METHOD}()", true);
-
                 foreach(MemberMapInfo propMemberMap in propMemberMaps)
                 {
-                    wrapperInitBuilder.AddLine($"{propMemberMap.GetPropAssignmentStr(addOrRemove)}", true);
+                    propMemberMap.AddPropAssignmentStr(addOrRemove, wrapperInitBuilder);
                 }
             }
 
@@ -321,10 +319,8 @@ namespace NP.Roxy.TypeConfigImpl
             {
                 foreach (MemberMapInfo propMemberMap in propMemberMaps)
                 {
-                    wrapperInitBuilder.AddLine($"{propMemberMap.GetPropAssignmentStr(addOrRemove)}", true);
+                    propMemberMap.AddPropAssignmentStr(addOrRemove, wrapperInitBuilder);
                 }
-
-                //wrapperInitBuilder.AddLine($"{TypeConfigBase.CALL_STATIC_INIT_METHOD}()", true);
 
                 SetOrUnsetConcretizationDelegates(wrapperInitBuilder, true);
             }

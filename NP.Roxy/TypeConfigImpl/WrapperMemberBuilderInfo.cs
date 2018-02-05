@@ -277,18 +277,7 @@ namespace NP.Roxy.TypeConfigImpl
 
                 foreach (MemberMapInfo memberMap in this.WrappedMembers)
                 {
-                    if (memberMap.IsNonPublic)
-                    {
-                        if (memberMap.AllowNonPublic)
-                        {
-                            roslynCodeBuilder.AddLine($"{memberMap.WrappedObjPropName}.SetPropValue(\"{memberMap.WrappedMemberName}\", value, true)", true);
-                        }
-                    }
-                    else
-                    {
-                        string wrappedMemberStr = memberMap.WrappedClassMemberFullName;
-                        roslynCodeBuilder.AddSettingValue(wrappedMemberStr);
-                    }
+                    memberMap.AddAssignWrappedProp("value", roslynCodeBuilder);
                 }
 
                 roslynCodeBuilder.Pop();

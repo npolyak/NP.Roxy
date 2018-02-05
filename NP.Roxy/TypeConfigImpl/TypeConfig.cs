@@ -408,6 +408,8 @@ namespace NP.Roxy.TypeConfigImpl
                 .DoForEach(wrappedObjInfo => wrappedObjInfo.AddMissingMaps(ImplementableSymbols.Select(symb => symb.Name).Distinct()));
         }
 
+
+        // sets wrapped member for every builder info
         void SetWrappedMembers()
         {
             this.EventBuilderInfos.Cast<WrapperMemberBuilderInfoBase>()
