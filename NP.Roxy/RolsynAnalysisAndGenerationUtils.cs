@@ -754,9 +754,25 @@ namespace NP.Roxy
             return types.SelectMany(type => type.GetAllReferencedAssemblies()).Distinct().ToList();
         }
 
+        public static bool Matches(this AssemblyIdentity assemblyIdentity, AssemblyName assemblyName)
+        {
+            return (assemblyIdentity.Name == assemblyName.Name) &&
+                   (assemblyIdentity.Version == assemblyName.Version);
+        }
+
         public static MetadataReference ToRef(this IAssemblySymbol assembly)
         {
-            return assembly.GetMetadata().GetReference();
+            AssemblyMetadata metaData = assembly.GetMetadata();
+
+            if (metaData != null)
+                return metaData.GetReference();
+
+            AssemblyIdentity id = assembly.Identity;
+
+           Assembly resultAssembly =
+                AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(assmbly => id.Matches(assmbly.GetName()));
+
+            return resultAssembly?.ToRef();
         }
 
         public static string MemberConcat(params string[] strs) =>

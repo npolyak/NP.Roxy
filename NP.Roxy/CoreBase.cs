@@ -209,7 +209,7 @@ namespace NP.Roxy
                 return;
 
             IEnumerable<MetadataReference> allMetadataReferences =
-                TheCompilation.References.Union(newAssemblies.Select(assemblySymbol => toMDReference(assemblySymbol))).ToList();
+                TheCompilation.References.Union(newAssemblies.SelectMany(assemblySymbol => toMDReference(assemblySymbol).ToCollection())).ToList();
 
             TheProj = TheProj.WithMetadataReferences(allMetadataReferences);
 
