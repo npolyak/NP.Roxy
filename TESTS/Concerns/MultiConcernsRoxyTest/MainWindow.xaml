@@ -3,17 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
-        xmlns:viewModels ="clr-namespace:MultiConcernsRoxyTest.ViewModels"
         Title="MainWindow" 
         Height="300" Width="300">
     <Grid>
-        <Grid.Resources>
-            <viewModels:TestBusinessGroupsVM x:Key="AllBusinessGroups"/>
-        </Grid.Resources>
         <ItemsControl x:Name="BusinessGroups"
                       HorizontalAlignment="Center"
                       VerticalAlignment="Top"
-                      ItemsSource="{Binding Source={StaticResource AllBusinessGroups}}"
+                      ItemsSource="{Binding }"
                       Margin="20">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>

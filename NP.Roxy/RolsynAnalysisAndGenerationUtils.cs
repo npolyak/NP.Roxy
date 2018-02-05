@@ -611,7 +611,7 @@ namespace NP.Roxy
             return typeSymbol as INamedTypeSymbol;
         }
 
-        public static string GetEventInvokationWrapperName(this string eventName)
+        public static string GetEventInvocationWrapperName(this string eventName)
             => $"__Invoke_{eventName}";
 
         const string FUNC = "Func";
@@ -979,16 +979,40 @@ namespace NP.Roxy
             return GetClassName(typeSymbol.Name, className);
         }
 
-        internal static string GetClassName<TImplInterface>(this string className)
+        internal static string GetClassName<TImplInterface, TBaseClass>(this string className)
         {
-            return typeof(TImplInterface).GetClassName(className);
+            Type interfaceType = typeof(TImplInterface);
+
+            Type baseClassType = typeof(TBaseClass);
+
+            if ( (interfaceType == typeof(NoInterface)) && 
+                 (baseClassType == typeof(NoClass)) )
+            {
+                throw new Exception("Roxy Usage Error: Cannot create a type class without interface and base class");
+            }
+
+            string result = "";
+
+            if (interfaceType != typeof(NoInterface))
+            {
+                result += interfaceType.GetTypeName() + "_";
+            }
+
+            if (baseClassType != typeof(NoClass))
+            {
+                result += baseClassType.GetTypeName() + "_";
+            }
+
+            result += "Default";
+
+            return result;
         }
 
         internal static bool Matches(this INamedTypeSymbol typeSymbol, Type type, Compilation compilation)
         {
             INamedTypeSymbol typeSymbolToCompare = type.GetTypeSymbol(compilation);
 
-            return typeSymbol.Equals(typeSymbolToCompare);
+            return typeSymbolToCompare.GetFullTypeString() == typeSymbol.GetFullTypeString();
         }
 
         public static bool CanBeConvertedImplicitly

@@ -1,21 +1,7 @@
 ﻿using MultiConcernsRoxyTest.RoxyViewModels;
 using NP.Roxy;
 using NP.Utilities.Behaviors;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace MultiConcernsRoxyTest
 {
@@ -24,28 +10,51 @@ namespace MultiConcernsRoxyTest
     /// </summary>
     public partial class MainWindow : Window
     {
-        public static void Set<TObj, TPart>(Expression<Func<TObj, TPart>> expression)
-        {
-            System.Linq.Expressions.Expression body = expression.Body;
-
-            ParameterExpression parameterExpression = body as ParameterExpression;
-
-            MemberExpression memberExpression = body as MemberExpression;
-        }
-
         public MainWindow()
         {
             InitializeComponent();
 
             RoxyModelAssembler.AssembleSelectableRemovablePerson();
 
-            ISelectableRemovablePerson selectableRemovablePerson =
-                Core.GetInstanceOfGeneratedType<ISelectableRemovablePerson>();
-
             RoxyModelAssembler.AssembleSelectableRemovableBusinessGroup();
 
-            ISelectableRemovableBusinessGroup businessGroup = 
+            RoxyModelAssembler.AssembleBusinessGroupsCollection();
+
+            SingleSelectionObservableCollection<ISelectableRemovableBusinessGroup> dataContext =
+                Core.GetInstanceOfGeneratedType<SingleSelectionObservableCollection<ISelectableRemovableBusinessGroup>>();
+
+            this.DataContext = dataContext;
+
+           ISelectableRemovableBusinessGroup businessGroup1 = 
                 Core.GetInstanceOfGeneratedType<ISelectableRemovableBusinessGroup>();
+
+            businessGroup1.Name = "Astrologists";
+            dataContext.Add(businessGroup1);
+
+            ISelectableRemovablePerson person1 = Core.GetInstanceOfGeneratedType<ISelectableRemovablePerson>();
+            person1.FirstName = "Joe";
+            person1.LastName = "Doe";
+            businessGroup1.People.Add(person1);
+
+            ISelectableRemovablePerson person2 = Core.GetInstanceOfGeneratedType<ISelectableRemovablePerson>();
+            person2.FirstName = "Jane";
+            person2.LastName = "Dane";
+            businessGroup1.People.Add(person2);
+
+            ISelectableRemovableBusinessGroup businessGroup2 =
+                Core.GetInstanceOfGeneratedType<ISelectableRemovableBusinessGroup>();
+            businessGroup2.Name = "Alchemists";
+            dataContext.Add(businessGroup2);
+
+            ISelectableRemovablePerson person3 = Core.GetInstanceOfGeneratedType<ISelectableRemovablePerson>();
+            person3.FirstName = "Michael";
+            person3.LastName = "Mont";
+            businessGroup2.People.Add(person3);
+
+            ISelectableRemovablePerson person4 = Core.GetInstanceOfGeneratedType<ISelectableRemovablePerson>();
+            person4.FirstName = "Michelle";
+            person4.LastName = "Mitchell";
+            businessGroup2.People.Add(person4);
         }
     }
 }

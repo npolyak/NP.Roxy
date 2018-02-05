@@ -130,7 +130,7 @@ namespace NP.Roxy.TypeConfigImpl
             string addOrRemoveStr = addOrRemoveHandler ? "+" : "-";
 
             string result =
-                $"{WrappedClassMemberFullName} {addOrRemoveStr}= {WrapperMemberName.GetEventInvokationWrapperName()}";
+                $"{WrappedClassMemberFullName} {addOrRemoveStr}= {WrapperMemberName.GetEventInvocationWrapperName()}";
 
             return result;
         }

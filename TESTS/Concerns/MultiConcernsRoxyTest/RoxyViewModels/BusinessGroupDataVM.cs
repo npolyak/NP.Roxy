@@ -12,6 +12,6 @@ namespace MultiConcernsRoxyTest.RoxyViewModels
     {
         string Name { get; set; }
 
-        SingleSelectionObservableCollection<ISelectableRemovablePerson> People { get; }
+        ObservableCollection<ISelectableRemovablePerson> People { get; }
     }
 }

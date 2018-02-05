@@ -1,16 +1,18 @@
 ﻿using NP.Roxy;
 using NP.Roxy.TypeConfigImpl;
+using NP.Utilities;
 using NP.Utilities.Behaviors;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace MultiConcernsRoxyTest.RoxyViewModels
 {
-    public interface ISelectableRemovableItem<T> : ISelectableItem<T>, IRemovable
+    public interface ISelectableRemovableItem<T> : ISelectableItem<T>, IRemovable, INotifyPropertyChanged
        where T : ISelectableItem<T>
     {
     }
@@ -32,7 +34,6 @@ namespace MultiConcernsRoxyTest.RoxyViewModels
     public interface ISelectableRemovablePersonWrapper :
         ISelectableRemovableWrapper<ISelectableRemovablePerson>
     {
-
     }
 
     public interface ISelectableRemovableBusinessGroup :
@@ -42,11 +43,16 @@ namespace MultiConcernsRoxyTest.RoxyViewModels
 
     }
 
+    public interface IRemovableCollectionBehaviorWrapper
+    {
+        RemovableCollectionBehavior TheRemovableCollectionBehavior { get; }
+    }
+
     public interface ISelectableRemovableBusinessGroupWrapper :
-        ISelectableRemovableWrapper<ISelectableRemovableBusinessGroup>
+        ISelectableRemovableWrapper<ISelectableRemovableBusinessGroup>,
+        IRemovableCollectionBehaviorWrapper
     {
         ParentChildSelectionBehavior<ISelectableRemovableBusinessGroup, ISelectableRemovablePerson> TheParentChildSelectionBehavior { get; }
-        RemovableCollectionBehavior TheRemovableCollectionBehavior { get; }
     }
 
     public static class RoxyModelAssembler
@@ -54,7 +60,9 @@ namespace MultiConcernsRoxyTest.RoxyViewModels
         public static void AssembleSelectableRemovablePerson()
         {
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<ISelectableRemovablePerson, ISelectableRemovablePersonWrapper>();
+                Core.FindOrCreateTypeConfig<ISelectableRemovablePerson, PersonDataVM, ISelectableRemovablePersonWrapper>();
+
+            typeConfig.SetEventArgThisIdx(nameof(INotifyPropertyChanged.PropertyChanged), 0);
 
             typeConfig.ConfigurationCompleted();
         }
@@ -66,7 +74,13 @@ namespace MultiConcernsRoxyTest.RoxyViewModels
 
             typeConfig.SetInit<SingleSelectionObservableCollection<ISelectableRemovablePerson>>(nameof(IBusinessGroup.People));
 
-            Type t= typeof(ParentChildSelectionBehavior<,>);
+            typeConfig.SetEventArgThisIdx(nameof(INotifyPropertyChanged.PropertyChanged), 0);
+
+            typeConfig.SetThisMemberMap
+            (
+                nameof(ISelectableRemovableBusinessGroupWrapper.TheParentChildSelectionBehavior),
+                nameof(ParentChildSelectionBehavior<ISelectableRemovableBusinessGroup, ISelectableRemovablePerson>.Parent)
+            );
 
             typeConfig.SetMemberMap
             (
@@ -80,6 +94,20 @@ namespace MultiConcernsRoxyTest.RoxyViewModels
                 nameof(ISelectableRemovableBusinessGroupWrapper.TheRemovableCollectionBehavior),
                 nameof(RemovableCollectionBehavior.TheCollection),
                 nameof(IBusinessGroup.People)
+            );
+
+            typeConfig.ConfigurationCompleted();
+        }
+
+        public static void AssembleBusinessGroupsCollection()
+        {
+            ITypeConfig typeConfig =
+                Core.FindOrCreateTypeConfig<NoInterface, SingleSelectionObservableCollection<ISelectableRemovableBusinessGroup>, IRemovableCollectionBehaviorWrapper>();
+
+            typeConfig.SetThisMemberMap
+            (
+                nameof(IRemovableCollectionBehaviorWrapper.TheRemovableCollectionBehavior),
+                nameof(RemovableCollectionBehavior.TheCollection)
             );
 
             typeConfig.ConfigurationCompleted();

@@ -689,7 +689,7 @@ namespace NP.Roxy
             (
                 eventName,
                 delegateInvokeMethodSymbol,
-                eventName.GetEventInvokationWrapperName(),
+                eventName.GetEventInvocationWrapperName(),
                 false,
                 Accessibility.Private,
                 false,

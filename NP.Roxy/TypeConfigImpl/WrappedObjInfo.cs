@@ -167,7 +167,6 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetMap(string wrappedMemberName, string wrapperMemberName, bool? allowNonPublic = null)
         {
             MemberMapInfo map = FindMapByWrapperMemberName(wrapperMemberName);
-
            
             if (map == null)
             {

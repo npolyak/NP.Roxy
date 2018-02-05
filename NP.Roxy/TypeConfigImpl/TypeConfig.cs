@@ -56,11 +56,18 @@ namespace NP.Roxy.TypeConfigImpl
 
         void SetAllowNonPublicForAllMembers(string wrappedObjPropName);
 
+        void SetThisMemberMap
+        (
+            string wrappedObjPropName,
+            string wrappedMemberName,
+            bool? allowNonPublic = null
+        );
+
         void SetMemberMap
         (
             string wrappedObjPropName, 
             string wrappedMemberName, 
-            string wrapperMemberName, 
+            string wrapperMemberName,
             bool? allowNonPublic = null);
 
         void SetMemberMapAllowNonPublic
@@ -285,7 +292,6 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
-
         public void SetMemberMap
         (
             string wrappedObjPropName, 
@@ -300,6 +306,17 @@ namespace NP.Roxy.TypeConfigImpl
 
             wrappedObjInfo.SetMap(wrappedMemberName, wrapperMemberName, allowNonPublic);
         }
+
+        public void SetThisMemberMap
+        (
+            string wrappedObjPropName,
+            string wrappedMemberName,
+            bool? allowNonPublic = null
+        )
+        {
+            SetMemberMap(wrappedObjPropName, wrappedMemberName, "this", allowNonPublic);
+        }
+
 
 
         public void SetMemberMapAllowNonPublic
