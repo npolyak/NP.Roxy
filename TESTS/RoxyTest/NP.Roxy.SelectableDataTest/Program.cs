@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis;
 using NP.Paradigms;
 using NP.Roxy;
 using NP.Roxy.TypeConfigImpl;
+using NP.Utilities.Behaviors;
 using System;
 using System.Collections.Generic;
 using System.Linq;

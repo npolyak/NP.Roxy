@@ -131,6 +131,8 @@ namespace NP.Roxy.TypeConfigImpl
         public IEnumerable<MemberMapInfo> EventWrappedMemberNameMaps =>
             WrappedMemberNameMaps.Where(memberMap => memberMap.TheWrappedSymbol is IEventSymbol);
 
+        public IEnumerable<MemberMapInfo> PropWrappedMemberNameMaps =>
+            WrappedMemberNameMaps.Where(memberMap => memberMap.TheWrappedSymbol is IPropertySymbol);
 
         public void SetFromParentSymbol(INamedTypeSymbol parentTypeSymbol)
         {
@@ -165,7 +167,6 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetMap(string wrappedMemberName, string wrapperMemberName, bool? allowNonPublic = null)
         {
             MemberMapInfo map = FindMapByWrapperMemberName(wrapperMemberName);
-
            
             if (map == null)
             {
@@ -282,7 +283,12 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
-        string BuildWrapperInit(IEnumerable<MemberMapInfo> memberMaps, bool addOrRemove)
+        string BuildWrapperInit
+        (
+            IEnumerable<MemberMapInfo> eventMemberMaps, 
+            IEnumerable<MemberMapInfo> propMemberMaps,
+            bool addOrRemove
+        )
         {
             RoslynCodeBuilder wrapperInitBuilder = new RoslynCodeBuilder();
 
@@ -298,17 +304,23 @@ namespace NP.Roxy.TypeConfigImpl
             {
                 SetOrUnsetConcretizationDelegates(wrapperInitBuilder, false);
 
-                wrapperInitBuilder.AddLine($"{TypeConfigBase.CALL_STATIC_UNINIT_METHOD}()", true);
+                foreach(MemberMapInfo propMemberMap in propMemberMaps)
+                {
+                    propMemberMap.AddPropAssignmentStr(addOrRemove, wrapperInitBuilder);
+                }
             }
 
-            foreach (MemberMapInfo eventMemberMap in memberMaps)
+            foreach (MemberMapInfo eventMemberMap in eventMemberMaps)
             {
                 wrapperInitBuilder.AddLine(eventMemberMap.GetEventHandlerAssignmentStr(addOrRemove), true);
             }
 
             if (addOrRemove)
             {
-                wrapperInitBuilder.AddLine($"{TypeConfigBase.CALL_STATIC_INIT_METHOD}()", true);
+                foreach (MemberMapInfo propMemberMap in propMemberMaps)
+                {
+                    propMemberMap.AddPropAssignmentStr(addOrRemove, wrapperInitBuilder);
+                }
 
                 SetOrUnsetConcretizationDelegates(wrapperInitBuilder, true);
             }
@@ -320,22 +332,22 @@ namespace NP.Roxy.TypeConfigImpl
 
         public void AddWrappedClass(RoslynCodeBuilder roslynCodeBuilder)
         {
-            string beforeSetterStr = BuildWrapperInit(EventWrappedMemberNameMaps, false);
+            if (this.WrappedObjNamedTypeSymbol.IsAbstract)
+            {
+                // here, the concretization is created
+                this.ConcreteWrappedObjNamedTypeSymbol =
+                    this.TheCore.FindOrCreateConcretizationTypeConf(this.WrappedObjNamedTypeSymbol).TheSelfTypeSymbol;
+            }
 
-            string afterSetterStr = BuildWrapperInit(EventWrappedMemberNameMaps.Reverse(), true);
+            string beforeSetterStr = BuildWrapperInit(EventWrappedMemberNameMaps, PropWrappedMemberNameMaps, false);
+
+            string afterSetterStr = BuildWrapperInit(EventWrappedMemberNameMaps.Reverse(), PropWrappedMemberNameMaps.Reverse(), true);
 
             Accessibility setterAccessibility = Accessibility.Private;
 
             if (this.WrappedObjPropSymbol.SetMethod != null)
             {
                 setterAccessibility = this.WrappedObjPropSymbol.GetMethod.DeclaredAccessibility;
-            }
-
-            if (this.WrappedObjNamedTypeSymbol.IsAbstract)
-            {
-                // here, the concretization is created
-                this.ConcreteWrappedObjNamedTypeSymbol =
-                    this.TheCore.FindOrCreateConcretizationTypeConf(this.WrappedObjNamedTypeSymbol).TheSelfTypeSymbol;
             }
 
             roslynCodeBuilder.AddPropWithBackingStore
@@ -368,13 +380,12 @@ namespace NP.Roxy.TypeConfigImpl
             if (WrappedObjNamedTypeSymbol.TypeKind == TypeKind.Enum)
                 return;
 
-            roslynCodeBuilder
-                .AddAssignmentLine
-                (
-                    this.WrappedObjPropName,
-                    $"TheCore.CreateClassObj<{WrappedObjNamedTypeSymbol.GetFullTypeString()}>(\"{ConcreteWrappedObjClassName}\")"
-                    //$"new {this.WrappedObjNamedTypeSymbol.GetFullTypeString()}()"
-                );
+            roslynCodeBuilder.AddAssignCoreObj
+            (
+                this.WrappedObjPropName, 
+                WrappedObjNamedTypeSymbol, 
+                ConcreteWrappedObjClassName
+            );
         }
     }
 }

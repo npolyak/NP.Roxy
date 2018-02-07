@@ -49,7 +49,7 @@ namespace NP.Roxy.Tests.EmbeddingConcretization
         {
             #region CONCRETIZATION SAMPLE
             //MyDataImplementorClass classConcretization =
-            //    Core.GetClassConcretization<MyDataImplementorClass>();
+            //    Core.Concretize<MyDataImplementorClass>();
             #endregion CONCRETIZATION SAMPLE
 
             #region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
@@ -65,7 +65,7 @@ namespace NP.Roxy.Tests.EmbeddingConcretization
             //Console.WriteLine(myData.GetFullName());
             #endregion WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
 
-            ITypeConfig<IMyData, NoClass, WrapperInterface1> typeConfig1 =
+            ITypeConfig typeConfig1 =
                 Core.FindOrCreateTypeConfig<IMyData, WrapperInterface1>("MyType1");
 
             typeConfig1.ConfigurationCompleted();
@@ -75,7 +75,16 @@ namespace NP.Roxy.Tests.EmbeddingConcretization
             myData1.FirstName = "Joe";
             myData1.LastName = "Doe";
 
+            Core.Save("GeneratedCode");
+
             Console.WriteLine(myData1.GetFullName());
+
+            ITypeConfig typeConfig2 =
+                Core.FindOrCreateTypeConfig<IMyData, MyData, WrapperInterface>("MyType2");
+
+            typeConfig2.ConfigurationCompleted();
+
+            IMyData myData2 = Core.GetInstanceOfGeneratedType<IMyData>("MyType2");
         }
     }
 }

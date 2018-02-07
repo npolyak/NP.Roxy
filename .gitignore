@@ -47,3 +47,6 @@
 /NP.Roxy/DA_NU
 /NP.Roxy/NP.Roxy.0.9.1.nupkg
 /NP.Roxy/NP.Roxy.0.9.1.1.nupkg
+/TESTS/Concerns/MultiConcernsRoxyDemo/obj/Debug
+/TESTS/Concerns/MultiConcernsRoxyTest/bin/Debug
+/TESTS/Concerns/MultiConcernsRoxyTest/obj/Debug

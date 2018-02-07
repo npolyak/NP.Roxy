@@ -130,9 +130,42 @@ namespace NP.Roxy.TypeConfigImpl
             string addOrRemoveStr = addOrRemoveHandler ? "+" : "-";
 
             string result =
-                $"{WrappedClassMemberFullName} {addOrRemoveStr}= {WrapperMemberName.GetEventInvokationWrapperName()}";
+                $"{WrappedClassMemberFullName} {addOrRemoveStr}= {WrapperMemberName.GetEventInvocationWrapperName()}";
 
             return result;
+        }
+
+        public void AddAssignWrappedProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder)
+        {
+            if (this.IsNonPublic)
+            {
+                if (this.AllowNonPublic)
+                {
+                    roslynCodeBuilder.AddLine($"{this.WrappedObjPropName}.SetPropValue(\"{this.WrappedMemberName}\", {assignmentStr}, true)", true);
+                }
+                else
+                {
+                    return; // do not add anything
+                }
+            }
+            else
+            {
+                roslynCodeBuilder.AddAssignmentLine(WrappedClassMemberFullName, assignmentStr);
+            }
+        }
+
+        IPropertySymbol TheWrappedPropSymbol => TheWrappedSymbol as IPropertySymbol;
+
+        public void AddPropAssignmentStr(bool setOrUnset, RoslynCodeBuilder roslynCodeBuilder)
+        {
+            if (this.TheWrappedPropSymbol?.HasSetter() != true)
+                return;
+
+            string assignmentStr =
+                setOrUnset ?
+                    WrapperMemberName : $"default({(TheWrappedSymbol as IPropertySymbol).Type.AsNamed().GetFullTypeString()})";
+
+            AddAssignWrappedProp(assignmentStr, roslynCodeBuilder);
         }
     }
 }

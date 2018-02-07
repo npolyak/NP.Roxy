@@ -12,6 +12,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
+using NP.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -131,7 +132,9 @@ namespace NP.Roxy
 
             using (MemoryStream memoryStream = new MemoryStream())
             {
+                //StopWatch.ResetStatic();
                 EmitResult result = compilation.Emit(memoryStream);
+                //StopWatch.PrintDifference("Emit Time: ");
 
                 if (!result.Success)
                 {

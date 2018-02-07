@@ -41,7 +41,7 @@ namespace NP.Roxy.Tests.NonPublicMembers
         static void Main(string[] args)
         {
             #region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
-            ITypeConfig<IMyData, NoClass, WrapperInterface> typeConfig =
+            ITypeConfig typeConfig =
                 Core.FindOrCreateTypeConfig<IMyData, NoClass, WrapperInterface>("MyType");
 
             typeConfig.SetMemberMap
@@ -52,7 +52,7 @@ namespace NP.Roxy.Tests.NonPublicMembers
                 true
             );
 
-            typeConfig.SetPropMapAllowNonPublic(nameof(WrapperInterface.TheClass), nameof(IMyData.GetFullName));
+            typeConfig.SetMemberMapAllowNonPublic(nameof(WrapperInterface.TheClass), nameof(IMyData.GetFullName));
 
             typeConfig.ConfigurationCompleted();
 
