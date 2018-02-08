@@ -50,3 +50,5 @@
 /TESTS/Concerns/MultiConcernsRoxyDemo/obj/Debug
 /TESTS/Concerns/MultiConcernsRoxyTest/bin/Debug
 /TESTS/Concerns/MultiConcernsRoxyTest/obj/Debug
+/TESTS/RoxyTest/NP.Roxy.OverloadingTest/bin/Debug
+/TESTS/RoxyTest/NP.Roxy.OverloadingTest/obj/Debug
