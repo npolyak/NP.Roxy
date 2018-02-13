@@ -97,7 +97,11 @@ namespace NP.Roxy.TypeConfigImpl
 
     public interface ITypeConfig<TWrapperInterface> : ITypeConfig
     {
-
+        void SetPropMemberMap<TWrapper, TWrappedObj, TWrapperProp>
+        (
+            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TWrappedObj, TWrapperProp>> wrappedPropChooser,
+            Expression<Func<TWrapper, TWrapperProp>> wrapperPropChooser);
     }
 
 
@@ -284,6 +288,18 @@ namespace NP.Roxy.TypeConfigImpl
             {
                 wrappedObjInfo.AllowNonPublicForAllMemberMaps = true;
             }
+        }
+
+        public void SetPropMemberMap<TImplementer, TWrappedObj, TWrapperProp>
+        (
+            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser, 
+            Expression<Func<TWrappedObj, TWrapperProp>> wrappedPropChooser, 
+            Expression<Func<TImplementer, TWrapperProp>> wrapperPropChooser)
+        {
+            string wrappedObjPropName = wrappedObjChooser.GetMemberName();
+            string wrappedMemberName = wrappedPropChooser.GetMemberName();
+            string wrapperMemberName = wrapperPropChooser.GetMemberName();
+            SetMemberMap(wrappedObjPropName, wrappedMemberName, wrapperMemberName);
         }
 
         public void SetMemberMap

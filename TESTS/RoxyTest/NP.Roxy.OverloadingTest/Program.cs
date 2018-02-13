@@ -22,10 +22,34 @@ using System.Threading.Tasks;
 
 namespace NP.Roxy.OverloadingTest
 {
+    public interface IMyDataImplWrapper
+    {
+        MyDataImplementorClass DataImplementor { get; }
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
+            ITypeConfig<IMyDataImplWrapper> typeConfig =
+                Core.FindOrCreateTypeConfig<IMyData, IMyDataImplWrapper>();
+
+            typeConfig.SetPropMemberMap<IMyData, MyDataImplementorClass, string>
+            (
+                (wrapper) => wrapper.DataImplementor,
+                (dataImpl) => dataImpl.FullName,
+                (data) => data.FullName
+            );
+
+            typeConfig.ConfigurationCompleted();
+
+            IMyData myData =
+                Core.GetInstanceOfGeneratedType<IMyData>();
+
+            myData.FirstName = "Joe";
+            myData.LastName = "Doe";
+
+            Console.WriteLine(myData.FullName);
         }
     }
 }
