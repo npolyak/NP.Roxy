@@ -23,7 +23,7 @@ namespace NP.Roxy.OverloadingTest
 
         public abstract string LastName { get; }
 
-        public string FullName
+        public string FullName1
         {
             get => $"{LastName}, {FirstName}";
         }

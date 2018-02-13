@@ -93,6 +93,12 @@ namespace NP.Roxy.TypeConfigImpl
         void SetInit(string propName, INamedTypeSymbol typeSymbol);
 
         void SetInit<TInit>(string propName);
+
+        void SetPropGetter<TImpl, TProp>
+        (
+            Expression<Func<TImpl, TProp>> propNameGetter,
+            Expression<Func<TImpl, TProp>> propGetter
+        );
     }
 
     public interface ITypeConfig<TWrapperInterface> : ITypeConfig
@@ -288,6 +294,14 @@ namespace NP.Roxy.TypeConfigImpl
             {
                 wrappedObjInfo.AllowNonPublicForAllMemberMaps = true;
             }
+        }
+        public void SetPropGetter<TImpl, TProp>
+        (
+            Expression<Func<TImpl, TProp>> propNameGetter,
+            Expression<Func<TImpl, TProp>> propGetter
+        )
+        {
+
         }
 
         public void SetPropMemberMap<TImplementer, TWrappedObj, TWrapperProp>

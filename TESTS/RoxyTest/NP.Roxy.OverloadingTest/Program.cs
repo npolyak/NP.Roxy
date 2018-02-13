@@ -31,13 +31,15 @@ namespace NP.Roxy.OverloadingTest
     {
         static void Main(string[] args)
         {
+            #region TypeSave prop map setting
+
             ITypeConfig<IMyDataImplWrapper> typeConfig =
                 Core.FindOrCreateTypeConfig<IMyData, IMyDataImplWrapper>();
 
             typeConfig.SetPropMemberMap<IMyData, MyDataImplementorClass, string>
             (
                 (wrapper) => wrapper.DataImplementor,
-                (dataImpl) => dataImpl.FullName,
+                (dataImpl) => dataImpl.FullName1,
                 (data) => data.FullName
             );
 
@@ -50,6 +52,8 @@ namespace NP.Roxy.OverloadingTest
             myData.LastName = "Doe";
 
             Console.WriteLine(myData.FullName);
+
+            # endregion TypeSave prop map setting
         }
     }
 }
