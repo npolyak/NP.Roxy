@@ -12,8 +12,10 @@
 using Microsoft.CodeAnalysis;
 using NP.Roxy;
 using NP.Roxy.TypeConfigImpl;
+using NP.Utilities.Expressions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -27,33 +29,50 @@ namespace NP.Roxy.OverloadingTest
         MyDataImplementorClass DataImplementor { get; }
     }
 
+
     class Program
     {
         static void Main(string[] args)
         {
             #region TypeSave prop map setting
 
-            ITypeConfig<IMyDataImplWrapper> typeConfig =
-                Core.FindOrCreateTypeConfig<IMyData, IMyDataImplWrapper>();
+            //ITypeConfig<IMyDataImplWrapper> typeConfig =
+            //    Core.FindOrCreateTypeConfig<IMyData, IMyDataImplWrapper>();
 
-            typeConfig.SetPropMemberMap<IMyData, MyDataImplementorClass, string>
+            //typeConfig.SetPropMemberMap<IMyData, MyDataImplementorClass, string>
+            //(
+            //    (wrapper) => wrapper.DataImplementor,
+            //    (dataImpl) => dataImpl.FullName1,
+            //    (data) => data.FullName
+            //);
+
+            //typeConfig.ConfigurationCompleted();
+
+            //IMyData myData =
+            //    Core.GetInstanceOfGeneratedType<IMyData>();
+
+            //myData.FirstName = "Joe";
+            //myData.LastName = "Doe";
+
+            //Console.WriteLine(myData.FullName);
+
+            #endregion TypeSave prop map setting
+
+            #region Prop Getter 
+            ITypeConfig typeConfig =
+                Core.FindOrCreateTypeConfig<IMyData, NoInterface>();
+
+            typeConfig.SetPropGetter<IMyData, string>
             (
-                (wrapper) => wrapper.DataImplementor,
-                (dataImpl) => dataImpl.FullName1,
-                (data) => data.FullName
+                (data) => data.FullName,
+                (data) => data.FirstName + " " + data.LastName
             );
 
             typeConfig.ConfigurationCompleted();
 
-            IMyData myData =
-                Core.GetInstanceOfGeneratedType<IMyData>();
+            #endregion Prop Getter 
 
-            myData.FirstName = "Joe";
-            myData.LastName = "Doe";
-
-            Console.WriteLine(myData.FullName);
-
-            # endregion TypeSave prop map setting
+            Core.Save("GeneratedCode");
         }
     }
 }

@@ -290,6 +290,15 @@ namespace NP.Roxy
             AddLine($"[{attrName}(\"{memberName}\")]");
         }
 
+        public void AddGetterProp(IPropertySymbol propertySymbol, string expressionStr)
+        {
+            AddPropOpening(propertySymbol);
+
+            AddLine($"get => {expressionStr}", true);
+
+            Pop();
+        }
+
         public void AddDelegatesCallingProp(IPropertySymbol propertySymbol)
         {
             string propName = propertySymbol.Name;

@@ -12,9 +12,11 @@
 using Microsoft.CodeAnalysis;
 using NP.Utilities;
 using NP.Utilities.Attributes;
+using NP.Utilities.Expressions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -39,6 +41,8 @@ namespace NP.Roxy.TypeConfigImpl
     internal abstract class WrapperMemberBuilderInfo<TSymbol> : WrapperMemberBuilderInfoBase
         where TSymbol : ISymbol
     {
+        public Compilation TheCompilation { get; private set; }
+
         public TSymbol WrapperSymbol { get; }
 
         public bool MustImplement => WrapperSymbol.IsAbstract || OverrideVirtual;
@@ -51,6 +55,8 @@ namespace NP.Roxy.TypeConfigImpl
 
         public bool OverrideVirtual { get; private set; } = false;
         public bool IncludeBaseVirtualInOverride { get; private set; } = false;
+
+        public bool NoWrappers { get; protected set; } = false;
 
         public override void SetOverrideVirtual(bool includeBase)
         {
@@ -66,10 +72,12 @@ namespace NP.Roxy.TypeConfigImpl
 
         public WrapperMemberBuilderInfo
         (
-            TSymbol wrapperSymbol
+            TSymbol wrapperSymbol,
+            Compilation compilation
         )
         {
             this.WrapperSymbol = wrapperSymbol;
+            this.TheCompilation = compilation;
         }
 
         internal IMemberCodeBuilder<TSymbol> TheCodeBuilder { get; set; } = null;
@@ -82,21 +90,25 @@ namespace NP.Roxy.TypeConfigImpl
             RoslynCodeBuilder roslynCodeBuilder
         );
 
+        protected virtual void BuildIfNoWrappers(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            if (TheCodeBuilder != null)
+            {
+                TheCodeBuilder.Build(this.WrapperSymbol, roslynCodeBuilder);
+                return;
+            }
+
+            if (DefaultCodeBuilder != null)
+            {
+                DefaultCodeBuilder.Build(this.WrapperSymbol, roslynCodeBuilder);
+            }
+        }
 
         internal void Build(RoslynCodeBuilder roslynCodeBuilder)
         {
-            if (this.WrappedMembers.IsNullOrEmpty())
+            if (NoWrappers || this.WrappedMembers.IsNullOrEmpty())
             {
-                if (TheCodeBuilder != null)
-                {
-                    TheCodeBuilder.Build(this.WrapperSymbol, roslynCodeBuilder);
-                    return;
-                }
-
-                if (DefaultCodeBuilder != null)
-                {
-                    DefaultCodeBuilder.Build(this.WrapperSymbol, roslynCodeBuilder);
-                }
+                BuildIfNoWrappers(roslynCodeBuilder);
 
                 return;
             }
@@ -116,8 +128,9 @@ namespace NP.Roxy.TypeConfigImpl
 
         public EventWrapperMemberBuilderInfo
         (
-            IEventSymbol wrapperSymbol
-        ) : base(wrapperSymbol)
+            IEventSymbol wrapperSymbol,
+            Compilation compilation
+        ) : base(wrapperSymbol, compilation)
         {
             AttributeData attrData = WrapperSymbol.GetAttrSymbol(typeof(EventThisIdxAttribute));
 
@@ -164,21 +177,55 @@ namespace NP.Roxy.TypeConfigImpl
 
         public PropertyWrapperMemberBuilderInfo
         (
-            IPropertySymbol wrapperSymbol
-        ) : base(wrapperSymbol)
+            IPropertySymbol wrapperSymbol,
+            Compilation compilation
+        ) : base(wrapperSymbol, compilation)
         {
             this.DefaultCodeBuilder = AutoPropBuilder.TheAutoPropBuilder;
         }
 
+        FirstArgToThisExprStringBuilder _expressionBuilder;
+        public string ExpressionStr { get; private set; }
+
+        protected override void BuildIfNoWrappers(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            if (ExpressionStr == null)
+            {
+                base.BuildIfNoWrappers(roslynCodeBuilder);
+            }
+            else
+            {
+                roslynCodeBuilder.AddGetterProp(this.WrapperSymbol, ExpressionStr);
+            }
+        }
+
+        public void SetPropGetter<TImpl, TProp>(Expression<Func<TImpl, TProp>> propGetterExpression)
+        {
+            this.NoWrappers = true;
+
+            Type propType = typeof(TProp);
+
+            if (!this.WrapperTypeSymbol.Matches(propType, this.TheCompilation))
+                throw new Exception($"Roxy Usage Error: prop type {propType.Name} does not match the required type {this.WrapperTypeSymbol.Name}.");
+
+            if (this.WrapperSymbol.HasSetter())
+                throw new Exception($"Roxy Usage Error: Cannot set expression for property {this.WrapperSymbol.Name} since it has a setter");
+
+            _expressionBuilder = new FirstArgToThisExprStringBuilder();
+
+            _expressionBuilder.Visit(propGetterExpression);
+
+            ExpressionStr = _expressionBuilder.ToStr();
+        }
+
         public void SetInit
         (
-            INamedTypeSymbol initTypeSymbol, 
-            Compilation compilation
+            INamedTypeSymbol initTypeSymbol
         )
         {
             ForceCreateSetter = true;
 
-            if (!compilation.CanBeConvertedImplicitly(initTypeSymbol, this.WrapperTypeSymbol))
+            if (!TheCompilation.CanBeConvertedImplicitly(initTypeSymbol, this.WrapperTypeSymbol))
             {
                 throw new Exception($"Roxy Usage Error: Cannot initialize property '{WrapperSymbol.Name}' to type '{initTypeSymbol.GetFullTypeString()}'");
             }
@@ -291,8 +338,9 @@ namespace NP.Roxy.TypeConfigImpl
     {
         public MethodWrapperMemberBuilderInfo
         (
-            IMethodSymbol wrapperSymbol
-        ) : base(wrapperSymbol)
+            IMethodSymbol wrapperSymbol,
+            Compilation compilation
+        ) : base(wrapperSymbol, compilation)
         {
         }
 

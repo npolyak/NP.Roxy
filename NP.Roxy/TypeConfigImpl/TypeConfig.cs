@@ -128,8 +128,13 @@ namespace NP.Roxy.TypeConfigImpl
 
         public INamedTypeSymbol WrapInterfaceTypeSymbol { get; private set; }
 
+        // all types that can be used to reference the object
+        protected IEnumerable<INamedTypeSymbol> AllReferenceTypesSymbols =>
+            new[] { ImplInterfaceTypeSymbol, SuperClassTypeSymbol };
+
+        // all implemented types 
         protected IEnumerable<INamedTypeSymbol> AllImplementedTypesSymbols =>
-            new[] { ImplInterfaceTypeSymbol, SuperClassTypeSymbol, WrapInterfaceTypeSymbol };
+            AllReferenceTypesSymbols.Union(WrapInterfaceTypeSymbol.ToCollection());
 
         public bool HasInterfaceToImplement =>
             ImplInterfaceTypeSymbol.Name != nameof(NoInterface);
@@ -301,7 +306,25 @@ namespace NP.Roxy.TypeConfigImpl
             Expression<Func<TImpl, TProp>> propGetter
         )
         {
+            string propName = propNameGetter.GetMemberName();
 
+            Type implType = typeof(TImpl);
+
+            INamedTypeSymbol implTypeSymbol = 
+                implType.GetTypeSymbol(this.TheCompilation);
+
+            if (!this.AllReferenceTypesSymbols.Contains(implTypeSymbol))
+            {
+                string errorMessage =
+                    $"Roxy Usage Error: referenced interface {ImplInterfaceTypeSymbol.Name} and class {SuperClassTypeSymbol}" +
+                    $" do not include property {propName} container {implTypeSymbol.Name}";
+                throw new Exception(errorMessage);
+            }
+
+            PropertyWrapperMemberBuilderInfo propBuilderInfo =
+                this.GetPropWrapperMemberBuilderInfo(propName);
+
+            propBuilderInfo.SetPropGetter<TImpl, TProp>(propGetter);
         }
 
         public void SetPropMemberMap<TImplementer, TWrappedObj, TWrapperProp>
@@ -414,16 +437,16 @@ namespace NP.Roxy.TypeConfigImpl
         {
             this.EventBuilderInfos =
                 this.ImplementableSymbols.GetSymbolsOfType<IEventSymbol>()
-                    .Select(symbol => new EventWrapperMemberBuilderInfo(symbol)).ToList();
+                    .Select(symbol => new EventWrapperMemberBuilderInfo(symbol, this.TheCompilation)).ToList();
 
             this.PropBuilderInfos =
                  this.ImplementableSymbols.GetSymbolsOfType<IPropertySymbol>()
-                     .Select(symbol => new PropertyWrapperMemberBuilderInfo(symbol)).ToList();
+                     .Select(symbol => new PropertyWrapperMemberBuilderInfo(symbol, this.TheCompilation)).ToList();
 
             this.MethodBuilderInfos =
                 this.ImplementableSymbols.GetSymbolsOfType<IMethodSymbol>()
                     .Where(symbol => symbol.AssociatedSymbol == null)
-                    .Select(symbol => new MethodWrapperMemberBuilderInfo(symbol)).ToList();
+                    .Select(symbol => new MethodWrapperMemberBuilderInfo(symbol, this.TheCompilation)).ToList();
         }
 
         void SetMissingMaps()
@@ -610,17 +633,23 @@ namespace NP.Roxy.TypeConfigImpl
             roslynCodeBuilder.PopRegion();
         }
 
-
-        protected virtual void AddStaticInitLambda(RoslynCodeBuilder roslynCodeBuilder)
-        {
-
-        }
-
         public const string STATIC_CORE_MEMBER_NAME = "TheCore";
 
         void AddStaticCoreReference(RoslynCodeBuilder roslynCodeBuilder)
         {
             roslynCodeBuilder.AddLine($"public static Core TheCore {{ get; set; }}");
+        }
+
+        void AddStaticDelegatePropGetters(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            roslynCodeBuilder.PushRegion("Static Delegates for Getting Props");
+
+            foreach(PropertyWrapperMemberBuilderInfo propBuilderInfo in this.PropBuilderInfos)
+            {
+
+            }
+
+            roslynCodeBuilder.PopRegion();
         }
 
         internal string GenerateCode()
@@ -646,8 +675,6 @@ namespace NP.Roxy.TypeConfigImpl
             OpenClassDeclaration(roslynCodeBuilder);
 
             AddStaticCoreReference(roslynCodeBuilder);
-
-            //AddStaticInitLambda(roslynCodeBuilder);
 
             ImplementEvents(roslynCodeBuilder);
 
@@ -768,7 +795,7 @@ namespace NP.Roxy.TypeConfigImpl
             PropertyWrapperMemberBuilderInfo propertyWrapperMemberBuilder = 
                 GetPropWrapperMemberBuilderInfo(propName);
 
-            propertyWrapperMemberBuilder.SetInit(typeSymbol, this.TheCompilation);
+            propertyWrapperMemberBuilder.SetInit(typeSymbol);
         }
 
         public void SetInit<TInit>(string propName)
