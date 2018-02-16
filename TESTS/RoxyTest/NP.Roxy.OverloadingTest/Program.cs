@@ -70,6 +70,13 @@ namespace NP.Roxy.OverloadingTest
 
             typeConfig.ConfigurationCompleted();
 
+            IMyData myData = Core.GetInstanceOfGeneratedType<IMyData>();
+
+            myData.FirstName = "Joe";
+            myData.LastName = "Doe";
+
+            Console.WriteLine(myData.FullName);
+
             #endregion Prop Getter 
 
             Core.Save("GeneratedCode");
