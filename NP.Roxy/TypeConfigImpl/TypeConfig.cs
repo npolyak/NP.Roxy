@@ -241,7 +241,7 @@ namespace NP.Roxy.TypeConfigImpl
             foreach (ISymbol prop in props)
             {
                 WrappedObjInfo wrappedObjInfo =
-                    new WrappedObjInfo { WrappedObjPropName = prop.Name, TheCore = this.TheCore };
+                    new WrappedObjInfo(this.TheCore, prop.Name);
 
                 _wrappedObjInfos.Add(wrappedObjInfo);
             }
@@ -286,6 +286,13 @@ namespace NP.Roxy.TypeConfigImpl
             return wrappedObjInfo;
         }
 
+        WrappedObjInfo GetWrappedObjInfo<TWrappedObj, TProp>(Expression<Func<TWrappedObj, TProp>> expr)
+        {
+            string wrappedObjName = expr.GetMemberName();
+
+            return GetWrappedObjInfo(wrappedObjName);
+        }
+
         public void SetAllowNonPublicForAllMembers(string wrappedObjPropName)
         {
             WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjPropName);
@@ -300,17 +307,14 @@ namespace NP.Roxy.TypeConfigImpl
                 wrappedObjInfo.AllowNonPublicForAllMemberMaps = true;
             }
         }
-        public void SetPropGetter<TImpl, TProp>
-        (
-            Expression<Func<TImpl, TProp>> propNameGetter,
-            Expression<Func<TImpl, TProp>> propGetter
-        )
+
+        private PropertyWrapperMemberBuilderInfo GetPropWrapperMemberBuilderInfoByExpr<TImpl, TProp>(Expression<Func<TImpl, TProp>> propNameGetter)
         {
             string propName = propNameGetter.GetMemberName();
 
             Type implType = typeof(TImpl);
 
-            INamedTypeSymbol implTypeSymbol = 
+            INamedTypeSymbol implTypeSymbol =
                 implType.GetTypeSymbol(this.TheCompilation);
 
             if (!this.AllReferenceTypesSymbols.Contains(implTypeSymbol))
@@ -324,7 +328,46 @@ namespace NP.Roxy.TypeConfigImpl
             PropertyWrapperMemberBuilderInfo propBuilderInfo =
                 this.GetPropWrapperMemberBuilderInfo(propName);
 
-            propBuilderInfo.SetPropGetter<TImpl, TProp>(propGetter);
+            return propBuilderInfo;
+        }
+
+        public void SetPropGetter<TImpl, TProp>
+        (
+            Expression<Func<TImpl, TProp>> propNameGetter,
+            Expression<Func<TImpl, TProp>> propGetter
+        )
+        {
+            PropertyWrapperMemberBuilderInfo propBuilderInfo =
+                GetPropWrapperMemberBuilderInfoByExpr(propNameGetter);
+
+            propBuilderInfo.SetPropGetter(propGetter);
+        }
+
+        public void SetPropGetter<TImpl, TWrappedObj, TProp>
+        (
+            Expression<Func<TImpl, TProp>> propNameGetter,
+            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TWrappedObj, TProp>> propGetter
+        )
+        {
+            PropertyWrapperMemberBuilderInfo propBuilderInfo =
+                GetPropWrapperMemberBuilderInfoByExpr(propNameGetter);
+
+            propBuilderInfo.SetPropGetter(propGetter);
+
+            WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjChooser);
+
+
+        }
+
+        public void SetVoidMethod<TImpl, TWrappedObj>
+        (
+             Expression<Func<TImpl>> methodNameGetter,
+             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Action<TWrappedObj>> wrappedMethod
+        )
+        {
+
         }
 
         public void SetPropMemberMap<TImplementer, TWrappedObj, TWrapperProp>
@@ -361,10 +404,10 @@ namespace NP.Roxy.TypeConfigImpl
             bool? allowNonPublic = null
         )
         {
+            // this is only done for initialization purpose, not for 
+            // property map
             SetMemberMap(wrappedObjPropName, wrappedMemberName, "this", allowNonPublic);
         }
-
-
 
         public void SetMemberMapAllowNonPublic
         (
@@ -490,6 +533,9 @@ namespace NP.Roxy.TypeConfigImpl
 
         IEnumerable<MethodWrapperMemberBuilderInfo> MethodBuilderInfos { get; set; }
 
+        IEnumerable<WrapperMemberBuilderInfoBase> AllWrapperMemberInfos =>
+            EventBuilderInfos.NullToEmpty().Cast<WrapperMemberBuilderInfoBase>().Union(PropBuilderInfos.NullToEmpty()).Union(MethodBuilderInfos.NullToEmpty());
+
         void OpenClassDeclaration(RoslynCodeBuilder roslynCodeBuilder)
         {
             roslynCodeBuilder.AddClass
@@ -501,7 +547,7 @@ namespace NP.Roxy.TypeConfigImpl
             );
         }
 
-        private IEnumerable<MemberMapInfo>
+        private IEnumerable<MemberMapInfoBase>
             GetWrappedMemberInfos(string wrapperMemberName)
         {
             return 
@@ -640,17 +686,6 @@ namespace NP.Roxy.TypeConfigImpl
             roslynCodeBuilder.AddLine($"public static Core TheCore {{ get; set; }}");
         }
 
-        void AddStaticDelegatePropGetters(RoslynCodeBuilder roslynCodeBuilder)
-        {
-            roslynCodeBuilder.PushRegion("Static Delegates for Getting Props");
-
-            foreach(PropertyWrapperMemberBuilderInfo propBuilderInfo in this.PropBuilderInfos)
-            {
-
-            }
-
-            roslynCodeBuilder.PopRegion();
-        }
 
         internal string GenerateCode()
         {

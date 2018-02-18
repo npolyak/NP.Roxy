@@ -36,7 +36,7 @@ namespace NP.Roxy.TypeConfigImpl
                 _allowNonPublicForAllMemberMaps = value;
 
                 this.WrappedMemberNameMaps
-                    .ForEach(memberMap => memberMap.AllowNonPublic = _allowNonPublicForAllMemberMaps);
+                    .ForEach(memberMap => memberMap.SetAllowNonPublic(_allowNonPublicForAllMemberMaps));
             }
         }
 
@@ -54,6 +54,11 @@ namespace NP.Roxy.TypeConfigImpl
         public IEnumerable<INamedTypeSymbol> StaticMethodContainers { get; } =
             new List<INamedTypeSymbol>();
 
+        public WrappedObjInfo(Core core, string wrappedObjPropName)
+        {
+            this.WrappedObjPropName = wrappedObjPropName;
+            this.TheCore = core;
+        }
 
         public void AddStaticMethodsContainerType(INamedTypeSymbol staticMethodsContainerTypeSymbol)
         {
@@ -108,7 +113,7 @@ namespace NP.Roxy.TypeConfigImpl
             this.ConcreteWrappedObjNamedTypeSymbol.Name;
 
         [XmlAttribute]
-        public string WrappedObjPropName { get; internal set; }
+        public string WrappedObjPropName { get; private set; }
 
         [XmlIgnore]
         public string WrapperObjConcretizedPropName =>
@@ -119,19 +124,19 @@ namespace NP.Roxy.TypeConfigImpl
             WrappedObjPropName?.PropToFieldName();
 
         [XmlIgnore]
-        public Core TheCore { get; internal set; }
+        public Core TheCore { get; private set; }
 
         [XmlIgnore]
         public Compilation TheCompilation =>
             TheCore.TheCompilation;
 
-        List<MemberMapInfo> WrappedMemberNameMaps { get; } =
-            new List<MemberMapInfo>();
+        List<MemberMapInfoBase> WrappedMemberNameMaps { get; } =
+            new List<MemberMapInfoBase>();
 
-        public IEnumerable<MemberMapInfo> EventWrappedMemberNameMaps =>
+        public IEnumerable<MemberMapInfoBase> EventWrappedMemberNameMaps =>
             WrappedMemberNameMaps.Where(memberMap => memberMap.TheWrappedSymbol is IEventSymbol);
 
-        public IEnumerable<MemberMapInfo> PropWrappedMemberNameMaps =>
+        public IEnumerable<MemberMapInfoBase> PropWrappedMemberNameMaps =>
             WrappedMemberNameMaps.Where(memberMap => memberMap.TheWrappedSymbol is IPropertySymbol);
 
         public void SetFromParentSymbol(INamedTypeSymbol parentTypeSymbol)
@@ -139,53 +144,48 @@ namespace NP.Roxy.TypeConfigImpl
             this.WrappedObjPropSymbol = 
                 parentTypeSymbol.GetMemberByName<IPropertySymbol>(WrappedObjPropName);
         }
-        MemberMapInfo FindMapImpl(string name, Func<MemberMapInfo, string> findMethod)
+
+        MemberMapInfoBase FindMapImpl(string name, Func<MemberMapInfoBase, string> findMethod)
         {
             return WrappedMemberNameMaps.FirstOrDefault(strMap => findMethod(strMap) == name);
         }
 
-        MemberMapInfo FindMap(string wrappedMemberName)
+        MemberMapInfoBase FindMapByWrappedMemberName(string wrappedMemberName)
         {
-            return FindMapImpl(wrappedMemberName, strMap => strMap.WrappedMemberName);
+            return FindMapImpl(wrappedMemberName, strMap => (strMap as MemberMapInfo)?.WrappedMemberName);
         }
 
-        MemberMapInfo FindMapByWrapperMemberName(string wrapperMemberName)
+        MemberMapInfoBase FindMapByWrapperMemberName(string wrapperMemberName)
         {
             return FindMapImpl(wrapperMemberName, strMap => strMap.WrapperMemberName);
         }
 
-        public string GetWrapperMemberName(string wrappedMemberName)
+        internal virtual string GetWrapperMemberName(string wrappedMemberName)
         {
-            return FindMap(wrappedMemberName)?.WrapperMemberName ?? wrappedMemberName;
-        }
-
-        public string GetWrappedMemberName(string wrapperMemberName)
-        {
-            return FindMapByWrapperMemberName(wrapperMemberName).WrappedMemberName ?? wrapperMemberName;
+            return FindMapByWrappedMemberName(wrappedMemberName)?.WrapperMemberName ?? wrappedMemberName;
         }
 
         public void SetMap(string wrappedMemberName, string wrapperMemberName, bool? allowNonPublic = null)
         {
-            MemberMapInfo map = FindMapByWrapperMemberName(wrapperMemberName);
+            MemberMapInfoBase map = FindMapByWrapperMemberName(wrapperMemberName);
            
             if (map == null)
             {
                 if (wrappedMemberName == null)
                     wrappedMemberName = wrapperMemberName;
 
-                map = new MemberMapInfo(wrappedMemberName, wrapperMemberName);
-                map.SetWrappedObjPropName(this.WrappedObjPropName);
+                map = new MemberMapInfo(wrappedMemberName, wrapperMemberName, this.WrappedObjPropName);
 
                 WrappedMemberNameMaps.Add(map);
             }
-            else // if exists - simply modify it
-            {
-                map.WrappedMemberName = wrappedMemberName;
-            }
+            //else // if exists - simply modify it
+            //{
+            //    map.WrappedMemberName = wrappedMemberName;
+            //}
 
             bool resultingAllowNonPublic = allowNonPublic ?? this.AllowNonPublicForAllMemberMaps;
 
-            map.AllowNonPublic = resultingAllowNonPublic;
+            map.SetAllowNonPublic(resultingAllowNonPublic);
 
             map.SetFromContainingType
             (
@@ -206,7 +206,7 @@ namespace NP.Roxy.TypeConfigImpl
         // are equal to the passed wrapperMemberName
         public void AddWrapperMapIfMissing(string wrapperMemberName)
         {
-            MemberMapInfo map = FindMapByWrapperMemberName(wrapperMemberName);
+            MemberMapInfoBase map = FindMapByWrapperMemberName(wrapperMemberName);
 
             if (map != null)
                 return;
@@ -222,9 +222,9 @@ namespace NP.Roxy.TypeConfigImpl
 
         // gets all member infos for the wrapperMemberName 
         // (including those that do not require renaming)
-        public MemberMapInfo GetWrappedMemberInfo(string wrapperMemberName)
+        public MemberMapInfoBase GetWrappedMemberInfo(string wrapperMemberName)
         {
-            MemberMapInfo memberMap = this.FindMapByWrapperMemberName(wrapperMemberName);
+            MemberMapInfoBase memberMap = this.FindMapByWrapperMemberName(wrapperMemberName);
 
             if (memberMap == null)
                 return null;
@@ -285,8 +285,8 @@ namespace NP.Roxy.TypeConfigImpl
 
         string BuildWrapperInit
         (
-            IEnumerable<MemberMapInfo> eventMemberMaps, 
-            IEnumerable<MemberMapInfo> propMemberMaps,
+            IEnumerable<MemberMapInfoBase> eventMemberMaps, 
+            IEnumerable<MemberMapInfoBase> propMemberMaps,
             bool addOrRemove
         )
         {
@@ -304,20 +304,20 @@ namespace NP.Roxy.TypeConfigImpl
             {
                 SetOrUnsetConcretizationDelegates(wrapperInitBuilder, false);
 
-                foreach(MemberMapInfo propMemberMap in propMemberMaps)
+                foreach(MemberMapInfoBase propMemberMap in propMemberMaps)
                 {
                     propMemberMap.AddPropAssignmentStr(addOrRemove, wrapperInitBuilder);
                 }
             }
 
-            foreach (MemberMapInfo eventMemberMap in eventMemberMaps)
+            foreach (MemberMapInfoBase eventMemberMap in eventMemberMaps)
             {
                 wrapperInitBuilder.AddLine(eventMemberMap.GetEventHandlerAssignmentStr(addOrRemove), true);
             }
 
             if (addOrRemove)
             {
-                foreach (MemberMapInfo propMemberMap in propMemberMaps)
+                foreach (MemberMapInfoBase propMemberMap in propMemberMaps)
                 {
                     propMemberMap.AddPropAssignmentStr(addOrRemove, wrapperInitBuilder);
                 }

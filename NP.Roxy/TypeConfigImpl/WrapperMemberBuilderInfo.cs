@@ -24,11 +24,13 @@ namespace NP.Roxy.TypeConfigImpl
 {
     internal abstract class WrapperMemberBuilderInfoBase
     {
+        public ISymbol WrapperSymbolBase { get; }
+
         public abstract string WrapperSymbolName { get; }
 
-        protected List<MemberMapInfo> WrappedMembers { get; } = new List<MemberMapInfo>();
+        protected List<MemberMapInfoBase> WrappedMembers { get; } = new List<MemberMapInfoBase>();
 
-        public void SetWrappedMembers(IEnumerable<MemberMapInfo> wrappedMembers)
+        public void SetWrappedMembers(IEnumerable<MemberMapInfoBase> wrappedMembers)
         {
             WrappedMembers.Clear();
 
@@ -36,6 +38,11 @@ namespace NP.Roxy.TypeConfigImpl
         }
 
         public abstract void SetOverrideVirtual(bool includeBase);
+
+        public WrapperMemberBuilderInfoBase(ISymbol wrapperSymbolBase)
+        {
+            WrapperSymbolBase = wrapperSymbolBase;
+        }
     }
 
     internal abstract class WrapperMemberBuilderInfo<TSymbol> : WrapperMemberBuilderInfoBase
@@ -74,7 +81,8 @@ namespace NP.Roxy.TypeConfigImpl
         (
             TSymbol wrapperSymbol,
             Compilation compilation
-        )
+        ) 
+            : base(wrapperSymbol)
         {
             this.WrapperSymbol = wrapperSymbol;
             this.TheCompilation = compilation;
@@ -268,7 +276,7 @@ namespace NP.Roxy.TypeConfigImpl
                 }
                 else
                 {
-                    MemberMapInfo firstMemberMap =
+                    MemberMapInfoBase firstMemberMap =
                         this.WrappedMembers
                             .FirstOrDefault(member => (!member.IsNonPublic));
 
@@ -277,20 +285,7 @@ namespace NP.Roxy.TypeConfigImpl
                         firstMemberMap = this.WrappedMembers.First();
                     }
 
-                    if (firstMemberMap.IsNonPublic)
-                    {
-                        if (firstMemberMap.AllowNonPublic)
-                        {
-                            string returnType = (propertyWrapperSymbol.Type as INamedTypeSymbol).GetFullTypeString();
-                            roslynCodeBuilder.AddLine($"return ({returnType}) {firstMemberMap.WrappedObjPropName}.GetPropValue(\"{firstMemberMap.WrappedMemberName}\", true)", true);
-                        }
-                    }
-                    else
-                    {
-                        string wrappedMemberStr = firstMemberMap.WrappedClassMemberFullName;
-
-                        roslynCodeBuilder.AddReturnVar(wrappedMemberStr);
-                    }
+                    firstMemberMap.AddWrappedPropGetterLine(propertyWrapperSymbol, roslynCodeBuilder);
                 }
                 roslynCodeBuilder.Pop();
             }
@@ -363,7 +358,7 @@ namespace NP.Roxy.TypeConfigImpl
             }
 
             bool isFirst = true;
-            foreach (MemberMapInfo memberMap in this.WrappedMembers)
+            foreach (MemberMapInfoBase memberMap in this.WrappedMembers)
             {
                 roslynCodeBuilder.AddEmptyLine();
                 if (isFirst)
@@ -372,40 +367,7 @@ namespace NP.Roxy.TypeConfigImpl
                     isFirst = false;
                 }
 
-                IMethodSymbol wrappedMethodSymbol = memberMap.TheWrappedSymbol as IMethodSymbol;
-
-                if (memberMap.IsNonPublic)
-                {
-                    if (memberMap.AllowNonPublic)
-                    {
-                        roslynCodeBuilder
-                            .AddNonPublicMethodCall
-                            (
-                                WrapperSymbol, 
-                                memberMap.WrappedObjPropName, 
-                                memberMap.WrappedMemberName,
-                                wrappedMethodSymbol
-                            );
-                    }
-                }
-                else
-                {
-                    if (memberMap.TheWrappedSymbol.IsStatic)
-                    {
-                        roslynCodeBuilder.AddStaticMethodCall
-                        (
-                            WrapperSymbol,
-                            memberMap.WrappedObjPropName,
-                            memberMap.WrappedClassMemberFullName);
-                    }
-                    else
-                    {
-                        roslynCodeBuilder.AddMethodCall
-                        (
-                            WrapperSymbol,
-                            memberMap.WrappedClassMemberFullName);
-                    }
-                }
+                memberMap.AddWrappedMethodLine(this.WrapperSymbol, roslynCodeBuilder);
             }
 
             if (!methodWrapperSymbol.ReturnsVoid)
