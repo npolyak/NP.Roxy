@@ -64,6 +64,50 @@ namespace NP.Roxy.TypeConfigImpl
         internal abstract void AddWrappedMethodLine(IMethodSymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder);
     }
 
+    internal class ExpressionMemberMapInfo : MemberMapInfoBase
+    {
+        public ExpressionMemberMapInfo(string wrapperMemberName, string wrappedObjPropName) 
+            : 
+            base(wrapperMemberName, wrappedObjPropName)
+        {
+        }
+
+        internal override void AddAssignWrappedProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder)
+        {
+            
+        }
+
+        internal override void AddPropAssignmentStr(bool setOrUnset, RoslynCodeBuilder roslynCodeBuilder)
+        {
+            
+        }
+
+        internal override void AddWrappedMethodLine(IMethodSymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
+        {
+            
+        }
+
+        internal override void AddWrappedPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
+        {
+           
+        }
+
+        internal override string GetEventHandlerAssignmentStr(bool addOrRemoveHandler)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal override void SetAllowNonPublic(bool allowNonPublic)
+        {
+           
+        }
+
+        internal override void SetFromContainingType(Compilation compilation, INamedTypeSymbol containingType, IEnumerable<INamedTypeSymbol> staticMethodContainers)
+        {
+            
+        }
+    }
+
     internal class MemberMapInfo : MemberMapInfoBase
     {
 
