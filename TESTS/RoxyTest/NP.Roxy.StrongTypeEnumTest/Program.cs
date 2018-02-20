@@ -26,24 +26,29 @@ namespace NP.Roxy.StrongTypeEnumTest
 {
 
 
+    public class MyClass
+    {
+        public string Str { get; set; }
+
+        public int I { get; set; }
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
             ITypeConfig<SingleWrapperInterface<ProductKind>> adapterTypeConfig =
-                Core.FindOrCreateTypeConfig<IProduct, SingleWrapperInterface<ProductKind>>();
+                Core.FindOrCreateSingleWrapperTypeConfig<IProduct, ProductKind>();
 
             adapterTypeConfig.SetWrappedPropGetter<IProduct, ProductKind, string>
             (
                 prod => prod.DisplayName,
-                (wrapper) => wrapper.TheWrappedType,
                 prodKind => prodKind.GetDisplayName()
             );
 
             adapterTypeConfig.SetWrappedPropGetter<IProduct, ProductKind, string>
             (
                 prod => prod.Description,
-                (wrapper) => wrapper.TheWrappedType,
                 prodKind => prodKind.GetDescription()
             );
 

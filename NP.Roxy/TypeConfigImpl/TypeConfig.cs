@@ -105,6 +105,13 @@ namespace NP.Roxy.TypeConfigImpl
     {
         void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
         (
+            string propName, 
+            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TWrappedObj, TProp>> propGetter
+        );
+
+        void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        (
             Expression<Func<TImpl, TProp>> propNameGetter,
             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
             Expression<Func<TWrappedObj, TProp>> propGetter
@@ -351,9 +358,10 @@ namespace NP.Roxy.TypeConfigImpl
             propBuilderInfo.SetPropGetter(propGetter);
         }
 
+
         public void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
         (
-            Expression<Func<TImpl, TProp>> propNameGetter,
+            string propName,
             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
             Expression<Func<TWrappedObj, TProp>> propGetter
         )
@@ -361,7 +369,23 @@ namespace NP.Roxy.TypeConfigImpl
             ThrowErrorIfCompleted();
             WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjChooser);
 
-            wrappedObjInfo.SetPropGetterExpressionMap(propNameGetter.GetMemberName(), propGetter);
+            wrappedObjInfo.SetPropGetterExpressionMap(propName, propGetter);
+        }
+
+
+        public void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        (
+            Expression<Func<TImpl, TProp>> propNameGetter,
+            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TWrappedObj, TProp>> propGetter
+        )
+        {
+            this.SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+            (
+                propNameGetter.GetMemberName(), 
+                wrappedObjChooser, 
+                propGetter
+            );
         }
 
         public void SetVoidMethod<TImpl, TWrappedObj>
@@ -887,6 +911,38 @@ namespace NP.Roxy.TypeConfigImpl
         public TypeConfig(Core core, string className = null) : 
             base(core, className, typeof(TImplementedInterface), typeof(TSuperClass), typeof(TWrapperInterface))
         {
+        }
+    }
+
+    public static class TypeConfigExtensions
+    {
+        public static void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        (
+            this ITypeConfig<SingleWrapperInterface<TWrappedObj>> typeConfig,
+            string propName,
+            Expression<Func<TWrappedObj, TProp>> propGetter
+        )
+        {
+            typeConfig.SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+            (
+                propName,
+                (singleWrapperInt) => singleWrapperInt.TheWrappedType,
+                propGetter
+            );
+        }
+
+        public static void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        (
+            this ITypeConfig<SingleWrapperInterface<TWrappedObj>> typeConfig,
+            Expression<Func<TImpl, TProp>> propNameGetter,
+            Expression<Func<TWrappedObj, TProp>> propGetter
+        )
+        {
+            typeConfig.SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+            (
+                propNameGetter.GetMemberName(),
+                propGetter
+            );
         }
     }
 }

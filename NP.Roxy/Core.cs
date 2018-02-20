@@ -352,6 +352,10 @@ namespace NP.Roxy
             return core.FindOrCreateTypeConf<TImplementedInterface, NoClass, TWrapperInterface>(className);
         }
 
+        public static ITypeConfig<SingleWrapperInterface<TWrapped>> 
+            FindOrCreateSingleWrapperTypeConfig<TImplementedInterface, TWrapped>(string className = null, Core core = null) 
+            => FindOrCreateTypeConfig<TImplementedInterface, SingleWrapperInterface<TWrapped>>(className, core);
+
         public static T GetInstanceOfGeneratedType<T>(string className = null, params object[] args)
         {
             return TheCore.GetInstOfGeneratedType<T>(className, args);
