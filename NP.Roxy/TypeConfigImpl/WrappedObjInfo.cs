@@ -18,6 +18,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using System.Linq.Expressions;
 
 namespace NP.Roxy.TypeConfigImpl
 {
@@ -165,23 +166,46 @@ namespace NP.Roxy.TypeConfigImpl
             return FindMapByWrappedMemberName(wrappedMemberName)?.WrapperMemberName ?? wrappedMemberName;
         }
 
-        public void SetMap(string wrappedMemberName, string wrapperMemberName, bool? allowNonPublic = null)
+        void CheckMapExists(string wrapperMemberName)
         {
             MemberMapInfoBase map = FindMapByWrapperMemberName(wrapperMemberName);
-           
-            if (map == null)
+
+            if (map != null)
+                throw new Exception($"Roxy Usage Error: the member map for member {wrapperMemberName} of {this.WrappedObjPropName} wrapped obj has already been set.");
+        }
+
+        public void SetPropGetterExpressionMap<TWrappedObj, TProp>
+        (
+            string wrapperPropName, 
+            Expression<Func<TWrappedObj, TProp>> propGetter
+        )
+        {
+            CheckMapExists(wrapperPropName);
+
+            Type wrappedObjType = typeof(TWrappedObj);
+
+            if (!this.WrappedObjNamedTypeSymbol.Matches(wrappedObjType, this.TheCompilation))
             {
-                if (wrappedMemberName == null)
-                    wrappedMemberName = wrapperMemberName;
-
-                map = new MemberMapInfo(wrappedMemberName, wrapperMemberName, this.WrappedObjPropName);
-
-                WrappedMemberNameMaps.Add(map);
+                throw new Exception($"Roxy Usage Error: the type {wrappedObjType.Name} does not match the type {this.WrappedObjNamedTypeSymbol.Name} of the wrapped obj {this.WrappedObjPropName}.");
             }
-            //else // if exists - simply modify it
-            //{
-            //    map.WrappedMemberName = wrappedMemberName;
-            //}
+
+            ExpressionMemberMapInfo expressionMap = 
+                new ExpressionMemberMapInfo(wrapperPropName, this.WrappedObjPropName, propGetter);
+
+            WrappedMemberNameMaps.Add(expressionMap);
+        }
+
+        public void SetMap(string wrappedMemberName, string wrapperMemberName, bool? allowNonPublic = null)
+        {
+            CheckMapExists(wrapperMemberName);
+
+            if (wrappedMemberName == null)
+                wrappedMemberName = wrapperMemberName;
+
+            MemberMapInfoBase map = new MemberMapInfo(wrappedMemberName, wrapperMemberName, this.WrappedObjPropName);
+
+            WrappedMemberNameMaps.Add(map);
+
 
             bool resultingAllowNonPublic = allowNonPublic ?? this.AllowNonPublicForAllMemberMaps;
 

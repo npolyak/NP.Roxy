@@ -103,6 +103,14 @@ namespace NP.Roxy.TypeConfigImpl
 
     public interface ITypeConfig<TWrapperInterface> : ITypeConfig
     {
+        void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        (
+            Expression<Func<TImpl, TProp>> propNameGetter,
+            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TWrappedObj, TProp>> propGetter
+        );
+
+
         void SetPropMemberMap<TWrapper, TWrappedObj, TWrapperProp>
         (
             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
@@ -343,21 +351,17 @@ namespace NP.Roxy.TypeConfigImpl
             propBuilderInfo.SetPropGetter(propGetter);
         }
 
-        public void SetPropGetter<TImpl, TWrappedObj, TProp>
+        public void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
         (
             Expression<Func<TImpl, TProp>> propNameGetter,
             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
             Expression<Func<TWrappedObj, TProp>> propGetter
         )
         {
-            PropertyWrapperMemberBuilderInfo propBuilderInfo =
-                GetPropWrapperMemberBuilderInfoByExpr(propNameGetter);
-
-            propBuilderInfo.SetPropGetter(propGetter);
-
+            ThrowErrorIfCompleted();
             WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjChooser);
 
-
+            wrappedObjInfo.SetPropGetterExpressionMap(propNameGetter.GetMemberName(), propGetter);
         }
 
         public void SetVoidMethod<TImpl, TWrappedObj>

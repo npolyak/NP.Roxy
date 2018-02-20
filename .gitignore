@@ -52,3 +52,7 @@
 /TESTS/Concerns/MultiConcernsRoxyTest/obj/Debug
 /TESTS/RoxyTest/NP.Roxy.OverloadingTest/bin/Debug
 /TESTS/RoxyTest/NP.Roxy.OverloadingTest/obj/Debug
+/TESTS/RoxyTest/NP.Roxy.CompositeGetters/bin/Debug
+/TESTS/RoxyTest/NP.Roxy.CompositeGetters/obj/Debug
+/TESTS/RoxyTest/NP.Roxy.StrongTypeEnumTest/bin/Debug
+/TESTS/RoxyTest/NP.Roxy.StrongTypeEnumTest/obj/Debug

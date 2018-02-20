@@ -11,9 +11,11 @@
 
 using Microsoft.CodeAnalysis;
 using NP.Utilities;
+using NP.Utilities.Expressions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -66,10 +68,13 @@ namespace NP.Roxy.TypeConfigImpl
 
     internal class ExpressionMemberMapInfo : MemberMapInfoBase
     {
-        public ExpressionMemberMapInfo(string wrapperMemberName, string wrappedObjPropName) 
+        public Expression TheGetterExpression { get; private set; }
+
+        public ExpressionMemberMapInfo(string wrapperMemberName, string wrappedObjPropName, Expression getterExpression) 
             : 
             base(wrapperMemberName, wrappedObjPropName)
         {
+            this.TheGetterExpression = getterExpression;
         }
 
         internal override void AddAssignWrappedProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder)
@@ -89,17 +94,22 @@ namespace NP.Roxy.TypeConfigImpl
 
         internal override void AddWrappedPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
-           
+            ReplaceFirstArgExprStringBuilder exprStrBuilder = 
+                new ReplaceFirstArgExprStringBuilder(this.WrappedObjPropName);
+
+            exprStrBuilder.Visit(this.TheGetterExpression);
+
+            roslynCodeBuilder.AddReturnVar(exprStrBuilder.ToStr());
         }
 
         internal override string GetEventHandlerAssignmentStr(bool addOrRemoveHandler)
         {
-            throw new NotImplementedException();
+            throw new Exception("Roxy Usage Error: there can be no ExpressionMemberMaps for events");
         }
 
         internal override void SetAllowNonPublic(bool allowNonPublic)
         {
-           
+            throw new Exception("Roxy Usage Error: Non Public Flag cannot be modified for ExpressionMemberMapInfo");
         }
 
         internal override void SetFromContainingType(Compilation compilation, INamedTypeSymbol containingType, IEnumerable<INamedTypeSymbol> staticMethodContainers)
