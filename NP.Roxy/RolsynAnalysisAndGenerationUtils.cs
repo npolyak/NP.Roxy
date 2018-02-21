@@ -1052,13 +1052,6 @@ namespace NP.Roxy
             return compilation.ClassifyConversion(sourceType, targetType).IsImplicit;
         }
 
-        public static bool FirstParamMatches(this Compilation compilation, IMethodSymbol methodSymbol, INamedTypeSymbol typeToMatch)
-        {
-            if (methodSymbol.Parameters.Length == 0)
-                return false;
-
-            return compilation.ClassifyConversion(typeToMatch, methodSymbol.Parameters.First().Type).IsImplicit;
-        }
 
         public static IMethodSymbol GetStaticMethodWithFirstArgThatCanAcceptType
         (
@@ -1118,6 +1111,98 @@ namespace NP.Roxy
 
         public static bool HasPublicDefaultConstructor(this INamedTypeSymbol typeSymbol) =>
             typeSymbol.GetPublicDefaultConstructor() != null;
+
+
+        public static bool ParamTypesMatch
+        (
+            this Compilation compilation, 
+            ITypeSymbol callingParamType, 
+            ITypeSymbol calledParamType, 
+            bool isInputParam = true)
+        {
+            ITypeSymbol source, target;
+
+            if (isInputParam)
+            {
+                source = callingParamType;
+                target = calledParamType;
+            }
+            else
+            {
+                target = callingParamType;
+                source = calledParamType;
+            }
+
+            if (target == null)
+            {
+                if (source != null)
+                    return false;
+                else
+                    return true;
+            }
+            else
+            {
+                if (source == null)
+                    return false;
+            }
+
+            return compilation.ClassifyConversion(source, target).IsImplicit;
+        }
+
+        public static bool MethodsArgsMatch(this Compilation compilation, IMethodSymbol callingMethod, IMethodSymbol calledMethod)
+        {
+            if (callingMethod.Parameters.Count() != calledMethod.Parameters.Count())
+                return false;
+
+
+            // compare the return params
+            bool result = compilation.ParamTypesMatch(calledMethod.ReturnType, calledMethod.ReturnType, false);
+
+            if (!result)
+                return false;
+
+            foreach (var sourceTargetParams in callingMethod.Parameters.Zip(calledMethod.Parameters, (sourceParam, targetParam) => new { Source = sourceParam, Target = targetParam }))
+            {
+                result = compilation.ParamTypesMatch(sourceTargetParams.Source.Type, sourceTargetParams.Target.Type);
+
+                if (!result)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public static IMethodSymbol FindMatchingMethodSymbol
+        (
+            this Compilation compilation,
+            IMethodSymbol callingMethod,
+            INamedTypeSymbol calledMethodContainerTypeSymbol,
+            string nameToMatch = null,
+            bool allowNonPublic = false
+        )
+        {
+            if (nameToMatch == null)
+            {
+                nameToMatch = callingMethod.Name;
+            }
+
+            IEnumerable<IMethodSymbol> methodsMatchedByName = 
+                calledMethodContainerTypeSymbol.GetMembersByName<IMethodSymbol>(nameToMatch, allowNonPublic);
+
+            IMethodSymbol result = 
+                methodsMatchedByName.FirstOrDefault(methodSymbol => compilation.MethodsArgsMatch(callingMethod, methodSymbol));
+
+            return result;
+        }
+
+        public static bool FirstParamMatches(this Compilation compilation, IMethodSymbol methodSymbol, INamedTypeSymbol typeToMatch)
+        {
+            if (methodSymbol.Parameters.Length == 0)
+                return false;
+
+            return compilation.ParamTypesMatch(typeToMatch, methodSymbol.Parameters.First().Type);
+        }
+
     }
 
     public class SymbolByNameComparer : IEqualityComparer<ISymbol>
