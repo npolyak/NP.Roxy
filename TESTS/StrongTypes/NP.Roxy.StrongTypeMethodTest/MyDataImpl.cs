@@ -14,7 +14,7 @@ namespace NP.Roxy.StrongTypeMethodTest
 
         public string GetGreeting() => "Hello World!";
 
-        public string GetGreeting(string greetingMessage)
+        public string GetGreetingImpl(string greetingMessage)
         {
             return $"{greetingMessage} {FirstName} {LastName}!";
         }

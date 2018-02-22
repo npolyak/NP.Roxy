@@ -175,13 +175,13 @@ namespace NP.Roxy.TypeConfigImpl
                 throw new Exception($"Roxy Usage Error: the member map for member {wrapperMemberSymbol.Name} of {this.WrappedObjPropName} wrapped obj has already been set.");
         }
 
-        public void SetPropGetterExpressionMap<TWrappedObj, TProp>
+        public void SetExpressionMemberMap<TWrappedObj>
         (
-            ISymbol wrapperPropSymbol, 
-            Expression<Func<TWrappedObj, TProp>> propGetter
+            ISymbol wrapperMemberSymbol, 
+            Expression expression
         )
         {
-            CheckMapExists(wrapperPropSymbol);
+            CheckMapExists(wrapperMemberSymbol);
 
             Type wrappedObjType = typeof(TWrappedObj);
 
@@ -191,7 +191,7 @@ namespace NP.Roxy.TypeConfigImpl
             }
 
             ExpressionMemberMapInfo expressionMap = 
-                new ExpressionMemberMapInfo(wrapperPropSymbol, this.WrappedObjPropName, propGetter);
+                new ExpressionMemberMapInfo(wrapperMemberSymbol, this.WrappedObjPropName, expression);
 
             WrappedMemberNameMaps.Add(expressionMap);
         }

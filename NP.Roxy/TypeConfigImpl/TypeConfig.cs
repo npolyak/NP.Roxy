@@ -123,6 +123,13 @@ namespace NP.Roxy.TypeConfigImpl
             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
             Expression<Func<TWrappedObj, TWrapperProp>> wrappedPropChooser,
             Expression<Func<TWrapper, TWrapperProp>> wrapperPropChooser);
+
+        void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TOut>
+        (
+             Expression<Func<TImpl, TIn1, TOut>> methodNameGetter,
+             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TWrappedObj, TIn1, TOut>> wrappedMethod
+        );
     }
 
 
@@ -371,7 +378,7 @@ namespace NP.Roxy.TypeConfigImpl
 
             ISymbol wrapperMemberSymbol = GetWrapperMemberSymbolByName(propName);
 
-            wrappedObjInfo.SetPropGetterExpressionMap(wrapperMemberSymbol, propGetter);
+            wrappedObjInfo.SetExpressionMemberMap<TWrappedObj>(wrapperMemberSymbol, propGetter);
         }
 
 
@@ -398,6 +405,22 @@ namespace NP.Roxy.TypeConfigImpl
         )
         {
 
+        }
+
+        public void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TOut>
+        (
+             Expression<Func<TImpl, TIn1, TOut>> methodNameGetter,
+             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TWrappedObj, TIn1, TOut>> wrappedMethod
+        )
+        {
+            ThrowErrorIfCompleted();
+            WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjChooser);
+
+            IMethodSymbol callingMethodSymbol = 
+                this.TheCompilation.FindMatchingMethodSymbol<TImpl, TIn1, TOut>(methodNameGetter.GetMemberName());
+
+            wrappedObjInfo.SetExpressionMemberMap<TWrappedObj>(callingMethodSymbol, wrappedMethod);
         }
 
         public void SetPropMemberMap<TImplementer, TWrappedObj, TWrapperProp>

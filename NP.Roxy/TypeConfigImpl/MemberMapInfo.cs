@@ -67,17 +67,17 @@ namespace NP.Roxy.TypeConfigImpl
     {
         internal override bool IsAbstract => false;
 
-        public Expression TheGetterExpression { get; private set; }
+        public Expression TheExpression { get; private set; }
 
         public ExpressionMemberMapInfo
         (
             ISymbol wrapperMemberSymbol, 
             string wrappedObjPropName, 
-            Expression getterExpression) 
+            Expression expression) 
             : 
             base(wrapperMemberSymbol, wrappedObjPropName)
         {
-            this.TheGetterExpression = getterExpression;
+            this.TheExpression = expression;
         }
 
         internal override void AddAssignWrappedProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder)
@@ -92,7 +92,12 @@ namespace NP.Roxy.TypeConfigImpl
 
         internal override void AddWrappedMethodLine(IMethodSymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
-            
+            ReplaceFirstArgExprStringBuilder exprStrBuilder =
+                new ReplaceFirstArgExprStringBuilder(this.WrappedObjPropName);
+
+            exprStrBuilder.Visit(this.TheExpression);
+
+            roslynCodeBuilder.AddText(exprStrBuilder.ToStr() + ";");
         }
 
         internal override void AddWrappedPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
@@ -100,7 +105,7 @@ namespace NP.Roxy.TypeConfigImpl
             ReplaceFirstArgExprStringBuilder exprStrBuilder = 
                 new ReplaceFirstArgExprStringBuilder(this.WrappedObjPropName);
 
-            exprStrBuilder.Visit(this.TheGetterExpression);
+            exprStrBuilder.Visit(this.TheExpression);
 
             roslynCodeBuilder.AddReturnVar(exprStrBuilder.ToStr());
         }
