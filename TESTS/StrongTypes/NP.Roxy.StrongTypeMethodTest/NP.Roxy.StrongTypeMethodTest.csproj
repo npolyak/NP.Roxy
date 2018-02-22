@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{19E8CF58-342F-4A57-8413-A1D618B238B9}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>NP.Roxy.StrongTypeEnumTest</RootNamespace>
-    <AssemblyName>NP.Roxy.StrongTypeEnumTest</AssemblyName>
+    <RootNamespace>NP.Roxy.StrongTypeMethodTest</RootNamespace>
+    <AssemblyName>NP.Roxy.StrongTypeMethodTest</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -163,6 +163,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IMyData.cs" />
+    <Compile Include="MyDataImpl.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

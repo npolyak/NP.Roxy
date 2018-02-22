@@ -1197,6 +1197,37 @@ namespace NP.Roxy
             return result;
         }
 
+        public static ISymbol FindMatchingSymbol
+        (
+            this Compilation compilation,
+            ISymbol callingSymbol,
+            INamedTypeSymbol calledContainerTypeSymbol,
+            string nameToMatch = null,
+            bool allowNonPublic = false
+        )
+        {
+            if (nameToMatch == null)
+            {
+                nameToMatch = callingSymbol.Name;
+            }
+
+            IMethodSymbol callingMethodSymbol = callingSymbol as IMethodSymbol;
+
+            if (callingMethodSymbol != null)
+            {
+                return 
+                    compilation.FindMatchingMethodSymbol
+                    (
+                        callingMethodSymbol, 
+                        calledContainerTypeSymbol, 
+                        nameToMatch, 
+                        allowNonPublic);
+            }
+
+            return calledContainerTypeSymbol?.GetMemberByName<ISymbol>(nameToMatch, allowNonPublic);
+        }
+
+
         public static bool FirstParamMatches(this Compilation compilation, IMethodSymbol methodSymbol, INamedTypeSymbol typeToMatch)
         {
             if (methodSymbol.Parameters.Length == 0)

@@ -22,41 +22,31 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NP.Roxy.StrongTypeEnumTest
+namespace NP.Roxy.StrongTypeMethodTest
 {
 
 
-    public class MyClass
+    public interface IWrapper
     {
-        public string Str { get; set; }
-
-        public int I { get; set; }
+        MyDataImpl TheDataImpl { get; }
     }
 
     class Program
     {
         static void Main(string[] args)
         {
-            ITypeConfig<SingleWrapperInterface<ProductKind>> adapterTypeConfig =
-                Core.FindOrCreateSingleWrapperTypeConfig<IProduct, ProductKind>();
+            ITypeConfig<IWrapper> typeConfig = Core.FindOrCreateTypeConfig<IMyData, IWrapper>();
 
-            adapterTypeConfig.SetWrappedPropGetter<IProduct, ProductKind, string>
-            (
-                prod => prod.DisplayName,
-                prodKind => prodKind.GetDisplayName()
-            );
+            typeConfig.ConfigurationCompleted();
 
-            adapterTypeConfig.SetWrappedPropGetter<IProduct, ProductKind, string>
-            (
-                prod => prod.Description,
-                prodKind => prodKind.GetDescription()
-            );
+            IMyData myData = Core.GetInstanceOfGeneratedType<IMyData>();
 
-            adapterTypeConfig.ConfigurationCompleted();
+            myData.FirstName = "Joe";
+            myData.LastName = "Doe";
 
-            IProduct product = Core.GetInstanceOfGeneratedType<IProduct>(null, ProductKind.Information);
+            string greetingStr = myData.GetGreeting("Hello");
 
-            Console.WriteLine($"{product.DisplayName}: {product.Description}");
+            Console.WriteLine(greetingStr);
 
             Core.Save("GeneratedCode");
         }

@@ -154,12 +154,8 @@ namespace NP.Roxy.TypeConfigImpl
             if (this.WrappedMemberName == null)
                 return;
 
-            this.WrappedMemberSymbol = 
-                containingType?.GetMemberByName<ISymbol>
-                (
-                    this.WrappedMemberName, 
-                    this.AllowNonPublic
-                );
+            this.WrappedMemberSymbol =
+                compilation.FindMatchingSymbol(this.WrapperMemberSymbol, containingType, this.WrappedMemberName, this.AllowNonPublic);
 
             if (this.WrappedMemberSymbol != null)
                 return;

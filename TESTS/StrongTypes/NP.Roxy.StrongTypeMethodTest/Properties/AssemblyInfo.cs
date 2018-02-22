@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("NP.Roxy.StrongTypeEnumTest")]
+[assembly: AssemblyTitle("NP.Roxy.StrongTypeMethodTest")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("NP.Roxy.StrongTypeEnumTestt")]
+[assembly: AssemblyProduct("NP.Roxy.StrongTypeMethodTest")]
 [assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
