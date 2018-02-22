@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{FD16B9DD-3686-4B9B-BD99-17D0670F44F3}</ProjectGuid>
+    <ProjectGuid>{39450BE9-E6E5-45E9-BD64-25EC79697315}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>NP.Roxy.StrongTypeEnumTest</RootNamespace>
     <AssemblyName>NP.Roxy.StrongTypeEnumTest</AssemblyName>
