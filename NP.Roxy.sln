@@ -53,6 +53,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NP.Roxy.StrongTypeMethodTes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NP.Roxy.CompositeGetters", "TESTS\StrongTypes\NP.Roxy.CompositeGetters\NP.Roxy.CompositeGetters.csproj", "{CDBCADC1-0D1D-4FB0-B2DA-CCADF5414DA0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NP.Roxy.MethodOverloadingTest", "TESTS\StrongTypes\NP.Roxy.MethodOverloadingTest\NP.Roxy.MethodOverloadingTest.csproj", "{61864132-7AB3-4C47-ABC6-10A35161CE61}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -139,6 +141,10 @@ Global
 		{CDBCADC1-0D1D-4FB0-B2DA-CCADF5414DA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CDBCADC1-0D1D-4FB0-B2DA-CCADF5414DA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CDBCADC1-0D1D-4FB0-B2DA-CCADF5414DA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61864132-7AB3-4C47-ABC6-10A35161CE61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61864132-7AB3-4C47-ABC6-10A35161CE61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61864132-7AB3-4C47-ABC6-10A35161CE61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61864132-7AB3-4C47-ABC6-10A35161CE61}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -166,6 +172,7 @@ Global
 		{39450BE9-E6E5-45E9-BD64-25EC79697315} = {3894394A-5D8B-4639-AB3F-6FB803B86A37}
 		{19E8CF58-342F-4A57-8413-A1D618B238B9} = {3894394A-5D8B-4639-AB3F-6FB803B86A37}
 		{CDBCADC1-0D1D-4FB0-B2DA-CCADF5414DA0} = {3894394A-5D8B-4639-AB3F-6FB803B86A37}
+		{61864132-7AB3-4C47-ABC6-10A35161CE61} = {3894394A-5D8B-4639-AB3F-6FB803B86A37}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {63B2F242-8654-4FBD-A762-D369E201F590}

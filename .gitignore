@@ -64,3 +64,5 @@
 /TESTS/StrongTypes/NP.Roxy.CompositeGetters/obj/Debug
 /TESTS/StrongTypes/NP.Roxy.StrongTypeMethodTest/bin/Debug
 /TESTS/StrongTypes/NP.Roxy.StrongTypeMethodTest/obj/Debug
+/TESTS/StrongTypes/NP.Roxy.MethodOverloadingTest/bin/Debug
+/TESTS/StrongTypes/NP.Roxy.MethodOverloadingTest/obj/Debug
