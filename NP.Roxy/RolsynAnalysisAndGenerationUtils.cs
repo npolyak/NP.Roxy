@@ -30,6 +30,8 @@ namespace NP.Roxy
 
     public static class RoslynAnalysisAndGenerationUtils
     {
+        public const string THIS = "this";
+
         public static bool IsOverridable(this ISymbol symbol)
         {
             return symbol.IsAbstract || symbol.IsVirtual;
@@ -488,7 +490,7 @@ namespace NP.Roxy
 
                 if (paramIdx == indexParamToReplaceByThis)
                 {
-                    result += "this";
+                    result += THIS;
                 }
                 else
                 {

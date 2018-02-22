@@ -369,7 +369,9 @@ namespace NP.Roxy.TypeConfigImpl
             ThrowErrorIfCompleted();
             WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjChooser);
 
-            wrappedObjInfo.SetPropGetterExpressionMap(propName, propGetter);
+            ISymbol wrapperMemberSymbol = GetWrapperMemberSymbolByName(propName);
+
+            wrappedObjInfo.SetPropGetterExpressionMap(wrapperMemberSymbol, propGetter);
         }
 
 
@@ -410,10 +412,28 @@ namespace NP.Roxy.TypeConfigImpl
             SetMemberMap(wrappedObjPropName, wrappedMemberName, wrapperMemberName);
         }
 
+        public ISymbol GetWrapperMemberSymbolByName(string wrapperMemberName)
+        {
+            IEnumerable<ISymbol> wrapperMemberSymbols = ImplementableSymbols.Where(symbol => symbol.Name == wrapperMemberName).ToList();
+
+            if (wrapperMemberSymbols.IsNullOrEmpty())
+            {
+                throw new Exception($"Roxy Usage Error: no implementable symbol for member name {wrapperMemberName}");
+            }
+            else if (wrapperMemberSymbols.Count() > 1)
+            {
+                throw new Exception($"Roxy Usage Error: there is more than one implementable member corresponding to member name {wrapperMemberName}. Cannot resolve the member by name.");
+            }
+
+            ISymbol wrapperMemberSymbol = wrapperMemberSymbols.Single();
+
+            return wrapperMemberSymbol;
+        }
+
         public void SetMemberMap
         (
-            string wrappedObjPropName, 
-            string wrappedMemberName, 
+            string wrappedObjPropName,
+            string wrappedMemberName,
             string wrapperMemberName,
             bool? allowNonPublic = null
         )
@@ -422,7 +442,14 @@ namespace NP.Roxy.TypeConfigImpl
 
             WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjPropName);
 
-            wrappedObjInfo.SetMap(wrappedMemberName, wrapperMemberName, allowNonPublic);
+            ISymbol wrapperMemberSymbol = null;
+
+            if (wrapperMemberName != RoslynAnalysisAndGenerationUtils.THIS)
+            {
+                wrapperMemberSymbol = GetWrapperMemberSymbolByName(wrapperMemberName);
+            }
+
+            wrappedObjInfo.SetMap(wrappedMemberName, wrapperMemberSymbol, allowNonPublic);
         }
 
         public void SetThisMemberMap
@@ -432,9 +459,7 @@ namespace NP.Roxy.TypeConfigImpl
             bool? allowNonPublic = null
         )
         {
-            // this is only done for initialization purpose, not for 
-            // property map
-            SetMemberMap(wrappedObjPropName, wrappedMemberName, "this", allowNonPublic);
+            SetMemberMap(wrappedObjPropName, wrappedMemberName, RoslynAnalysisAndGenerationUtils.THIS, allowNonPublic);
         }
 
         public void SetMemberMapAllowNonPublic
@@ -523,7 +548,7 @@ namespace NP.Roxy.TypeConfigImpl
         void SetMissingMaps()
         {
             this._wrappedObjInfos
-                .DoForEach(wrappedObjInfo => wrappedObjInfo.AddMissingMaps(ImplementableSymbols.Select(symb => symb.Name).Distinct()));
+                .DoForEach(wrappedObjInfo => wrappedObjInfo.AddMissingMaps(ImplementableSymbols.Distinct()));
         }
 
 
@@ -533,7 +558,7 @@ namespace NP.Roxy.TypeConfigImpl
             this.EventBuilderInfos.Cast<WrapperMemberBuilderInfoBase>()
                 .Union(PropBuilderInfos.Where(propBuilderInfo => propBuilderInfo.MustImplement))
                 .Union(MethodBuilderInfos.Where(propBuilderInfo => propBuilderInfo.MustImplement))
-                .DoForEach(builderInfo => builderInfo.SetWrappedMembers(GetWrappedMemberInfos(builderInfo.WrapperSymbolName)));
+                .DoForEach(builderInfo => builderInfo.SetWrappedMembers(GetWrappedMemberInfos(builderInfo.WrapperSymbolBase)));
         }
 
         public void SetOverrideVirtual(string memberName, bool includeBase = false)
@@ -576,11 +601,11 @@ namespace NP.Roxy.TypeConfigImpl
         }
 
         private IEnumerable<MemberMapInfoBase>
-            GetWrappedMemberInfos(string wrapperMemberName)
+            GetWrappedMemberInfos(ISymbol wrapperSymbol)
         {
             return 
                 _wrappedObjInfos
-                    .SelectMany(wrappedObj => wrappedObj.GetWrappedMemberInfo(wrapperMemberName).ToCollection().ToList()).ToList();
+                    .SelectMany(wrappedObj => wrappedObj.GetWrappedMemberInfo(wrapperSymbol).ToCollection().ToList()).ToList();
         }
 
         private void ImplementEvents(RoslynCodeBuilder roslynCodeBuilder)

@@ -24,34 +24,30 @@ namespace NP.Roxy.TypeConfigImpl
 {
     internal abstract class MemberMapInfoBase
     {
+        public ISymbol WrapperMemberSymbol { get; }
+
         // gets this value only from the parent object
-        [XmlIgnore]
         public string WrappedObjPropName { get; private set; }
 
-        [XmlAttribute]
-        public string WrapperMemberName { get; set; }
-        [XmlIgnore]
+        public string WrapperMemberName => WrapperMemberSymbol.Name;
 
-        public ISymbol TheWrappedSymbol { get; protected set; }
+        public virtual ClassMemberType TheMemberType =>
+            WrapperMemberSymbol.GetMemberType();
+
+        public virtual string WrapperAssignPropName => WrapperMemberName;
 
         public MemberMapInfoBase
         (
-            string wrapperMemberName, 
+            ISymbol wrapperMemberSymbol, 
             string wrappedObjPropName)
         {
-            this.WrapperMemberName = wrapperMemberName;
+            this.WrapperMemberSymbol = wrapperMemberSymbol;
             this.WrappedObjPropName = wrappedObjPropName;
-
-            TheWrappedSymbol = null;
         }
 
-        internal virtual bool IsNonPublic => false;
+        internal abstract bool IsAbstract { get; }
 
-        internal abstract void SetFromContainingType
-        (
-            Compilation compilation,
-            INamedTypeSymbol containingType,
-            IEnumerable<INamedTypeSymbol> staticMethodContainers);
+        internal virtual bool IsNonPublic => false;
 
         internal abstract void SetAllowNonPublic(bool allowNonPublic);
 
@@ -66,13 +62,20 @@ namespace NP.Roxy.TypeConfigImpl
         internal abstract void AddWrappedMethodLine(IMethodSymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder);
     }
 
+
     internal class ExpressionMemberMapInfo : MemberMapInfoBase
     {
+        internal override bool IsAbstract => false;
+
         public Expression TheGetterExpression { get; private set; }
 
-        public ExpressionMemberMapInfo(string wrapperMemberName, string wrappedObjPropName, Expression getterExpression) 
+        public ExpressionMemberMapInfo
+        (
+            ISymbol wrapperMemberSymbol, 
+            string wrappedObjPropName, 
+            Expression getterExpression) 
             : 
-            base(wrapperMemberName, wrappedObjPropName)
+            base(wrapperMemberSymbol, wrappedObjPropName)
         {
             this.TheGetterExpression = getterExpression;
         }
@@ -111,15 +114,14 @@ namespace NP.Roxy.TypeConfigImpl
         {
             throw new Exception("Roxy Usage Error: Non Public Flag cannot be modified for ExpressionMemberMapInfo");
         }
-
-        internal override void SetFromContainingType(Compilation compilation, INamedTypeSymbol containingType, IEnumerable<INamedTypeSymbol> staticMethodContainers)
-        {
-            
-        }
     }
 
     internal class MemberMapInfo : MemberMapInfoBase
     {
+        internal override bool IsAbstract =>
+            WrappedMemberSymbol?.IsAbstract == true;
+
+        public ISymbol WrappedMemberSymbol { get; protected set; }
 
         [XmlAttribute]
         public string WrappedMemberName { get; set; }
@@ -135,15 +137,15 @@ namespace NP.Roxy.TypeConfigImpl
         public MemberMapInfo
         (
             string wrappedMemberName, 
-            string wrapperMemberName, 
+            ISymbol wrapperMemberSymbol, 
             string wrappedObjPropName
         ) :
-            base(wrapperMemberName, wrappedObjPropName)
+            base(wrapperMemberSymbol, wrappedObjPropName)
         {
             this.WrappedMemberName = wrappedMemberName;
         }
 
-        internal override void SetFromContainingType
+        internal void SetFromContainingType
         (
             Compilation compilation,
             INamedTypeSymbol containingType, 
@@ -152,19 +154,19 @@ namespace NP.Roxy.TypeConfigImpl
             if (this.WrappedMemberName == null)
                 return;
 
-            this.TheWrappedSymbol = 
+            this.WrappedMemberSymbol = 
                 containingType?.GetMemberByName<ISymbol>
                 (
                     this.WrappedMemberName, 
                     this.AllowNonPublic
                 );
 
-            if (this.TheWrappedSymbol != null)
+            if (this.WrappedMemberSymbol != null)
                 return;
 
             foreach(INamedTypeSymbol typeSymbol in staticMethodContainers)
             {
-                this.TheWrappedSymbol =
+                this.WrappedMemberSymbol =
                     compilation.GetStaticMethodWithFirstArgThatCanAcceptType
                     (
                         typeSymbol,
@@ -172,23 +174,23 @@ namespace NP.Roxy.TypeConfigImpl
                         this.WrappedMemberName,
                         this.AllowNonPublic);
 
-                if (this.TheWrappedSymbol != null)
+                if (this.WrappedMemberSymbol != null)
                     break;
             }
         }
 
         // if private - WrappedSymbol will be null
         internal override bool IsNonPublic =>
-            this.TheWrappedSymbol.DeclaredAccessibility != Accessibility.Public;
+            this.WrappedMemberSymbol.DeclaredAccessibility != Accessibility.Public;
 
         protected string GetWrappedClassMemberFullName(bool hasNullCheck)
         {
             string divider = hasNullCheck ? "?." : ".";
 
-            if (this.TheWrappedSymbol.IsStatic)
+            if (this.WrappedMemberSymbol.IsStatic)
             {
                 IMethodSymbol methodSymbol =
-                    this.TheWrappedSymbol as IMethodSymbol;
+                    this.WrappedMemberSymbol as IMethodSymbol;
 
                 string containingTypeStr = methodSymbol.ContainingType.GetFullTypeString();
 
@@ -232,7 +234,7 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
-        IPropertySymbol TheWrappedPropSymbol => TheWrappedSymbol as IPropertySymbol;
+        IPropertySymbol TheWrappedPropSymbol => WrappedMemberSymbol as IPropertySymbol;
 
         internal override void AddPropAssignmentStr(bool setOrUnset, RoslynCodeBuilder roslynCodeBuilder)
         {
@@ -241,7 +243,7 @@ namespace NP.Roxy.TypeConfigImpl
 
             string assignmentStr =
                 setOrUnset ?
-                    WrapperMemberName : $"default({(TheWrappedSymbol as IPropertySymbol).Type.AsNamed().GetFullTypeString()})";
+                    WrapperAssignPropName : $"default({(WrappedMemberSymbol as IPropertySymbol).Type.AsNamed().GetFullTypeString()})";
 
             AddAssignWrappedProp(assignmentStr, roslynCodeBuilder);
         }
@@ -265,9 +267,13 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
-        internal override void AddWrappedMethodLine(IMethodSymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
+        internal override void AddWrappedMethodLine
+        (
+            IMethodSymbol wrapperSymbol, 
+            RoslynCodeBuilder roslynCodeBuilder
+        )
         {
-            IMethodSymbol wrappedMethodSymbol = this.TheWrappedSymbol as IMethodSymbol;
+            IMethodSymbol wrappedMethodSymbol = this.WrappedMemberSymbol as IMethodSymbol;
 
             if (this.IsNonPublic)
             {
@@ -285,7 +291,7 @@ namespace NP.Roxy.TypeConfigImpl
             }
             else
             {
-                if (this.TheWrappedSymbol.IsStatic)
+                if (this.WrappedMemberSymbol.IsStatic)
                 {
                     roslynCodeBuilder.AddStaticMethodCall
                     (
@@ -302,5 +308,19 @@ namespace NP.Roxy.TypeConfigImpl
                 }
             }
         }
+    }
+
+
+    internal class ThisMemberMapInfo : MemberMapInfo
+    {
+        public ThisMemberMapInfo(string wrappedObjPropName, string wrappedMemberName) : 
+            base(wrappedMemberName, null, wrappedObjPropName)
+        {
+
+        }
+
+        public override string WrapperAssignPropName => RoslynAnalysisAndGenerationUtils.THIS;
+
+        public override ClassMemberType TheMemberType => ClassMemberType.Property;
     }
 }
