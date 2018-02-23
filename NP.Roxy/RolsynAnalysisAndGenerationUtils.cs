@@ -1267,7 +1267,8 @@ namespace NP.Roxy
                         calledMethodContainerTypeSymbol, 
                         nameToMatch, 
                         callingMethod.ReturnType, 
-                        callingMethod.Parameters.Select(param => param.Type)
+                        callingMethod.Parameters.Select(param => param.Type),
+                        allowNonPublic
                     );
         }
 
