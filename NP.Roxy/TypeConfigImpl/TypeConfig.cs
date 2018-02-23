@@ -844,7 +844,7 @@ namespace NP.Roxy.TypeConfigImpl
                             .Except
                             (
                                 this.SuperClassTypeSymbol.GetAllPublicMembers(),
-                                RoslynAnalysisAndGenerationUtils.TheSymbolByNameComparer
+                                RoslynAnalysisAndGenerationUtils.TheSymbolByNameAndSignatureComparer
                             ).Union(SuperClassTypeSymbol.GetMembers().Where(member => member.IsOverridable()));
             }
         }

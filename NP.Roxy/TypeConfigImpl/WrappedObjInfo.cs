@@ -254,7 +254,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         public void AddMissingMaps(IEnumerable<ISymbol> wrapperMembers)
         {
-            wrapperMembers.DoForEach(wrapperMemberName => AddWrapperMapIfMissing(wrapperMemberName));
+            wrapperMembers.DoForEach(wrapperMember => AddWrapperMapIfMissing(wrapperMember));
         }
 
         // gets all member infos for the wrapperMemberName 

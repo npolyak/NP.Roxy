@@ -12,8 +12,10 @@ namespace NP.Roxy.MethodOverloadingTest
 
         public abstract string LastName { get; }
 
+        // demonstrates method overloading
         public string GetGreeting() => "Hello World!";
 
+        // demonstrates method overloading
         public string GetGreeting(string greetingMessage)
         {
             return $"{greetingMessage} {FirstName} {LastName}!";

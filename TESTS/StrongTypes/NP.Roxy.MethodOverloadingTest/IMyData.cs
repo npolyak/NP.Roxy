@@ -12,6 +12,10 @@ namespace NP.Roxy.MethodOverloadingTest
 
         string LastName { get; set; }
 
+        // demonstrates method overloading
+        string GetGreeting();
+
+        // demonstrates method overloading
         string GetGreeting(string greetingMessage);
     }
 }

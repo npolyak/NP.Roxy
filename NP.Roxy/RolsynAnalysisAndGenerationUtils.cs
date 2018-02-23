@@ -932,6 +932,26 @@ namespace NP.Roxy
             return result;
         }
 
+        public static bool MethodsStrictlyMatch(this IMethodSymbol method1, IMethodSymbol method2)
+        {
+            if (method1.Name != method2.Name)
+                return false;
+
+            IEnumerable<IParameterSymbol> params1 = method1.Parameters;
+            IEnumerable<IParameterSymbol> params2 = method2.Parameters;
+
+            if (params1.Count() != params2.Count())
+                return false;
+
+            foreach(var pars in params1.Zip(params2, (par1, par2) => new { Par1 = par1, Par2 = par2 }))
+            {
+                if (!pars.Par1.Type.TypesStrictlyMatch(pars.Par2.Type))
+                    return false;
+            }
+
+            return true;
+        }
+
         public static IEnumerable<ISymbol> GetAllPublicMembers
         (
             this ITypeSymbol typeSymbol,
@@ -951,8 +971,8 @@ namespace NP.Roxy
             where TSymbol : class, ISymbol
             => symbols.Where(symb => symb is TSymbol).Cast<TSymbol>();
 
-        public static IEqualityComparer<ISymbol> TheSymbolByNameComparer { get; } =
-            new SymbolByNameComparer();
+        public static IEqualityComparer<ISymbol> TheSymbolByNameAndSignatureComparer { get; } =
+            new SymbolByNameAndSignatureComparer();
 
         public static string InterfaceToClassName(this string typeName)
         {
@@ -1118,6 +1138,28 @@ namespace NP.Roxy
             typeSymbol.GetPublicDefaultConstructor() != null;
 
 
+        public static bool TypesStrictlyMatch
+        (
+           this ITypeSymbol type1,
+           ITypeSymbol type2
+        )
+        {
+            if (type1 is INamedTypeSymbol namedType1)
+            {
+                if (type2 is INamedTypeSymbol namedType2)
+                {
+                    return namedType1.GetFullTypeString() == namedType2.GetFullTypeString();
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return (type1.GetFullNamespace() == type2.GetFullNamespace()) && 
+                   (type1.Name == type2.Name);
+        }
+
         public static bool ParamTypesMatch
         (
             this Compilation compilation,
@@ -1150,6 +1192,9 @@ namespace NP.Roxy
                 if (source == null)
                     return false;
             }
+
+            if (source == target)
+                return true;
 
             return compilation.ClassifyConversion(source, target).IsImplicit;
         }
@@ -1467,10 +1512,22 @@ namespace NP.Roxy
             FindMatchingVoidMethodSymbol<ContainerType, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface>(compilation, methodName);
     }
 
-    public class SymbolByNameComparer : IEqualityComparer<ISymbol>
+    public class SymbolByNameAndSignatureComparer : IEqualityComparer<ISymbol>
     {
         public bool Equals(ISymbol x, ISymbol y)
         {
+            if (x is IMethodSymbol xMethod)
+            {
+                if (y is IMethodSymbol yMethod)
+                {
+                    return xMethod.MethodsStrictlyMatch(yMethod);
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
             return x.Name == y.Name;
         }
 

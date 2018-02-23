@@ -35,6 +35,8 @@ namespace NP.Roxy.MethodOverloadingTest
     {
         static void Main(string[] args)
         {
+            Core.SetSaveOnErrorPath("GeneratedCode");
+
             ITypeConfig<IWrapper> typeConfig = Core.FindOrCreateTypeConfig<IMyData, IWrapper>();
 
             typeConfig.ConfigurationCompleted();
@@ -44,9 +46,12 @@ namespace NP.Roxy.MethodOverloadingTest
             myData.FirstName = "Joe";
             myData.LastName = "Doe";
 
-            string greetingStr = myData.GetGreeting("Hello");
+            string greetingStr1 = myData.GetGreeting();
+            Console.WriteLine(greetingStr1);
 
-            Console.WriteLine(greetingStr);
+            string greetingStr2 = myData.GetGreeting("Hello");
+
+            Console.WriteLine(greetingStr2);
 
             Core.Save("GeneratedCode");
         }
