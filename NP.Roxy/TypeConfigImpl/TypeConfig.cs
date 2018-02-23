@@ -94,16 +94,46 @@ namespace NP.Roxy.TypeConfigImpl
 
         void SetInit<TInit>(string propName);
 
-        void SetActions<TObj1, TPart1, TObj2, TPart2>
+        void SetPropGetter<TImpl, TProp>
         (
-            Expression<Func<TObj1, TPart1>> property1Expression,
-            Expression<Func<TObj2, TPart2>> property2Expression,
-            Action<TPart1, TPart2> setAction,
-            Action<TPart1, TPart2> unsetAction = null
+            Expression<Func<TImpl, TProp>> propNameGetter,
+            Expression<Func<TImpl, TProp>> propGetter
         );
     }
 
-    public interface ITypeConfig<TImplementedInterface, TSuperClass, TWrappedInterface> : ITypeConfig
+    public interface ITypeConfig<TWrapperInterface> : ITypeConfig
+    {
+        void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        (
+            string propName, 
+            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TWrappedObj, TProp>> propGetter
+        );
+
+        void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        (
+            Expression<Func<TImpl, TProp>> propNameGetter,
+            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TWrappedObj, TProp>> propGetter
+        );
+
+
+        void SetPropMemberMap<TWrapper, TWrappedObj, TWrapperProp>
+        (
+            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TWrappedObj, TWrapperProp>> wrappedPropChooser,
+            Expression<Func<TWrapper, TWrapperProp>> wrapperPropChooser);
+
+        void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TOut>
+        (
+             Expression<Func<TImpl, TIn1, TOut>> methodNameGetter,
+             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TWrappedObj, TIn1, TOut>> wrappedMethod
+        );
+    }
+
+
+    public interface ITypeConfig<TImplementedInterface, TSuperClass, TWrapperInterface> : ITypeConfig<TWrapperInterface>
     {
     }
 
@@ -112,7 +142,7 @@ namespace NP.Roxy.TypeConfigImpl
         internal const string INIT_METHOD_NAME = "__Init";
     }
 
-    public class TypeConfigBySymbols : TypeConfigBase, ITypeConfig
+    public class TypeConfigBySymbols<TWrapperInterface> : TypeConfigBase, ITypeConfig<TWrapperInterface>
     {
         public INamedTypeSymbol ImplInterfaceTypeSymbol { get; private set; }
 
@@ -120,8 +150,13 @@ namespace NP.Roxy.TypeConfigImpl
 
         public INamedTypeSymbol WrapInterfaceTypeSymbol { get; private set; }
 
+        // all types that can be used to reference the object
+        protected IEnumerable<INamedTypeSymbol> AllReferenceTypesSymbols =>
+            new[] { ImplInterfaceTypeSymbol, SuperClassTypeSymbol };
+
+        // all implemented types 
         protected IEnumerable<INamedTypeSymbol> AllImplementedTypesSymbols =>
-            new[] { ImplInterfaceTypeSymbol, SuperClassTypeSymbol, WrapInterfaceTypeSymbol };
+            AllReferenceTypesSymbols.Union(WrapInterfaceTypeSymbol.ToCollection());
 
         public bool HasInterfaceToImplement =>
             ImplInterfaceTypeSymbol.Name != nameof(NoInterface);
@@ -195,13 +230,12 @@ namespace NP.Roxy.TypeConfigImpl
         protected void SetFromSymbols
         (
             INamedTypeSymbol implInterfaceTypeSymbol,
-            INamedTypeSymbol superClassTypeSymbol,
-            INamedTypeSymbol wrapInterfaceTypeSymbol
+            INamedTypeSymbol superClassTypeSymbol
         )
         {
             this.ImplInterfaceTypeSymbol = implInterfaceTypeSymbol;
             this.SuperClassTypeSymbol = superClassTypeSymbol;
-            this.WrapInterfaceTypeSymbol = wrapInterfaceTypeSymbol;
+            this.WrapInterfaceTypeSymbol = typeof(TWrapperInterface).GetTypeSymbol(this.TheCompilation);
 
             TheCore.AddTypeSymbolsToReference(AllImplementedTypesSymbols);
 
@@ -229,7 +263,7 @@ namespace NP.Roxy.TypeConfigImpl
             foreach (ISymbol prop in props)
             {
                 WrappedObjInfo wrappedObjInfo =
-                    new WrappedObjInfo { WrappedObjPropName = prop.Name, TheCore = this.TheCore };
+                    new WrappedObjInfo(this.TheCore, prop.Name);
 
                 _wrappedObjInfos.Add(wrappedObjInfo);
             }
@@ -242,16 +276,14 @@ namespace NP.Roxy.TypeConfigImpl
             Core core,
             string className = null,
             INamedTypeSymbol implInterfaceTypeSymbol = null,
-            INamedTypeSymbol superClassTypeSymbol = null,
-            INamedTypeSymbol wrapInterfaceTypeSymbol = null
+            INamedTypeSymbol superClassTypeSymbol = null
         )
         {
             TheCore = core;
             this.ClassName = className;
 
             if ( (implInterfaceTypeSymbol == null) && 
-                 (superClassTypeSymbol == null)  &&
-                 (wrapInterfaceTypeSymbol == null) )
+                 (superClassTypeSymbol == null) )
             {
                 return;
             }
@@ -259,8 +291,7 @@ namespace NP.Roxy.TypeConfigImpl
             SetFromSymbols
             (
                 implInterfaceTypeSymbol, 
-                superClassTypeSymbol, 
-                wrapInterfaceTypeSymbol
+                superClassTypeSymbol
             );
         }
 
@@ -275,6 +306,13 @@ namespace NP.Roxy.TypeConfigImpl
             }
 
             return wrappedObjInfo;
+        }
+
+        WrappedObjInfo GetWrappedObjInfo<TWrappedObj, TProp>(Expression<Func<TWrappedObj, TProp>> expr)
+        {
+            string wrappedObjName = expr.GetMemberName();
+
+            return GetWrappedObjInfo(wrappedObjName);
         }
 
         public void SetAllowNonPublicForAllMembers(string wrappedObjPropName)
@@ -292,10 +330,133 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
+        private PropertyWrapperMemberBuilderInfo GetPropWrapperMemberBuilderInfoByExpr<TImpl, TProp>(Expression<Func<TImpl, TProp>> propNameGetter)
+        {
+            string propName = propNameGetter.GetMemberName();
+
+            Type implType = typeof(TImpl);
+
+            INamedTypeSymbol implTypeSymbol =
+                implType.GetTypeSymbol(this.TheCompilation);
+
+            if (!this.AllReferenceTypesSymbols.Contains(implTypeSymbol))
+            {
+                string errorMessage =
+                    $"Roxy Usage Error: referenced interface {ImplInterfaceTypeSymbol.Name} and class {SuperClassTypeSymbol}" +
+                    $" do not include property {propName} container {implTypeSymbol.Name}";
+                throw new Exception(errorMessage);
+            }
+
+            PropertyWrapperMemberBuilderInfo propBuilderInfo =
+                this.GetPropWrapperMemberBuilderInfo(propName);
+
+            return propBuilderInfo;
+        }
+
+        public void SetPropGetter<TImpl, TProp>
+        (
+            Expression<Func<TImpl, TProp>> propNameGetter,
+            Expression<Func<TImpl, TProp>> propGetter
+        )
+        {
+            PropertyWrapperMemberBuilderInfo propBuilderInfo =
+                GetPropWrapperMemberBuilderInfoByExpr(propNameGetter);
+
+            propBuilderInfo.SetPropGetter(propGetter);
+        }
+
+
+        public void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        (
+            string propName,
+            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TWrappedObj, TProp>> propGetter
+        )
+        {
+            ThrowErrorIfCompleted();
+            WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjChooser);
+
+            ISymbol wrapperMemberSymbol = GetWrapperMemberSymbolByName(propName);
+
+            wrappedObjInfo.SetExpressionMemberMap<TWrappedObj>(wrapperMemberSymbol, propGetter);
+        }
+
+
+        public void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        (
+            Expression<Func<TImpl, TProp>> propNameGetter,
+            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TWrappedObj, TProp>> propGetter
+        )
+        {
+            this.SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+            (
+                propNameGetter.GetMemberName(), 
+                wrappedObjChooser, 
+                propGetter
+            );
+        }
+
+        public void SetVoidMethod<TImpl, TWrappedObj>
+        (
+             Expression<Func<TImpl>> methodNameGetter,
+             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Action<TWrappedObj>> wrappedMethod
+        )
+        {
+
+        }
+
+        public void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TOut>
+        (
+             Expression<Func<TImpl, TIn1, TOut>> methodNameGetter,
+             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TWrappedObj, TIn1, TOut>> wrappedMethod
+        )
+        {
+            ThrowErrorIfCompleted();
+            WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjChooser);
+
+            IMethodSymbol callingMethodSymbol = 
+                this.TheCompilation.FindMatchingMethodSymbol<TImpl, TIn1, TOut>(methodNameGetter.GetMemberName());
+
+            wrappedObjInfo.SetExpressionMemberMap<TWrappedObj>(callingMethodSymbol, wrappedMethod);
+        }
+
+        public void SetPropMemberMap<TImplementer, TWrappedObj, TWrapperProp>
+        (
+            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser, 
+            Expression<Func<TWrappedObj, TWrapperProp>> wrappedPropChooser, 
+            Expression<Func<TImplementer, TWrapperProp>> wrapperPropChooser)
+        {
+            string wrappedObjPropName = wrappedObjChooser.GetMemberName();
+            string wrappedMemberName = wrappedPropChooser.GetMemberName();
+            string wrapperMemberName = wrapperPropChooser.GetMemberName();
+            SetMemberMap(wrappedObjPropName, wrappedMemberName, wrapperMemberName);
+        }
+
+        public ISymbol GetWrapperMemberSymbolByName(string wrapperMemberName)
+        {
+            IEnumerable<ISymbol> wrapperMemberSymbols = ImplementableSymbols.Where(symbol => symbol.Name == wrapperMemberName).ToList();
+
+            if (wrapperMemberSymbols.IsNullOrEmpty())
+            {
+                throw new Exception($"Roxy Usage Error: no implementable symbol for member name {wrapperMemberName}");
+            }
+            else if (wrapperMemberSymbols.Count() > 1)
+            {
+                throw new Exception($"Roxy Usage Error: there is more than one implementable member corresponding to member name {wrapperMemberName}. Cannot resolve the member by name.");
+            }
+
+            ISymbol wrapperMemberSymbol = wrapperMemberSymbols.Single();
+
+            return wrapperMemberSymbol;
+        }
+
         public void SetMemberMap
         (
-            string wrappedObjPropName, 
-            string wrappedMemberName, 
+            string wrappedObjPropName,
+            string wrappedMemberName,
             string wrapperMemberName,
             bool? allowNonPublic = null
         )
@@ -304,7 +465,14 @@ namespace NP.Roxy.TypeConfigImpl
 
             WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjPropName);
 
-            wrappedObjInfo.SetMap(wrappedMemberName, wrapperMemberName, allowNonPublic);
+            ISymbol wrapperMemberSymbol = null;
+
+            if (wrapperMemberName != RoslynAnalysisAndGenerationUtils.THIS)
+            {
+                wrapperMemberSymbol = GetWrapperMemberSymbolByName(wrapperMemberName);
+            }
+
+            wrappedObjInfo.SetMap(wrappedMemberName, wrapperMemberSymbol, allowNonPublic);
         }
 
         public void SetThisMemberMap
@@ -314,10 +482,8 @@ namespace NP.Roxy.TypeConfigImpl
             bool? allowNonPublic = null
         )
         {
-            SetMemberMap(wrappedObjPropName, wrappedMemberName, "this", allowNonPublic);
+            SetMemberMap(wrappedObjPropName, wrappedMemberName, RoslynAnalysisAndGenerationUtils.THIS, allowNonPublic);
         }
-
-
 
         public void SetMemberMapAllowNonPublic
         (
@@ -390,22 +556,22 @@ namespace NP.Roxy.TypeConfigImpl
         {
             this.EventBuilderInfos =
                 this.ImplementableSymbols.GetSymbolsOfType<IEventSymbol>()
-                    .Select(symbol => new EventWrapperMemberBuilderInfo(symbol)).ToList();
+                    .Select(symbol => new EventWrapperMemberBuilderInfo(symbol, this.TheCompilation)).ToList();
 
             this.PropBuilderInfos =
                  this.ImplementableSymbols.GetSymbolsOfType<IPropertySymbol>()
-                     .Select(symbol => new PropertyWrapperMemberBuilderInfo(symbol)).ToList();
+                     .Select(symbol => new PropertyWrapperMemberBuilderInfo(symbol, this.TheCompilation)).ToList();
 
             this.MethodBuilderInfos =
                 this.ImplementableSymbols.GetSymbolsOfType<IMethodSymbol>()
                     .Where(symbol => symbol.AssociatedSymbol == null)
-                    .Select(symbol => new MethodWrapperMemberBuilderInfo(symbol)).ToList();
+                    .Select(symbol => new MethodWrapperMemberBuilderInfo(symbol, this.TheCompilation)).ToList();
         }
 
         void SetMissingMaps()
         {
             this._wrappedObjInfos
-                .DoForEach(wrappedObjInfo => wrappedObjInfo.AddMissingMaps(ImplementableSymbols.Select(symb => symb.Name).Distinct()));
+                .DoForEach(wrappedObjInfo => wrappedObjInfo.AddMissingMaps(ImplementableSymbols.Distinct()));
         }
 
 
@@ -415,7 +581,7 @@ namespace NP.Roxy.TypeConfigImpl
             this.EventBuilderInfos.Cast<WrapperMemberBuilderInfoBase>()
                 .Union(PropBuilderInfos.Where(propBuilderInfo => propBuilderInfo.MustImplement))
                 .Union(MethodBuilderInfos.Where(propBuilderInfo => propBuilderInfo.MustImplement))
-                .DoForEach(builderInfo => builderInfo.SetWrappedMembers(GetWrappedMemberInfos(builderInfo.WrapperSymbolName)));
+                .DoForEach(builderInfo => builderInfo.SetWrappedMembers(GetWrappedMemberInfos(builderInfo.WrapperSymbolBase)));
         }
 
         public void SetOverrideVirtual(string memberName, bool includeBase = false)
@@ -443,6 +609,9 @@ namespace NP.Roxy.TypeConfigImpl
 
         IEnumerable<MethodWrapperMemberBuilderInfo> MethodBuilderInfos { get; set; }
 
+        IEnumerable<WrapperMemberBuilderInfoBase> AllWrapperMemberInfos =>
+            EventBuilderInfos.NullToEmpty().Cast<WrapperMemberBuilderInfoBase>().Union(PropBuilderInfos.NullToEmpty()).Union(MethodBuilderInfos.NullToEmpty());
+
         void OpenClassDeclaration(RoslynCodeBuilder roslynCodeBuilder)
         {
             roslynCodeBuilder.AddClass
@@ -454,12 +623,12 @@ namespace NP.Roxy.TypeConfigImpl
             );
         }
 
-        private IEnumerable<MemberMapInfo>
-            GetWrappedMemberInfos(string wrapperMemberName)
+        private IEnumerable<MemberMapInfoBase>
+            GetWrappedMemberInfos(ISymbol wrapperSymbol)
         {
             return 
                 _wrappedObjInfos
-                    .SelectMany(wrappedObj => wrappedObj.GetWrappedMemberInfo(wrapperMemberName).ToCollection().ToList()).ToList();
+                    .SelectMany(wrappedObj => wrappedObj.GetWrappedMemberInfo(wrapperSymbol).ToCollection().ToList()).ToList();
         }
 
         private void ImplementEvents(RoslynCodeBuilder roslynCodeBuilder)
@@ -586,18 +755,13 @@ namespace NP.Roxy.TypeConfigImpl
             roslynCodeBuilder.PopRegion();
         }
 
-
-        protected virtual void AddStaticInitLambda(RoslynCodeBuilder roslynCodeBuilder)
-        {
-
-        }
-
         public const string STATIC_CORE_MEMBER_NAME = "TheCore";
 
         void AddStaticCoreReference(RoslynCodeBuilder roslynCodeBuilder)
         {
             roslynCodeBuilder.AddLine($"public static Core TheCore {{ get; set; }}");
         }
+
 
         internal string GenerateCode()
         {
@@ -622,8 +786,6 @@ namespace NP.Roxy.TypeConfigImpl
             OpenClassDeclaration(roslynCodeBuilder);
 
             AddStaticCoreReference(roslynCodeBuilder);
-
-            //AddStaticInitLambda(roslynCodeBuilder);
 
             ImplementEvents(roslynCodeBuilder);
 
@@ -735,17 +897,6 @@ namespace NP.Roxy.TypeConfigImpl
             //INamedTypeSymbol partSymbol = typeof(TPart).GetTypeSymbol(TheCompilation);
         }
 
-        public void SetActions<TObj1, TPart1, TObj2, TPart2>
-        (
-            Expression<Func<TObj1, TPart1>> property1Expression,
-            Expression<Func<TObj2, TPart2>> property2Expression,
-            Action<TPart1, TPart2> setAction,
-            Action<TPart1, TPart2> unsetAction = null
-        )
-        {
-            
-        }
-
         public void SetInit
         (
             string propName, 
@@ -755,7 +906,7 @@ namespace NP.Roxy.TypeConfigImpl
             PropertyWrapperMemberBuilderInfo propertyWrapperMemberBuilder = 
                 GetPropWrapperMemberBuilderInfo(propName);
 
-            propertyWrapperMemberBuilder.SetInit(typeSymbol, this.TheCompilation);
+            propertyWrapperMemberBuilder.SetInit(typeSymbol);
         }
 
         public void SetInit<TInit>(string propName)
@@ -766,7 +917,7 @@ namespace NP.Roxy.TypeConfigImpl
         }
     }
 
-    internal class TypeConfig : TypeConfigBySymbols
+    internal class TypeConfig<TWrapperInterface>: TypeConfigBySymbols<TWrapperInterface>
     {
         public Type ImplInterfaceType { get; private set; }
 
@@ -793,8 +944,7 @@ namespace NP.Roxy.TypeConfigImpl
             base.SetFromSymbols
             (
                 ImplInterfaceType.GetTypeSymbol(TheCompilation),
-                SuperClassType.GetTypeSymbol(TheCompilation),
-                WrapInterfaceType.GetTypeSymbol(TheCompilation)
+                SuperClassType.GetTypeSymbol(TheCompilation)
             );
         }
 
@@ -802,13 +952,45 @@ namespace NP.Roxy.TypeConfigImpl
             new[] { ImplInterfaceType, SuperClassType, WrapInterfaceType };
     }
 
-    internal class TypeConfig<TImplementedInterface, TSuperClass, TWrappedInterface> :
-        TypeConfig,
-        ITypeConfig<TImplementedInterface, TSuperClass, TWrappedInterface>
+    internal class TypeConfig<TImplementedInterface, TSuperClass, TWrapperInterface> :
+        TypeConfig<TWrapperInterface>,
+        ITypeConfig<TImplementedInterface, TSuperClass, TWrapperInterface>
     {
         public TypeConfig(Core core, string className = null) : 
-            base(core, className, typeof(TImplementedInterface), typeof(TSuperClass), typeof(TWrappedInterface))
+            base(core, className, typeof(TImplementedInterface), typeof(TSuperClass), typeof(TWrapperInterface))
         {
+        }
+    }
+
+    public static class TypeConfigExtensions
+    {
+        public static void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        (
+            this ITypeConfig<SingleWrapperInterface<TWrappedObj>> typeConfig,
+            string propName,
+            Expression<Func<TWrappedObj, TProp>> propGetter
+        )
+        {
+            typeConfig.SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+            (
+                propName,
+                (singleWrapperInt) => singleWrapperInt.TheWrappedType,
+                propGetter
+            );
+        }
+
+        public static void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        (
+            this ITypeConfig<SingleWrapperInterface<TWrappedObj>> typeConfig,
+            Expression<Func<TImpl, TProp>> propNameGetter,
+            Expression<Func<TWrappedObj, TProp>> propGetter
+        )
+        {
+            typeConfig.SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+            (
+                propNameGetter.GetMemberName(),
+                propGetter
+            );
         }
     }
 }

@@ -14,11 +14,15 @@ namespace MultiConcernsRoxyTest
         {
             InitializeComponent();
 
+            Core.SetSaveOnErrorPath("GeneratedCode");
+
             RoxyModelAssembler.AssembleSelectableRemovablePerson();
 
             RoxyModelAssembler.AssembleSelectableRemovableBusinessGroup();
 
             RoxyModelAssembler.AssembleBusinessGroupsCollection();
+
+            Core.Save("GeneratedCode");
 
             SingleSelectionObservableCollection<ISelectableRemovableBusinessGroup> dataContext =
                 Core.GetInstanceOfGeneratedType<SingleSelectionObservableCollection<ISelectableRemovableBusinessGroup>>();
