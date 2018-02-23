@@ -192,7 +192,7 @@ namespace NP.Roxy.TypeConfigImpl
             this.DefaultCodeBuilder = AutoPropBuilder.TheAutoPropBuilder;
         }
 
-        ReplaceFirstArgExprStringBuilder _expressionBuilder;
+        ReplaceArgsExprStringBuilder _expressionBuilder;
         public string ExpressionStr { get; private set; }
 
         protected override void BuildIfNoWrappers(RoslynCodeBuilder roslynCodeBuilder)
@@ -219,7 +219,7 @@ namespace NP.Roxy.TypeConfigImpl
             if (this.WrapperSymbol.HasSetter())
                 throw new Exception($"Roxy Usage Error: Cannot set expression for property {this.WrapperSymbol.Name} since it has a setter");
 
-            _expressionBuilder = new ReplaceFirstArgExprStringBuilder(RoslynAnalysisAndGenerationUtils.THIS);
+            _expressionBuilder = new ReplaceArgsExprStringBuilder(RoslynAnalysisAndGenerationUtils.THIS);
 
             _expressionBuilder.Visit(propGetterExpression);
 

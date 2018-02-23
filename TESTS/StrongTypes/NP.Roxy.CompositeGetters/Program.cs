@@ -65,7 +65,7 @@ namespace NP.Roxy.OverloadingTest
             typeConfig.SetPropGetter<IMyData, string>
             (
                 (data) => data.FullName,
-                (data) => data.FirstName + " " + data.LastName
+                (data) => data.LastName + ", " + data.FirstName
             );
 
             typeConfig.ConfigurationCompleted();

@@ -92,8 +92,8 @@ namespace NP.Roxy.TypeConfigImpl
 
         internal override void AddWrappedMethodLine(IMethodSymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
-            ReplaceFirstArgExprStringBuilder exprStrBuilder =
-                new ReplaceFirstArgExprStringBuilder(this.WrappedObjPropName);
+            ReplaceArgsExprStringBuilder exprStrBuilder =
+                new ReplaceArgsExprStringBuilder(this.WrappedObjPropName.ToCollection().Union(wrapperSymbol.Parameters.Select(param => param.Name)).ToArray());
 
             exprStrBuilder.Visit(this.TheExpression);
 
@@ -102,8 +102,8 @@ namespace NP.Roxy.TypeConfigImpl
 
         internal override void AddWrappedPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
-            ReplaceFirstArgExprStringBuilder exprStrBuilder = 
-                new ReplaceFirstArgExprStringBuilder(this.WrappedObjPropName);
+            ReplaceArgsExprStringBuilder exprStrBuilder = 
+                new ReplaceArgsExprStringBuilder(this.WrappedObjPropName);
 
             exprStrBuilder.Visit(this.TheExpression);
 
