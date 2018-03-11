@@ -12,6 +12,7 @@
 using Microsoft.CodeAnalysis;
 using NP.Roxy;
 using NP.Roxy.TypeConfigImpl;
+using NP.Utilities.Behaviors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,10 +23,42 @@ using System.Threading.Tasks;
 
 namespace NP.Roxy.AttrTest
 {
+    public interface ISelectableData : IMyData, ISelectableItem<ISelectableData>
+    {
+
+    }
+
+    public interface WrapperInterface
+    {
+        SelectableItem<ISelectableData> TheSelectableItem { get; }
+    }
+
+
     class Program
     {
         static void Main(string[] args)
         {
+            ITypeConfig<WrapperInterface> typeConfig =
+                Core.FindOrCreateTypeConfig<ISelectableData, WrapperInterface>();
+
+            typeConfig.ConfigurationCompleted();
+
+            ISelectableData myInterfaceObj =
+                Core.GetInstanceOfGeneratedType<ISelectableData>(typeConfig.ClassName) as ISelectableData;
+
+            myInterfaceObj.FirstName = "Nick";
+            myInterfaceObj.LastName = "Polyak";
+
+            myInterfaceObj.IsSelectedChanged += MyInterfaceObj_IsSelectedChanged;
+
+            myInterfaceObj.IsSelected = true;
+
+            Core.Save("GeneratedCode");
+        }
+
+        private static void MyInterfaceObj_IsSelectedChanged(ISelectableItem<ISelectableData> obj)
+        {
+            Console.WriteLine("IsSelected changed");
         }
     }
 }

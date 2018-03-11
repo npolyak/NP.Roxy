@@ -271,7 +271,8 @@ namespace NP.Roxy.TypeConfigImpl
         internal const string INIT_METHOD_NAME = "__Init";
     }
 
-    public class TypeConfigBySymbols<TWrapperInterface> : TypeConfigBase, ITypeConfig<TWrapperInterface>
+    public class TypeConfigBySymbols<TWrapperInterface, TWrapperInterfaceExtended> : TypeConfigBase, ITypeConfig<TWrapperInterface>
+        where TWrapperInterfaceExtended : TWrapperInterface
     {
         public INamedTypeSymbol ImplInterfaceTypeSymbol { get; private set; }
 
@@ -364,7 +365,7 @@ namespace NP.Roxy.TypeConfigImpl
         {
             this.ImplInterfaceTypeSymbol = implInterfaceTypeSymbol;
             this.SuperClassTypeSymbol = superClassTypeSymbol;
-            this.WrapInterfaceTypeSymbol = typeof(TWrapperInterface).GetTypeSymbol(this.TheCompilation);
+            this.WrapInterfaceTypeSymbol = typeof(TWrapperInterfaceExtended).GetTypeSymbol(this.TheCompilation);
 
             TheCore.AddTypeSymbolsToReference(AllImplementedTypesSymbols);
 
@@ -1215,7 +1216,24 @@ namespace NP.Roxy.TypeConfigImpl
         }
     }
 
-    internal class TypeConfig<TWrapperInterface>: TypeConfigBySymbols<TWrapperInterface>
+
+    public class TypeConfigBySymbols<TWrapperInterface> : TypeConfigBySymbols<TWrapperInterface, TWrapperInterface>
+    {
+        public TypeConfigBySymbols
+        (
+            Core core, 
+            string className = null, 
+            INamedTypeSymbol implInterfaceTypeSymbol = null, 
+            INamedTypeSymbol superClassTypeSymbol = null
+        ) : 
+            base(core, className, implInterfaceTypeSymbol, superClassTypeSymbol)
+        {
+        }
+    }
+
+    internal class TypeConfig<TWrapperInterface, TWrapperInterfaceExtended> : 
+        TypeConfigBySymbols<TWrapperInterface, TWrapperInterfaceExtended>        
+        where TWrapperInterfaceExtended : TWrapperInterface
     {
         public Type ImplInterfaceType { get; private set; }
 
@@ -1248,6 +1266,20 @@ namespace NP.Roxy.TypeConfigImpl
 
         internal Type[] ReferencedTypes =>
             new[] { ImplInterfaceType, SuperClassType, WrapInterfaceType };
+    }
+
+    internal class TypeConfig<TWrapperInterface> : TypeConfig<TWrapperInterface, TWrapperInterface>
+    {
+        public TypeConfig
+        (
+            Core core, 
+            string className = null, 
+            Type implInterfaceType = null, 
+            Type superClassType = null, 
+            Type wrapInterfaceType = null) : 
+            base(core, className, implInterfaceType, superClassType, wrapInterfaceType)
+        {
+        }
     }
 
     internal class TypeConfig<TImplementedInterface, TSuperClass, TWrapperInterface> :
