@@ -67,3 +67,5 @@
 /TESTS/StrongTypes/NP.Roxy.MethodOverloadingTest/bin/Debug
 /TESTS/StrongTypes/NP.Roxy.MethodOverloadingTest/obj/Debug
 /TESTS/RoxyTest/NP.Roxy.Tests.TypeImplTest/bin/Debug
+/TESTS/IoCTests/NP.Roxy.AttrTest/bin/Debug
+/TESTS/IoCTests/NP.Roxy.AttrTest/obj/Debug
