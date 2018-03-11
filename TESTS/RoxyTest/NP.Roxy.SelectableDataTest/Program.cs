@@ -10,7 +10,7 @@
 // products that use it.
 
 using Microsoft.CodeAnalysis;
-using NP.Paradigms;
+using NP.Utilities;
 using NP.Roxy;
 using NP.Roxy.TypeConfigImpl;
 using NP.Utilities.Behaviors;
