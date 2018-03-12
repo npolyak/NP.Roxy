@@ -841,9 +841,23 @@ namespace NP.Roxy
             }
         }
 
+        public static IEnumerable<INamedTypeSymbol> GetSelfAndAllBaseTypesAndInterfaces
+        (
+            this INamedTypeSymbol typeSymbol
+        )
+        {
+            return typeSymbol.GetSelfAndAllBaseTypes().Union(typeSymbol.AllInterfaces.NullToEmpty());
+        }
+
         public static bool IsSelfOrSuperClass(this INamedTypeSymbol typeSymbol, string className)
         {
             return typeSymbol.GetSelfAndAllBaseTypes().FirstOrDefault(t => t.Name == className) != null;
+        }
+
+        public static bool IsSelfOrSuperType(this INamedTypeSymbol typeSymbol, INamedTypeSymbol superTypeSymbol)
+        {
+            return 
+                typeSymbol.GetSelfAndAllBaseTypesAndInterfaces().FirstOrDefault(t => t.TypesStrictlyMatch(superTypeSymbol)) != null;
         }
 
         public static AttributeData GetAttrSymbol(this ISymbol symbol, Type attrType)

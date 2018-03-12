@@ -359,12 +359,27 @@ namespace NP.Roxy.TypeConfigImpl
         protected void SetFromSymbols
         (
             INamedTypeSymbol implInterfaceTypeSymbol,
-            INamedTypeSymbol superClassTypeSymbol
+            INamedTypeSymbol superClassTypeSymbol,
+            INamedTypeSymbol wrapperInterfaceSymbol = null
         )
         {
             this.ImplInterfaceTypeSymbol = implInterfaceTypeSymbol;
             this.SuperClassTypeSymbol = superClassTypeSymbol;
-            this.WrapInterfaceTypeSymbol = typeof(TWrapperInterface).GetTypeSymbol(this.TheCompilation);
+
+            INamedTypeSymbol genericArgWrapperInterfaceTypeSymbol =
+                 typeof(TWrapperInterface).GetTypeSymbol(this.TheCompilation);
+
+            if (wrapperInterfaceSymbol == null)
+            {
+                wrapperInterfaceSymbol = genericArgWrapperInterfaceTypeSymbol;
+            }
+
+            if (!wrapperInterfaceSymbol.IsSelfOrSuperType(genericArgWrapperInterfaceTypeSymbol))
+            {
+                throw new Exception($"Roxy usage error: {wrapperInterfaceSymbol.GetFullTypeString()} does not derive from {genericArgWrapperInterfaceTypeSymbol.GetFullTypeString()}.");
+            }
+
+            this.WrapInterfaceTypeSymbol = wrapperInterfaceSymbol;
 
             TheCore.AddTypeSymbolsToReference(AllImplementedTypesSymbols);
 
@@ -405,7 +420,8 @@ namespace NP.Roxy.TypeConfigImpl
             Core core,
             string className = null,
             INamedTypeSymbol implInterfaceTypeSymbol = null,
-            INamedTypeSymbol superClassTypeSymbol = null
+            INamedTypeSymbol superClassTypeSymbol = null,
+            INamedTypeSymbol wrapperInterfaceTypeSymbol = null
         )
         {
             TheCore = core;
@@ -420,7 +436,8 @@ namespace NP.Roxy.TypeConfigImpl
             SetFromSymbols
             (
                 implInterfaceTypeSymbol, 
-                superClassTypeSymbol
+                superClassTypeSymbol,
+                wrapperInterfaceTypeSymbol
             );
         }
 
@@ -1230,20 +1247,22 @@ namespace NP.Roxy.TypeConfigImpl
             Core core,
             string className = null,
             Type implInterfaceType = null,
-            Type superClassType = null
+            Type superClassType = null,
+            Type wrapInterfaceType = null
         )
             : base(core, className)
         {
             ImplInterfaceType = implInterfaceType.GetInterfaceType();
             SuperClassType = superClassType.GetClassType();
-            WrapInterfaceType = typeof(TWrapperInterface).GetInterfaceType();
+            WrapInterfaceType = wrapInterfaceType.GetInterfaceType();
 
             this.TheCore.AddTypesToReference(ReferencedTypes);
 
             base.SetFromSymbols
             (
                 ImplInterfaceType.GetTypeSymbol(TheCompilation),
-                SuperClassType.GetTypeSymbol(TheCompilation)
+                SuperClassType.GetTypeSymbol(TheCompilation), 
+                WrapInterfaceType.GetTypeSymbol(TheCompilation)
             );
         }
 
@@ -1257,7 +1276,7 @@ namespace NP.Roxy.TypeConfigImpl
         ITypeConfig<TImplementedInterface, TSuperClass, TWrapperInterface>
     {
         public TypeConfig(Core core, string className = null) : 
-            base(core, className, typeof(TImplementedInterface), typeof(TSuperClass))
+            base(core, className, typeof(TImplementedInterface), typeof(TSuperClass), typeof(TWrapperInterface))
         {
         }
     }
