@@ -45,6 +45,43 @@ namespace NP.Roxy
 
         internal List<ITypeConfig> AllTypesAddedToCompilation { get; } = new List<ITypeConfig>();
 
+
+        Dictionary<Type, Type> _wrapperDictionary = new Dictionary<Type, Type>();
+
+        public void SetTWrapper(Type typeToImplement, Type wrapperType, bool forceOverride = false)
+        {
+            if (!forceOverride)
+            {
+                if (_wrapperDictionary.TryGetValue(typeToImplement, out Type existingWrapperType))
+                {
+                    throw new Exception($"Roxy Usage Error: Type {typeToImplement.Name} already has an implementation wrapper type {existingWrapperType.Name}");
+                }
+            }
+
+            _wrapperDictionary[typeToImplement] = wrapperType;
+        }
+
+        public void SetTWrapper<TToImplement, TWrapper>(bool forceOverride = false)
+        {
+            Type typeToImplement = typeof(TToImplement);
+            Type wrapperType = typeof(TWrapper);
+
+            SetTWrapper(typeToImplement, wrapperType, forceOverride);
+        }
+
+        public Type GetTWrapper(Type typeToImplement)
+        {
+            if (_wrapperDictionary.TryGetValue(typeToImplement, out Type existingWrapperType))
+            {
+                return existingWrapperType;
+            }
+
+            return null;
+        }
+
+        public Type GetTWrapper<TToImplement>() =>
+            GetTWrapper(typeof(TToImplement));
+
         internal bool HasCreatedType(string className)
         {
             return AllCreatedTypes.FirstOrDefault(t => t.ClassName == className) != null;
@@ -531,6 +568,27 @@ namespace NP.Roxy
         {
             TheCore.SaveToPathOnCompilationError(savePath);
         }
+
+        public static void SetWrapperType
+        (
+            Type typeToImplement, 
+            Type wrapperType, 
+            bool forceOverride = false
+        )
+        {
+            TheCore.SetTWrapper(typeToImplement, wrapperType, forceOverride);
+        }
+
+        public static void SetWrapperType<TToImplement, TWrapper>(bool forceOverride = false)
+        {
+            TheCore.SetTWrapper<TToImplement, TWrapper>(forceOverride);
+        }
+
+        public static Type GetWrapperType(Type typeToImplement) =>
+            TheCore.GetTWrapper(typeToImplement);
+
+        public static Type GetWrapperType<TToImplement>()
+            => TheCore.GetTWrapper<TToImplement>();
     }
 
     internal static class CoreUtils

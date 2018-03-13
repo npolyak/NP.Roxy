@@ -38,6 +38,8 @@ namespace NP.Roxy.AttrTest
     {
         static void Main(string[] args)
         {
+            Core.SetWrapperType(typeof(ISelectableItem<>), typeof(SelectableItemWrapper<>));
+
             ITypeConfig<WrapperInterface> typeConfig =
                 Core.FindOrCreateTypeConfig<ISelectableData, WrapperInterface>();
 
