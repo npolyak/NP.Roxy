@@ -28,20 +28,14 @@ namespace NP.Roxy.AttrTest
 
     }
 
-    public interface WrapperInterface
-    {
-        SelectableItem<ISelectableData> TheSelectableItem { get; }
-    }
-
-
     class Program
     {
         static void Main(string[] args)
         {
             Core.SetWrapperType(typeof(ISelectableItem<>), typeof(SelectableItemWrapper<>));
 
-            ITypeConfig<WrapperInterface> typeConfig =
-                Core.FindOrCreateTypeConfig<ISelectableData, WrapperInterface>();
+            ITypeConfig typeConfig =
+                Core.FindOrCreateTypeConfigByTypeToImpl<ISelectableData>();
 
             typeConfig.ConfigurationCompleted();
 

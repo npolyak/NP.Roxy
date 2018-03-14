@@ -339,7 +339,7 @@ namespace NP.Roxy
         }
 
         public ITypeConfig<TWrapperInterface>
-            FindOrCreateTypeConfByTypeToImpl<TypeToImpl, TWrapperInterface>(string className)
+            FindOrCreateTypeConfByTypeToImpl<TypeToImpl, TWrapperInterface>(string className = null)
         {
             Type typeToImpl = typeof(TypeToImpl);
 
@@ -355,12 +355,12 @@ namespace NP.Roxy
             throw new Exception($"Type '{typeToImpl.Name}' is neither a class, no an interface");
         }
 
-        public ITypeConfig FindOrCreateTypeConfByTypeToImpl<TypeToImpl>(string className)
+        public ITypeConfig FindOrCreateTypeConfByTypeToImpl<TypeToImpl>(string className = null)
         {
             return this.FindOrCreateTypeConfByTypeToImpl<TypeToImpl, NoInterface>(className);
         }
 
-        public static ITypeConfig FindOrCreateTypeConfigByTypeToImpl<TypeToImpl>(string className)
+        public static ITypeConfig FindOrCreateTypeConfigByTypeToImpl<TypeToImpl>(string className = null)
         {
             return TheCore.FindOrCreateTypeConfByTypeToImpl<TypeToImpl>(className);
         }
@@ -376,6 +376,7 @@ namespace NP.Roxy
 
             return core.FindOrCreateTypeConf<TImplementedInterface, TSuperClass, TWrapperInterface>(className);
         }
+
 
         public static ITypeConfig<TWrapperInterface>
             FindOrCreateTypeConfig<TImplementedInterface, TWrapperInterface>
