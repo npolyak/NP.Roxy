@@ -355,12 +355,12 @@ namespace NP.Roxy
             throw new Exception($"Type '{typeToImpl.Name}' is neither a class, no an interface");
         }
 
-        public ITypeConfig<NoInterface> FindOrCreateTypeConfByTypeToImpl<TypeToImpl>(string className)
+        public ITypeConfig FindOrCreateTypeConfByTypeToImpl<TypeToImpl>(string className)
         {
             return this.FindOrCreateTypeConfByTypeToImpl<TypeToImpl, NoInterface>(className);
         }
 
-        public static ITypeConfig<NoInterface> FindOrCreateTypeConfigByTypeToImpl<TypeToImpl>(string className)
+        public static ITypeConfig FindOrCreateTypeConfigByTypeToImpl<TypeToImpl>(string className)
         {
             return TheCore.FindOrCreateTypeConfByTypeToImpl<TypeToImpl>(className);
         }
@@ -398,14 +398,14 @@ namespace NP.Roxy
             return TheCore.GetInstOfGeneratedType<T>(className, args);
         }
 
-        public ITypeConfig<NoInterface> FindOrCreateConcretizationTypeConf
+        public ITypeConfig FindOrCreateConcretizationTypeConf
         (
             INamedTypeSymbol typeToConcretizeSymbol, 
             string concreteClassName = null)
         {
             concreteClassName = concreteClassName ?? typeToConcretizeSymbol.Name.GetConcretizationName();
 
-            ITypeConfig<NoInterface> typeConfig =
+            ITypeConfig typeConfig =
                 TheCore.FindOrCreateTypeConfByTypeToImpl<NoInterface>(concreteClassName, typeToConcretizeSymbol);
 
             if (typeConfig.TheGeneratedCode == null)
@@ -419,7 +419,7 @@ namespace NP.Roxy
             return typeConfig;
         }
 
-        public ITypeConfig<NoInterface> FindOrCreateConcretizationTypeConf<T>(string concreteClassName = null)
+        public ITypeConfig FindOrCreateConcretizationTypeConf<T>(string concreteClassName = null)
         {
             AddTypesToReference((new[] { typeof(T), typeof(NoInterface)}));
 
@@ -428,12 +428,12 @@ namespace NP.Roxy
             return FindOrCreateConcretizationTypeConf(typeSymbol, concreteClassName);
         }
 
-        public static ITypeConfig<NoInterface> FindOrCreateConcretizationTypeConfig(INamedTypeSymbol classTypeSymbol)
+        public static ITypeConfig FindOrCreateConcretizationTypeConfig(INamedTypeSymbol classTypeSymbol)
         {
             return TheCore.FindOrCreateConcretizationTypeConf(classTypeSymbol);
         }
 
-        public static ITypeConfig<NoInterface> FindOrCreateConcretizationTypeConfig<T>()
+        public static ITypeConfig FindOrCreateConcretizationTypeConfig<T>()
         {
             return TheCore.FindOrCreateConcretizationTypeConf<T>();
         }
