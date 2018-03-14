@@ -59,6 +59,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IoCTests", "IoCTests", "{8A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NP.Roxy.AttrTest", "TESTS\IoCTests\NP.Roxy.AttrTest\NP.Roxy.AttrTest.csproj", "{5585D1E1-942E-4153-92D7-1FF65E93421C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NP.Roxy.WrapperIntefaceGeneration", "TESTS\IoCTests\NP.Roxy.WrapperIntefaceGeneration\NP.Roxy.WrapperIntefaceGeneration.csproj", "{58831993-3605-45D9-8775-C5DD30B5A7C8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -153,6 +155,10 @@ Global
 		{5585D1E1-942E-4153-92D7-1FF65E93421C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5585D1E1-942E-4153-92D7-1FF65E93421C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5585D1E1-942E-4153-92D7-1FF65E93421C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58831993-3605-45D9-8775-C5DD30B5A7C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58831993-3605-45D9-8775-C5DD30B5A7C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58831993-3605-45D9-8775-C5DD30B5A7C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58831993-3605-45D9-8775-C5DD30B5A7C8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -183,6 +189,7 @@ Global
 		{61864132-7AB3-4C47-ABC6-10A35161CE61} = {3894394A-5D8B-4639-AB3F-6FB803B86A37}
 		{8A00C1AC-23EC-4014-84CA-553A3B38D991} = {01049369-4FD0-43FF-ABE9-4CD2F273DF6F}
 		{5585D1E1-942E-4153-92D7-1FF65E93421C} = {8A00C1AC-23EC-4014-84CA-553A3B38D991}
+		{58831993-3605-45D9-8775-C5DD30B5A7C8} = {8A00C1AC-23EC-4014-84CA-553A3B38D991}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {63B2F242-8654-4FBD-A762-D369E201F590}
