@@ -45,20 +45,35 @@ namespace NP.Roxy
 
         internal List<ITypeConfig> AllTypesAddedToCompilation { get; } = new List<ITypeConfig>();
 
+        Dictionary<INamedTypeSymbol, INamedTypeSymbol> _wrapperDictionary = new Dictionary<INamedTypeSymbol, INamedTypeSymbol>();
 
-        Dictionary<Type, Type> _wrapperDictionary = new Dictionary<Type, Type>();
-
-        public void SetTWrapper(Type typeToImplement, Type wrapperType, bool forceOverride = false)
+        public void SetTWrapper
+        (
+            INamedTypeSymbol typeToImplementSymbol, 
+            INamedTypeSymbol wrapperTypeSymbol, 
+            bool forceOverride = false)
         {
             if (!forceOverride)
             {
-                if (_wrapperDictionary.TryGetValue(typeToImplement, out Type existingWrapperType))
+                if (_wrapperDictionary.TryGetValue(typeToImplementSymbol, out INamedTypeSymbol existingWrapperType))
                 {
-                    throw new Exception($"Roxy Usage Error: Type {typeToImplement.Name} already has an implementation wrapper type {existingWrapperType.Name}");
+                    throw new Exception($"Roxy Usage Error: Type {typeToImplementSymbol.Name} already has an implementation wrapper type {existingWrapperType.Name}");
                 }
             }
 
-            _wrapperDictionary[typeToImplement] = wrapperType;
+            AddTypeSymbolsToReference(new[] { typeToImplementSymbol, wrapperTypeSymbol });
+
+            _wrapperDictionary[typeToImplementSymbol] = wrapperTypeSymbol;
+        }
+
+        public void SetTWrapper(Type typeToImplement, Type wrapperType, bool forceOverride = false)
+        {
+            this.AddTypesToReference(new[] { typeToImplement, wrapperType });
+
+            INamedTypeSymbol typeToImplementSymbol = this.GetUnboundGenericTypeSymbol(typeToImplement);
+            INamedTypeSymbol wrapperTypeSymbol = this.GetUnboundGenericTypeSymbol(wrapperType);
+
+            SetTWrapper(typeToImplementSymbol, wrapperTypeSymbol, forceOverride);
         }
 
         public void SetTWrapper<TToImplement, TWrapper>(bool forceOverride = false)
@@ -69,9 +84,9 @@ namespace NP.Roxy
             SetTWrapper(typeToImplement, wrapperType, forceOverride);
         }
 
-        public Type GetTWrapper(Type typeToImplement)
+        public INamedTypeSymbol GetTWrapper(INamedTypeSymbol typeToImplementSymbol)
         {
-            if (_wrapperDictionary.TryGetValue(typeToImplement, out Type existingWrapperType))
+            if (_wrapperDictionary.TryGetValue(typeToImplementSymbol, out INamedTypeSymbol existingWrapperType))
             {
                 return existingWrapperType;
             }
@@ -79,7 +94,12 @@ namespace NP.Roxy
             return null;
         }
 
-        public Type GetTWrapper<TToImplement>() =>
+        public INamedTypeSymbol GetTWrapper(Type typeToImplement)
+        {
+            return GetTWrapper(this.GetTypeSymbol(typeToImplement));
+        }
+
+        public INamedTypeSymbol GetTWrapper<TToImplement>() =>
             GetTWrapper(typeof(TToImplement));
 
         internal bool HasCreatedType(string className)
@@ -223,6 +243,26 @@ namespace NP.Roxy
             }
         }
 
+        internal ITypeConfig FindOrCreateWrapperMergerTypeConfig(string className, IEnumerable<INamedTypeSymbol> interfacesToMerge)
+        {
+            InterfaceMergingTypeConfig interfaceMergingTypeConfig = 
+                this.FindTypeConfig<NoInterface>(className) as InterfaceMergingTypeConfig;
+
+            if (interfaceMergingTypeConfig == null)
+            {
+                interfaceMergingTypeConfig =
+                    new InterfaceMergingTypeConfig(this, className, interfacesToMerge);
+
+                CheckAlreadyHasType(interfaceMergingTypeConfig.ClassName);
+
+                this.AllCreatedTypes.Add(interfaceMergingTypeConfig);
+
+                interfaceMergingTypeConfig.ConfigurationCompleted();
+            }
+
+            return interfaceMergingTypeConfig;
+        }
+
         internal ITypeConfig<TWrapperInterface> CreateTypeConf<TWrapperInterface>
         (
             string className,
@@ -358,6 +398,63 @@ namespace NP.Roxy
         public ITypeConfig FindOrCreateTypeConfByTypeToImpl<TypeToImpl>(string className = null)
         {
             return this.FindOrCreateTypeConfByTypeToImpl<TypeToImpl, NoInterface>(className);
+        }
+
+        private List<INamedTypeSymbol> GetAllWrapperSymbols(INamedTypeSymbol typeToImpl)
+        {
+            List<INamedTypeSymbol> implementationTypes =
+                new List<INamedTypeSymbol>();
+
+            foreach(INamedTypeSymbol baseTypeOrInterface in typeToImpl.GetBaseTypeAndInterfaces())
+            {
+                INamedTypeSymbol unboundBaseTypeOrInterface =
+                    baseTypeOrInterface.IsGenericType ?
+                        baseTypeOrInterface.ConstructUnboundGenericType() :
+                        baseTypeOrInterface;
+
+                INamedTypeSymbol namedWrapperTypeSymbol = 
+                    this.GetTWrapper(unboundBaseTypeOrInterface);
+
+                if (namedWrapperTypeSymbol == null)
+                {
+                    implementationTypes.AddRange(GetAllWrapperSymbols(baseTypeOrInterface));
+                }
+                else
+                {
+                    if (namedWrapperTypeSymbol.IsUnboundGenericType)
+                    {
+                        namedWrapperTypeSymbol = namedWrapperTypeSymbol.ConstructedFrom;
+                    }
+
+                    INamedTypeSymbol resultSymbol = namedWrapperTypeSymbol.Construct(baseTypeOrInterface.TypeArguments.ToArray());
+                    implementationTypes.Add(resultSymbol);
+                }
+            }
+
+            return implementationTypes;
+        }
+
+        public ITypeConfig GetDefaultWrapperTypeConf(INamedTypeSymbol typeToImpl)
+        {
+            IEnumerable<INamedTypeSymbol> implementationTypes =
+                GetAllWrapperSymbols(typeToImpl).Distinct(TypeSymbolComparer.TheTypeSymbolComparer).ToList();
+
+            string defaultWrapperName =
+                typeToImpl.GetDefaultWrapperName();
+
+            ITypeConfig typeConfig =
+                this.FindOrCreateWrapperMergerTypeConfig(defaultWrapperName, implementationTypes);
+
+            return typeConfig;
+        }
+
+        // assembles the wrapper interface 
+        public INamedTypeSymbol GetDefaultWrapper(INamedTypeSymbol typeToImpl)
+        {
+            ITypeConfig defaultWrapperTypeConfig =
+                GetDefaultWrapperTypeConf(typeToImpl);
+
+            return defaultWrapperTypeConfig.TheSelfTypeSymbol;
         }
 
         public static ITypeConfig FindOrCreateTypeConfigByTypeToImpl<TypeToImpl>(string className = null)
@@ -585,11 +682,30 @@ namespace NP.Roxy
             TheCore.SetTWrapper<TToImplement, TWrapper>(forceOverride);
         }
 
-        public static Type GetWrapperType(Type typeToImplement) =>
+
+        public static INamedTypeSymbol GetWrapperType(INamedTypeSymbol typeToImplementSymbol) =>
+            TheCore.GetTWrapper(typeToImplementSymbol);
+
+        public static INamedTypeSymbol GetWrapperType(Type typeToImplement) =>
             TheCore.GetTWrapper(typeToImplement);
 
-        public static Type GetWrapperType<TToImplement>()
+        public static INamedTypeSymbol GetWrapperType<TToImplement>()
             => TheCore.GetTWrapper<TToImplement>();
+
+        public static ITypeConfig GetDefaultWrapperTypeConfig(INamedTypeSymbol typeToImplSymbol)
+        {
+            return TheCore.GetDefaultWrapperTypeConf(typeToImplSymbol);
+        }
+
+        public static ITypeConfig GetDefaultWrapperTypeConfig(Type typeToImpl)
+        {
+            TheCore.AddTypesToReference(new[]{ typeToImpl});
+
+            INamedTypeSymbol typeToImplSymbol = 
+                TheCore.GetTypeSymbol(typeToImpl);
+
+            return TheCore.GetDefaultWrapperTypeConf(typeToImplSymbol);
+        }
     }
 
     internal static class CoreUtils

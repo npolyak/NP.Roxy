@@ -34,20 +34,7 @@ namespace NP.Roxy.WrapperIntefaceGeneration
         {
             Core.SetWrapperType(typeof(ISelectableItem<>), typeof(SelectableItemWrapper<>));
 
-            ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfigByTypeToImpl<ISelectableData>();
-
-            typeConfig.ConfigurationCompleted();
-
-            ISelectableData myInterfaceObj =
-                Core.GetInstanceOfGeneratedType<ISelectableData>(typeConfig.ClassName) as ISelectableData;
-
-            myInterfaceObj.FirstName = "Nick";
-            myInterfaceObj.LastName = "Polyak";
-
-            myInterfaceObj.IsSelectedChanged += MyInterfaceObj_IsSelectedChanged;
-
-            myInterfaceObj.IsSelected = true;
+            ITypeConfig typeConfig = Core.GetDefaultWrapperTypeConfig(typeof(ISelectableData));
 
             Core.Save("GeneratedCode");
         }

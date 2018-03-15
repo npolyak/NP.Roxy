@@ -43,7 +43,7 @@ namespace NP.Roxy
         }
     }
 
-    public abstract class CoreBase
+    public abstract class CoreBase : ICompilationContainer
     {
         MefHostServices _host = null;
 
@@ -61,7 +61,7 @@ namespace NP.Roxy
             private set;
         }
 
-        internal Compilation TheCompilation { get; private set; }
+        public Compilation TheCompilation { get; private set; }
 
         internal ParseOptions TheParseOptions { get; } = new CSharpParseOptions();
 

@@ -28,9 +28,12 @@ namespace NP.Roxy
         public HashSet<IAssemblySymbol> AllAssemblies { get; } =
             new HashSet<IAssemblySymbol>();
 
-        void AddWhereStatements(IEnumerable<ITypeParameterSymbol> typeParameters)
+        void AddWhereStatements(IEnumerable<ITypeSymbol> typeArgs)
         {
-            foreach (ITypeParameterSymbol typeParameterSymbol in typeParameters)
+            IEnumerable<ITypeParameterSymbol> typeParams = 
+                typeArgs.Where(typeArg => typeArg is ITypeParameterSymbol).Cast<ITypeParameterSymbol>().ToList();
+
+            foreach (ITypeParameterSymbol typeParameterSymbol in typeParams)
             {
                 string whereStatement = typeParameterSymbol.GetWhereStatement();
 
@@ -77,7 +80,7 @@ namespace NP.Roxy
 
             AddLine($"public class {className}{extensionString}");
 
-            baseTypes.DoForEach(baseType => AddWhereStatements(baseType.TypeParameters));
+            baseTypes.DoForEach(baseType => AddWhereStatements(baseType.TypeArguments));
 
             this.Push();
         }
@@ -105,7 +108,7 @@ namespace NP.Roxy
                 )
             );
 
-            AddWhereStatements(methodSymbol.TypeParameters);
+            AddWhereStatements(methodSymbol.TypeArguments);
 
             this.Push();
         }

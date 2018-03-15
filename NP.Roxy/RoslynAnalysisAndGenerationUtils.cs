@@ -780,7 +780,7 @@ namespace NP.Roxy
         public static string MemberConcat(params string[] strs) =>
             strs.StrConcat(null, StrUtils.PERIOD);
 
-        public static INamedTypeSymbol GetTypeSymbol(this Type type, Compilation compilation)
+        public static INamedTypeSymbol GetGenericTypeSymbol(this Type type, Compilation compilation)
         {
             if (type == null)
                 return null;
@@ -788,6 +788,25 @@ namespace NP.Roxy
             string basicType = type.GetFullTypeStr();
 
             INamedTypeSymbol namedTypeSymbol = compilation.GetTypeByMetadataName(basicType);
+
+            return namedTypeSymbol;
+        }
+
+        public static INamedTypeSymbol GetUnboundGenericTypeSymbol(this Type type, Compilation compilation)
+        {
+            INamedTypeSymbol genericSymbol = type.GetGenericTypeSymbol(compilation);
+
+            INamedTypeSymbol result = genericSymbol.IsGenericType ? genericSymbol.ConstructUnboundGenericType() : genericSymbol;
+
+            return result;
+        }
+
+        public static INamedTypeSymbol GetTypeSymbol(this Type type, Compilation compilation)
+        {
+            if (type == null)
+                return null;
+
+            INamedTypeSymbol namedTypeSymbol = type.GetGenericTypeSymbol(compilation);
 
             IEnumerable<Type> genericArgs = type.GetGenericArguments();
 
@@ -838,6 +857,23 @@ namespace NP.Roxy
             foreach (INamedTypeSymbol baseTypeSymbol in typeSymbol.BaseType.GetSelfAndAllBaseTypes())
             {
                 yield return baseTypeSymbol;
+            }
+        }
+
+        public static IEnumerable<INamedTypeSymbol> GetBaseTypeAndInterfaces(this INamedTypeSymbol typeSymbol)
+        {
+            if (typeSymbol == null)
+                yield break;
+
+            if (typeSymbol.BaseType != null)
+                yield return typeSymbol.BaseType;
+
+            if (typeSymbol.Interfaces == null)
+                yield break;
+
+            foreach(INamedTypeSymbol baseInterface in typeSymbol.Interfaces)
+            {
+                yield return baseInterface;
             }
         }
 
@@ -1005,6 +1041,8 @@ namespace NP.Roxy
 
         public const string CONCRETIZATION_SUFFIX = "_Concretization";
 
+        public const string DEFAULT_WRAPPER_SUFFIX = "_DefaultWrapper";
+
         public static string GetConcretizationName(this string typeName)
         {
             typeName = typeName.InterfaceToClassName();
@@ -1012,11 +1050,22 @@ namespace NP.Roxy
             return typeName + CONCRETIZATION_SUFFIX;
         }
 
+        public static string GetDefaultWrapperName(this string typeName)
+        {
+            typeName = "I" + typeName;
+
+            return typeName + DEFAULT_WRAPPER_SUFFIX;
+        }
+
         public static string GetConcretizedTypeName(this ITypeSymbol typeSymbol)
         {
             return typeSymbol.Name.GetConcretizationName();
         }
 
+        public static string GetDefaultWrapperName(this ITypeSymbol typeSymbol)
+        {
+            return typeSymbol.Name.GetDefaultWrapperName();
+        }
 
         static string GetClassName(string implIntefaceName, string className)
         {
@@ -1078,7 +1127,7 @@ namespace NP.Roxy
         {
             INamedTypeSymbol typeSymbolToCompare = type.GetTypeSymbol(compilation);
 
-            return typeSymbolToCompare.GetFullTypeString() == typeSymbol.GetFullTypeString();
+            return typeSymbolToCompare.GetUniqueTypeStr() == typeSymbol.GetUniqueTypeStr();
         }
 
         public static bool CanBeConvertedImplicitly
@@ -1152,6 +1201,16 @@ namespace NP.Roxy
             typeSymbol.GetPublicDefaultConstructor() != null;
 
 
+        public static string GetUniqueTypeStr(this ITypeSymbol type)
+        {
+            if (type is INamedTypeSymbol namedType1)
+            {
+                return namedType1.GetFullTypeString();
+            }
+
+            return type.GetFullNamespace() + "." + type.Name;
+        }
+
         public static bool TypesStrictlyMatch
         (
            this ITypeSymbol type1,
@@ -1162,7 +1221,7 @@ namespace NP.Roxy
             {
                 if (type2 is INamedTypeSymbol namedType2)
                 {
-                    return namedType1.GetFullTypeString() == namedType2.GetFullTypeString();
+                    return namedType1.GetUniqueTypeStr() == namedType2.GetUniqueTypeStr();
                 }
                 else
                 {
@@ -1170,8 +1229,7 @@ namespace NP.Roxy
                 }
             }
 
-            return (type1.GetFullNamespace() == type2.GetFullNamespace()) && 
-                   (type1.Name == type2.Name);
+            return (type1.GetUniqueTypeStr() == type2.GetUniqueTypeStr());
         }
 
         public static bool ParamTypesMatch
@@ -1525,6 +1583,22 @@ namespace NP.Roxy
             string methodName
         ) =>
             FindMatchingVoidMethodSymbol<ContainerType, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface>(compilation, methodName);
+    }
+
+    public class TypeSymbolComparer : IEqualityComparer<INamedTypeSymbol>
+    {
+        public static TypeSymbolComparer TheTypeSymbolComparer { get; } =
+            new TypeSymbolComparer();
+
+        public bool Equals(INamedTypeSymbol type1, INamedTypeSymbol type2)
+        {
+            return type1.TypesStrictlyMatch(type2);
+        }
+
+        public int GetHashCode(INamedTypeSymbol type)
+        {
+            return type.GetUniqueTypeStr().GetHashCodeExtension();
+        }
     }
 
     public class SymbolByNameAndSignatureComparer : IEqualityComparer<ISymbol>

@@ -356,7 +356,19 @@ namespace NP.Roxy.TypeConfigImpl
         [XmlIgnore]
         public Core TheCore { get; }
 
-        protected void SetFromSymbols
+        protected virtual INamedTypeSymbol GetWrapperInterfaceSymbol(INamedTypeSymbol wrapperInterfaceSymbol)
+        {
+            if (wrapperInterfaceSymbol.Matches(typeof(NoInterface), this.TheCompilation))
+            {
+                return TheCore.GetDefaultWrapper(this.ImplInterfaceTypeSymbol);
+            }
+            else
+            {
+                return wrapperInterfaceSymbol;
+            }
+        }
+
+        protected virtual void SetFromSymbols
         (
             INamedTypeSymbol implInterfaceTypeSymbol,
             INamedTypeSymbol superClassTypeSymbol,
@@ -373,6 +385,8 @@ namespace NP.Roxy.TypeConfigImpl
             {
                 wrapperInterfaceSymbol = genericArgWrapperInterfaceTypeSymbol;
             }
+
+            wrapperInterfaceSymbol = GetWrapperInterfaceSymbol(wrapperInterfaceSymbol);
 
             if (!wrapperInterfaceSymbol.IsSelfOrSuperType(genericArgWrapperInterfaceTypeSymbol))
             {
@@ -1077,8 +1091,7 @@ namespace NP.Roxy.TypeConfigImpl
             roslynCodeBuilder.AddLine($"public static Core TheCore {{ get; set; }}");
         }
 
-
-        internal string GenerateCode()
+        protected virtual string GenerateCode()
         {
             Compilation compilation = this.TheCompilation;
 
@@ -1144,7 +1157,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         public INamedTypeSymbol TheSelfTypeSymbol { get; private set; }
 
-        public string TheGeneratedCode { get; private set; }
+        public string TheGeneratedCode { get; protected set; }
 
 
         Type _generatedType = null;
@@ -1258,7 +1271,7 @@ namespace NP.Roxy.TypeConfigImpl
 
             this.TheCore.AddTypesToReference(ReferencedTypes);
 
-            base.SetFromSymbols
+            this.SetFromSymbols
             (
                 ImplInterfaceType.GetTypeSymbol(TheCompilation),
                 SuperClassType.GetTypeSymbol(TheCompilation), 
@@ -1268,6 +1281,49 @@ namespace NP.Roxy.TypeConfigImpl
 
         internal Type[] ReferencedTypes =>
             new[] { ImplInterfaceType, SuperClassType, WrapInterfaceType };
+    }
+
+    internal class InterfaceMergingTypeConfig : TypeConfig<NoInterface>
+    {
+        protected override void SetFromSymbols(INamedTypeSymbol implInterfaceTypeSymbol, INamedTypeSymbol superClassTypeSymbol, INamedTypeSymbol wrapperInterfaceSymbol = null)
+        {
+            
+        }
+
+        public INamedTypeSymbol[] AllInterfaceTypeSymbolsToMerge { get; }
+
+        public InterfaceMergingTypeConfig
+        (
+            Core core,
+            string className,
+            IEnumerable<INamedTypeSymbol> allInterfaceTypeSymbolsToMerge
+        )
+            : base(core, className, null, null, null)
+        {
+            AllInterfaceTypeSymbolsToMerge = allInterfaceTypeSymbolsToMerge.ToArray();
+        }
+
+        protected override INamedTypeSymbol GetWrapperInterfaceSymbol(INamedTypeSymbol wrapperInterfaceSymbol)
+        {
+            return wrapperInterfaceSymbol;
+        }
+
+        protected override string GenerateCode()
+        {
+            RoslynCodeBuilder roslynCodeBuilder = new RoslynCodeBuilder();
+            RoslynAnalysisAndGenerationUtils.TheNamespaces =
+                roslynCodeBuilder.AllNamespaces;
+
+            roslynCodeBuilder.AddNamespace(AssemblerNames.GENERATED_NAMESPACE_NAME);
+
+            roslynCodeBuilder.AddClass(this.ClassName, null, null, this.AllInterfaceTypeSymbolsToMerge);
+
+            roslynCodeBuilder.PopAll();
+
+            TheGeneratedCode = roslynCodeBuilder.ToStr();
+
+            return TheGeneratedCode;
+        }
     }
 
 
