@@ -17,6 +17,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
+using NP.Utilities.Attributes;
 
 namespace NP.Roxy
 {
@@ -101,6 +103,44 @@ namespace NP.Roxy
 
         public INamedTypeSymbol GetTWrapper<TToImplement>() =>
             GetTWrapper(typeof(TToImplement));
+
+
+        IEnumerable<Assembly> _addedAssemblies = new List<Assembly>();
+        public void AddAssembly(Assembly assembly)
+        {
+            if (_addedAssemblies.Contains(assembly))
+                return;
+
+            Type[] assemblyTypes = assembly.GetTypes();
+
+            foreach(Type assemblyType in assemblyTypes)
+            {
+                IEnumerable<WrapperInterfaceAttribute> wrapperAttrs =
+                    assemblyType.GetCustomAttributes<WrapperInterfaceAttribute>();
+
+                foreach(WrapperInterfaceAttribute wrapperAttr in wrapperAttrs)
+                {
+                    Type typeToImplement = wrapperAttr.TypeToImplement;
+
+                    this.SetTWrapper(typeToImplement, assemblyType);
+                }
+            }
+        }
+
+        public void AddTypeAssembly<T>()
+        {
+            AddAssembly(typeof(T).Assembly);
+        }
+
+        public static void AddAssemblyStatic(Assembly assembly)
+        {
+            TheCore.AddAssembly(assembly);
+        }
+
+        public static void AddTypeAssemblyStatic<T>()
+        {
+            TheCore.AddTypeAssembly<T>();
+        }
 
         internal bool HasCreatedType(string className)
         {

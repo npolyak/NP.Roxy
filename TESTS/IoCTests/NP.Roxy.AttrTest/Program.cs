@@ -12,6 +12,7 @@
 using Microsoft.CodeAnalysis;
 using NP.Roxy;
 using NP.Roxy.TypeConfigImpl;
+using NP.Utilities;
 using NP.Utilities.Behaviors;
 using System;
 using System.Collections.Generic;
@@ -34,7 +35,8 @@ namespace NP.Roxy.AttrTest
         {
             Core.SetSaveOnErrorPath("GeneratedCode");
 
-            Core.SetWrapperType(typeof(ISelectableItem<>), typeof(ISelectableItemWrapper<>));
+            //Core.SetWrapperType(typeof(ISelectableItem<>), typeof(ISelectableItemWrapper<>));
+            Core.AddTypeAssemblyStatic<CodeBuilder>();
 
             ISelectableData myInterfaceObj =
                 Core.CreateInstanceOfGeneratedType<ISelectableData>();
