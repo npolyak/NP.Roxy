@@ -32,15 +32,12 @@ namespace NP.Roxy.AttrTest
     {
         static void Main(string[] args)
         {
-            Core.SetWrapperType(typeof(ISelectableItem<>), typeof(SelectableItemWrapper<>));
+            Core.SetSaveOnErrorPath("GeneratedCode");
 
-            ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfigByTypeToImpl<ISelectableData>();
-
-            typeConfig.ConfigurationCompleted();
+            Core.SetWrapperType(typeof(ISelectableItem<>), typeof(ISelectableItemWrapper<>));
 
             ISelectableData myInterfaceObj =
-                Core.GetInstanceOfGeneratedType<ISelectableData>(typeConfig.ClassName) as ISelectableData;
+                Core.CreateInstanceOfGeneratedType<ISelectableData>();
 
             myInterfaceObj.FirstName = "Nick";
             myInterfaceObj.LastName = "Polyak";

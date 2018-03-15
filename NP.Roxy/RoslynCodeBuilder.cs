@@ -49,6 +49,7 @@ namespace NP.Roxy
             string className,
             string superClassName,
             INamedTypeSymbol superClassTypeSymbol,
+            bool classOrInterface, 
             params INamedTypeSymbol[] baseTypes
         )
         {
@@ -78,7 +79,10 @@ namespace NP.Roxy
                 extensionString = $" : {baseTypesStr}";
             }
 
-            AddLine($"public class {className}{extensionString}");
+            string classOrInterfaceInsert =
+                classOrInterface ? "class" : "interface";
+
+            AddLine($"public {classOrInterfaceInsert} {className}{extensionString}");
 
             baseTypes.DoForEach(baseType => AddWhereStatements(baseType.TypeArguments));
 

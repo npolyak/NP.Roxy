@@ -32,7 +32,7 @@ namespace NP.Roxy.WrapperIntefaceGeneration
     {
         static void Main(string[] args)
         {
-            Core.SetWrapperType(typeof(ISelectableItem<>), typeof(SelectableItemWrapper<>));
+            Core.SetWrapperType(typeof(ISelectableItem<>), typeof(ISelectableItemWrapper<>));
 
             ITypeConfig typeConfig = Core.GetDefaultWrapperTypeConfig(typeof(ISelectableData));
 

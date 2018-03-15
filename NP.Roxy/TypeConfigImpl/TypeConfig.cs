@@ -948,6 +948,7 @@ namespace NP.Roxy.TypeConfigImpl
                 ClassName,
                 null,
                 SuperClassTypeSymbol,
+                true,
                 AllImplementedInterfaces.ToArray()
             );
         }
@@ -1086,9 +1087,9 @@ namespace NP.Roxy.TypeConfigImpl
 
         public const string STATIC_CORE_MEMBER_NAME = "TheCore";
 
-        void AddStaticCoreReference(RoslynCodeBuilder roslynCodeBuilder)
+        protected void AddStaticCoreReference(RoslynCodeBuilder roslynCodeBuilder)
         {
-            roslynCodeBuilder.AddLine($"public static Core TheCore {{ get; set; }}");
+            roslynCodeBuilder.AddLine($"public static Core {STATIC_CORE_MEMBER_NAME} {{ get; set; }}");
         }
 
         protected virtual string GenerateCode()
@@ -1316,13 +1317,18 @@ namespace NP.Roxy.TypeConfigImpl
 
             roslynCodeBuilder.AddNamespace(AssemblerNames.GENERATED_NAMESPACE_NAME);
 
-            roslynCodeBuilder.AddClass(this.ClassName, null, null, this.AllInterfaceTypeSymbolsToMerge);
+            roslynCodeBuilder.AddClass(this.ClassName, null, null, false, this.AllInterfaceTypeSymbolsToMerge);
 
             roslynCodeBuilder.PopAll();
 
             TheGeneratedCode = roslynCodeBuilder.ToStr();
 
             return TheGeneratedCode;
+        }
+
+        protected override void PostTypeSet()
+        {
+            
         }
     }
 

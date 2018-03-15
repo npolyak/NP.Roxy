@@ -235,6 +235,23 @@ namespace NP.Roxy
         public T GetInstOfGeneratedType<T>(string className = null, params object[] args) =>
             GetInstOfGeneratedType<T, NoInterface>(className, args);
 
+        public T CreateInstOfGeneratedType<T>(string className = null, params object[] args)
+        {
+            ITypeConfig typeConfig = FindOrCreateTypeConfByTypeToImpl<T>(className);
+
+            if (!typeConfig.ConfigurationHasBeenCompleted)
+            {
+                typeConfig.ConfigurationCompleted();
+            }
+
+            if (typeConfig.TheGeneratedType == null)
+            {
+                this.RegenerateAssembly();
+            }
+
+            return GetInstanceOfType<T>(typeConfig, args);
+        }
+
         void CheckAlreadyHasType(string className)
         {
             if (HasCreatedType(className))
@@ -437,7 +454,7 @@ namespace NP.Roxy
         public ITypeConfig GetDefaultWrapperTypeConf(INamedTypeSymbol typeToImpl)
         {
             IEnumerable<INamedTypeSymbol> implementationTypes =
-                GetAllWrapperSymbols(typeToImpl).Distinct(TypeSymbolComparer.TheTypeSymbolComparer).ToList();
+                GetAllWrapperSymbols(typeToImpl).Union(new[] { typeof(NoInterface).GetTypeSymbol(this.TheCompilation) }).Distinct(TypeSymbolComparer.TheTypeSymbolComparer).ToList();
 
             string defaultWrapperName =
                 typeToImpl.GetDefaultWrapperName();
@@ -705,6 +722,11 @@ namespace NP.Roxy
                 TheCore.GetTypeSymbol(typeToImpl);
 
             return TheCore.GetDefaultWrapperTypeConf(typeToImplSymbol);
+        }
+
+        public static T CreateInstanceOfGeneratedType<T>(string className = null, params object[] args)
+        {
+            return TheCore.CreateInstOfGeneratedType<T>(className, args);
         }
     }
 
