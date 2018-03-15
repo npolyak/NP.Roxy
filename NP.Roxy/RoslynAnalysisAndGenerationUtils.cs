@@ -1125,6 +1125,9 @@ namespace NP.Roxy
 
         internal static bool Matches(this INamedTypeSymbol typeSymbol, Type type, Compilation compilation)
         {
+            if (typeSymbol == null)
+                return false;
+
             INamedTypeSymbol typeSymbolToCompare = type.GetTypeSymbol(compilation);
 
             return typeSymbolToCompare.GetUniqueTypeStr() == typeSymbol.GetUniqueTypeStr();
@@ -1583,6 +1586,32 @@ namespace NP.Roxy
             string methodName
         ) =>
             FindMatchingVoidMethodSymbol<ContainerType, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface, NoInterface>(compilation, methodName);
+    }
+
+    public class SymbolComparer : IEqualityComparer<ISymbol>
+    {
+        public static SymbolComparer TheSymbolComparer { get; } =
+            new SymbolComparer();
+
+        private string GetDefiningStr(ISymbol symbol)
+        {
+            INamedTypeSymbol containingSymbol =
+                symbol.ContainingSymbol as INamedTypeSymbol;
+
+            string name = symbol?.Name;
+
+            return (containingSymbol?.GetUniqueTypeStr()).NullToEmpty() + " " + name.NullToEmpty();
+        }
+
+        public bool Equals(ISymbol symbol1, ISymbol symbol2)
+        {
+            return GetDefiningStr(symbol1).ObjEquals(GetDefiningStr(symbol2));
+        }
+
+        public int GetHashCode(ISymbol symbol)
+        {
+            return GetDefiningStr(symbol).GetHashCodeExtension();
+        }
     }
 
     public class TypeSymbolComparer : IEqualityComparer<INamedTypeSymbol>

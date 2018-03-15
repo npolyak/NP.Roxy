@@ -386,6 +386,10 @@ namespace NP.Roxy.TypeConfigImpl
                 wrapperInterfaceSymbol = genericArgWrapperInterfaceTypeSymbol;
             }
 
+            this.WrapInterfaceTypeSymbol = wrapperInterfaceSymbol;
+
+            TheCore.AddTypeSymbolsToReference(AllImplementedTypesSymbols);
+
             wrapperInterfaceSymbol = GetWrapperInterfaceSymbol(wrapperInterfaceSymbol);
 
             if (!wrapperInterfaceSymbol.IsSelfOrSuperType(genericArgWrapperInterfaceTypeSymbol))
@@ -394,8 +398,6 @@ namespace NP.Roxy.TypeConfigImpl
             }
 
             this.WrapInterfaceTypeSymbol = wrapperInterfaceSymbol;
-
-            TheCore.AddTypeSymbolsToReference(AllImplementedTypesSymbols);
 
             this.ClassName = ImplInterfaceTypeSymbol.GetClassName(this.ClassName);
 
@@ -885,16 +887,16 @@ namespace NP.Roxy.TypeConfigImpl
         {
             this.EventBuilderInfos =
                 this.ImplementableSymbols.GetSymbolsOfType<IEventSymbol>()
-                    .Select(symbol => new EventWrapperMemberBuilderInfo(symbol, this.TheCompilation)).ToList();
+                    .Select(symbol => new EventWrapperMemberBuilderInfo(symbol, this.TheCore)).ToList();
 
             this.PropBuilderInfos =
                  this.ImplementableSymbols.GetSymbolsOfType<IPropertySymbol>()
-                     .Select(symbol => new PropertyWrapperMemberBuilderInfo(symbol, this.TheCompilation)).ToList();
+                     .Select(symbol => new PropertyWrapperMemberBuilderInfo(symbol, this.TheCore)).ToList();
 
             this.MethodBuilderInfos =
                 this.ImplementableSymbols.GetSymbolsOfType<IMethodSymbol>()
                     .Where(symbol => symbol.AssociatedSymbol == null)
-                    .Select(symbol => new MethodWrapperMemberBuilderInfo(symbol, this.TheCompilation)).ToList();
+                    .Select(symbol => new MethodWrapperMemberBuilderInfo(symbol, this.TheCore)).ToList();
         }
 
         void SetMissingMaps()

@@ -72,3 +72,5 @@
 /TESTS/RoxyTest/NP.Roxy.SelectableDataTest/bin/Debug
 /TESTS/IoCTests/NP.Roxy.WrapperIntefaceGeneration/bin/Debug
 /TESTS/IoCTests/NP.Roxy.WrapperIntefaceGeneration/obj/Debug
+/TESTS/IoCTests/NP.Roxy.AttrsMultiConcernsRoxyTest/bin/Debug
+/TESTS/IoCTests/NP.Roxy.AttrsMultiConcernsRoxyTest/obj/Debug

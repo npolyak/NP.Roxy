@@ -48,7 +48,10 @@ namespace NP.Roxy.TypeConfigImpl
     internal abstract class WrapperMemberBuilderInfo<TSymbol> : WrapperMemberBuilderInfoBase
         where TSymbol : ISymbol
     {
-        public Compilation TheCompilation { get; private set; }
+        public Core TheCore { get; }
+
+        public Compilation TheCompilation => 
+            TheCore.TheCompilation;
 
         public TSymbol WrapperSymbol { get; }
 
@@ -80,12 +83,12 @@ namespace NP.Roxy.TypeConfigImpl
         public WrapperMemberBuilderInfo
         (
             TSymbol wrapperSymbol,
-            Compilation compilation
+            Core core
         ) 
             : base(wrapperSymbol)
         {
             this.WrapperSymbol = wrapperSymbol;
-            this.TheCompilation = compilation;
+            this.TheCore = core;
         }
 
         internal IMemberCodeBuilder<TSymbol> TheCodeBuilder { get; set; } = null;
@@ -137,15 +140,24 @@ namespace NP.Roxy.TypeConfigImpl
         public EventWrapperMemberBuilderInfo
         (
             IEventSymbol wrapperSymbol,
-            Compilation compilation
-        ) : base(wrapperSymbol, compilation)
+            Core core
+        ) : base(wrapperSymbol, core)
         {
-            AttributeData attrData = WrapperSymbol.GetAttrSymbol(typeof(EventThisIdxAttribute));
 
-            if (attrData != null)
+            int idx = TheCore.GetEventThisIdx(WrapperSymbol);
+
+            if (idx < 0)
             {
-                int idx = (int) attrData.ConstructorArguments.First().Value;
+                AttributeData attrData = WrapperSymbol.GetAttrSymbol(typeof(EventThisIdxAttribute));
 
+                if (attrData != null)
+                {
+                    idx = (int)attrData.ConstructorArguments.First().Value;
+                }
+            }
+
+            if (idx >= 0)
+            {
                 this.IndexInputParamToReplaceByThis = idx;
             }
 
@@ -186,8 +198,8 @@ namespace NP.Roxy.TypeConfigImpl
         public PropertyWrapperMemberBuilderInfo
         (
             IPropertySymbol wrapperSymbol,
-            Compilation compilation
-        ) : base(wrapperSymbol, compilation)
+            Core core
+        ) : base(wrapperSymbol, core)
         {
             this.DefaultCodeBuilder = AutoPropBuilder.TheAutoPropBuilder;
         }
@@ -334,8 +346,8 @@ namespace NP.Roxy.TypeConfigImpl
         public MethodWrapperMemberBuilderInfo
         (
             IMethodSymbol wrapperSymbol,
-            Compilation compilation
-        ) : base(wrapperSymbol, compilation)
+            Core core
+        ) : base(wrapperSymbol, core)
         {
         }
 
