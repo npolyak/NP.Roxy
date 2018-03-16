@@ -18,7 +18,7 @@ namespace NP.Roxy.AttrsMultiConcernsRoxyTest
 
             Core.AddTypeAssemblyStatic<IPersonDataVM>();
             Core.AddTypeAssemblyStatic<CodeBuilder>();
-            Core.AddEventIdxInfo<INotifyPropertyChanged>("PropertyChanged");
+            Core.AddEventIdxInfo<INotifyPropertyChanged>(nameof(INotifyPropertyChanged.PropertyChanged));
 
             Core.SetSaveOnErrorPath("GeneratedCode");
 
