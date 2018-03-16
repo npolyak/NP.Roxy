@@ -35,6 +35,20 @@ namespace NP.Roxy.AttrsMultiConcernsRoxyTest.RoxyViewModels
         RemovableCollectionBehavior TheRemovableCollectionBehavior { get; }
     }
 
+    public class RemovableCollectionBehaviorAdaptor
+    {
+        public RemovableCollectionBehavior TheRemovableBehavior { get; } =
+            new RemovableCollectionBehavior();
+
+
+        public IEnumerable<IRemovable> TheCollection
+        {
+            get => TheRemovableBehavior.TheCollection;
+            set => TheRemovableBehavior.TheCollection = value;
+        }
+    }
+
+
     public interface ISelectableRemovableBusinessGroupWrapper :
         ISelectableItemWrapper<ISelectableRemovableBusinessGroup>,
         IRemovableWrapper,
