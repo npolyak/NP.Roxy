@@ -60,7 +60,7 @@ namespace NP.Roxy.OverloadingTest
 
             #region Prop Getter 
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<IMyData, NoInterface>();
+                Core.FindOrCreateTypeConfig<IMyData, NoType>();
 
             typeConfig.SetPropGetter<IMyData, string>
             (

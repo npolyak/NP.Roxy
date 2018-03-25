@@ -102,7 +102,7 @@ namespace MultiConcernsRoxyTest.RoxyViewModels
         public static void AssembleBusinessGroupsCollection()
         {
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<NoInterface, SingleSelectionObservableCollection<ISelectableRemovableBusinessGroup>, IRemovableCollectionBehaviorWrapper>();
+                Core.FindOrCreateTypeConfig<SingleSelectionObservableCollection<ISelectableRemovableBusinessGroup>, NoType, IRemovableCollectionBehaviorWrapper>();
 
             typeConfig.SetThisMemberMap
             (

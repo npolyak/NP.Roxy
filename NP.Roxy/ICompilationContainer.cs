@@ -29,5 +29,17 @@ namespace NP.Roxy
         {
             return type.GetTypeSymbol(compilationContainer.TheCompilation);
         }
+
+        public static INamedTypeSymbol GetRealTypeSymbol<T>(this ICompilationContainer compilationContainer) =>
+            RoslynAnalysisAndGenerationUtils.GetRealRoxyTypeSymbol<T>(compilationContainer.TheCompilation);
+
+        public static INamedTypeSymbol GetNullForNoType
+        (
+            this ICompilationContainer compilationContainer, 
+            INamedTypeSymbol typeSymbol
+        )
+        {
+            return typeSymbol.GetNullForNoType(compilationContainer.TheCompilation);
+        }
     }
 }

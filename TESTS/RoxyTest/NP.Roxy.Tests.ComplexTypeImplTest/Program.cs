@@ -41,7 +41,7 @@ namespace NP.Roxy.TypeImplTest
         static void Main(string[] args)
         {
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<NoInterface, MyDataImplementorClass, NoInterface>("MyGeneratedClass");
+                Core.FindOrCreateTypeConfig<NoType, MyDataImplementorClass, NoType>("MyGeneratedClass");
 
             typeConfig.SetPropBuilder
             (

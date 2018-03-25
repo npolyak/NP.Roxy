@@ -37,11 +37,8 @@ namespace NP.Roxy
             StartProj();
         }
 
-        INamedTypeSymbol NoInterfaceSymbol =>
-            typeof(NoInterface).GetTypeSymbol(TheCompilation);
-
-        INamedTypeSymbol NoClassSymbol =>
-            typeof(NoClass).GetTypeSymbol(TheCompilation);
+        INamedTypeSymbol NoTypeSymbol =>
+            typeof(NoType).GetTypeSymbol(TheCompilation);
 
         internal List<ITypeConfig> AllCreatedTypes { get; } = new List<ITypeConfig>();
 
@@ -253,34 +250,32 @@ namespace NP.Roxy
         }
 
 
-        public ITypeConfig<TWrapper> FindTypeConfig<TInterface, TClass, TWrapper>(string className = null)
+        public ITypeConfig<TToImplement, TImplementationClass, TWrapper> FindTypeConfig<TToImplement, TImplementationClass, TWrapper>(string className = null)
         {
-            Type interfaceType = typeof(TInterface);
-            Type baseClassType = typeof(TClass);
-            Type wrapperType = typeof(TWrapper);
+            ITypeConfig<TToImplement, TImplementationClass, TWrapper> typeConfig = null;
 
-            ITypeConfig<TWrapper> typeConfig = null;
+            if (!className.IsNullOrEmpty())
+            {
+                typeConfig =
+                    (ITypeConfig<TToImplement, TImplementationClass, TWrapper>) this.AllTypesAddedToCompilation.FirstOrDefault(tConfig => tConfig.ClassName == className);
+
+                return typeConfig;
+            }
+
+            INamedTypeSymbol typeToImplementSymbol = this.GetRealTypeSymbol<TToImplement>();
+            INamedTypeSymbol implementationSuperClassTypeSymbol = this.GetRealTypeSymbol<TImplementationClass>();
+            INamedTypeSymbol wrapperTypeSymbol = this.GetRealTypeSymbol<TWrapper>();
 
             if (className.IsNullOrEmpty())
             {
                 typeConfig = this.AllTypesAddedToCompilation
                     .FirstOrDefault
                     (
-                        tConfig =>
-                            ( (interfaceType == typeof(NoInterface)) || 
-                               (tConfig.ImplInterfaceTypeSymbol?.Matches(interfaceType, this.TheCompilation) == true))
-                               &&
-                            ( (baseClassType == typeof(NoClass)) || tConfig.SuperClassTypeSymbol.Matches(baseClassType, this.TheCompilation))
-                            &&
-                            (
-                                (wrapperType == typeof(NoInterface)) ||
-                                tConfig.WrapInterfaceTypeSymbol.Matches(wrapperType, this.TheCompilation)
-                            )) as ITypeConfig<TWrapper>;
-            }
-            else
-            {
-                typeConfig = 
-                    (ITypeConfig<TWrapper>) this.AllTypesAddedToCompilation.FirstOrDefault(tConfig => tConfig.ClassName == className);
+                        tConfig => 
+                            tConfig.TypeToImplementSymbol.TypesStrictlyMatch(typeToImplementSymbol) &&
+                            (tConfig.ImplSuperClassTypeSymbol?.TypesStrictlyMatch(implementationSuperClassTypeSymbol) != false) &&
+                            (tConfig.WrapInterfaceTypeSymbol?.TypesStrictlyMatch(wrapperTypeSymbol) != false)
+                    ) as ITypeConfig<TToImplement, TImplementationClass, TWrapper>;
             }
 
             return typeConfig;
@@ -298,12 +293,12 @@ namespace NP.Roxy
                     .FirstOrDefault
                     (
                         tConfig =>
-                            (tConfig.ImplInterfaceTypeSymbol.Matches(type, this.TheCompilation) ||
-                             tConfig.SuperClassTypeSymbol.Matches(type, this.TheCompilation)
+                            (tConfig.TypeToImplementSymbol.Matches(type, this.TheCompilation) ||
+                             tConfig.ImplSuperClassTypeSymbol.Matches(type, this.TheCompilation)
                             )
                             &&
                             (
-                                (wrapperType == typeof(NoInterface)) ||
+                                (wrapperType == typeof(NoType)) ||
                                 tConfig.WrapInterfaceTypeSymbol.Matches(wrapperType, this.TheCompilation)
                             ));
             }
@@ -316,7 +311,7 @@ namespace NP.Roxy
         }
 
         public ITypeConfig FindTypeConfig<T>(string className = null)
-            => FindTypeConfig<T, NoInterface>(className);
+            => FindTypeConfig<T, NoType>(className);
 
         public T GetInstOfGeneratedType<T, TWrapper>(string className = null, params object[] args)
         {
@@ -331,7 +326,7 @@ namespace NP.Roxy
         }
 
         public T GetInstOfGeneratedType<T>(string className = null, params object[] args) =>
-            GetInstOfGeneratedType<T, NoInterface>(className, args);
+            GetInstOfGeneratedType<T, NoType>(className, args);
 
         public T CreateInstOfGeneratedType<T>(string className = null, params object[] args)
         {
@@ -361,7 +356,7 @@ namespace NP.Roxy
         internal ITypeConfig FindOrCreateWrapperMergerTypeConfig(string className, IEnumerable<INamedTypeSymbol> interfacesToMerge)
         {
             InterfaceMergingTypeConfig interfaceMergingTypeConfig = 
-                this.FindTypeConfig<NoInterface>(className) as InterfaceMergingTypeConfig;
+                this.FindTypeConfig<NoType>(className) as InterfaceMergingTypeConfig;
 
             if (interfaceMergingTypeConfig == null)
             {
@@ -417,15 +412,7 @@ namespace NP.Roxy
         public ITypeConfig
             CreateTypeConf<TypeToImplement, WrappedInterface>(string className = null)
         {
-            Type typeToImplement = typeof(TypeToImplement);
-            if (typeToImplement.IsInterface)
-                return CreateTypeConf<TypeToImplement, NoClass, WrappedInterface>(className);
-            else if (typeToImplement.IsClass)
-            {
-                return CreateTypeConf<NoInterface, TypeToImplement, WrappedInterface>(className);
-            }
-
-            throw new Exception($"Roxy Usage Error: type '{typeToImplement.Name}' is neither class no interface");
+            return CreateTypeConf<TypeToImplement, NoType, WrappedInterface>(className);
         }
 
 
@@ -456,38 +443,22 @@ namespace NP.Roxy
             INamedTypeSymbol typeToImplSymbol // can be either an interface or a class
         )
         {
-            INamedTypeSymbol implInterfaceSymbol, superClassSymbol;
-            if (typeToImplSymbol.TypeKind == TypeKind.Interface)
-            {
-                implInterfaceSymbol = typeToImplSymbol;
-                superClassSymbol = NoClassSymbol;
-            }
-            else if (typeToImplSymbol.TypeKind == TypeKind.Class)
-            {
-                implInterfaceSymbol = NoInterfaceSymbol;
-                superClassSymbol = typeToImplSymbol;
-            }
-            else
-            {
-                throw new Exception($"Roxy Usage Error: Symbol '{typeToImplSymbol.Name}' is neither a class nor an interface");
-            }
-
             ITypeConfig<TWrapperInterface> typeConfig =
-                this.FindOrCreateTypeConf<TWrapperInterface>(className, implInterfaceSymbol, superClassSymbol);
+                this.FindOrCreateTypeConf<TWrapperInterface>(className, typeToImplSymbol, NoTypeSymbol);
 
             return typeConfig;
         }
 
         public ITypeConfig<TWrapperInterface>
-             FindOrCreateTypeConf<TImplementedInterface, TSuperClass, TWrapperInterface>(string className = null)
+             FindOrCreateTypeConf<TToImplement, TImplementationSuperClass, TWrapperInterface>(string className = null)
         {
             ITypeConfig<TWrapperInterface> result = 
-                FindTypeConfig<TImplementedInterface, TSuperClass, TWrapperInterface>(className);
+                FindTypeConfig<TToImplement, TImplementationSuperClass, TWrapperInterface>(className);
 
             if (result == null)
             {
-                className = className.GetClassName<TImplementedInterface, TSuperClass>();
-                result = CreateTypeConf<TImplementedInterface, TSuperClass, TWrapperInterface>(className);
+                className = className.GetClassName<TToImplement, TImplementationSuperClass>();
+                result = CreateTypeConf<TToImplement, TImplementationSuperClass, TWrapperInterface>(className);
             }
 
             return result;
@@ -496,23 +467,12 @@ namespace NP.Roxy
         public ITypeConfig<TWrapperInterface>
             FindOrCreateTypeConfByTypeToImpl<TypeToImpl, TWrapperInterface>(string className = null)
         {
-            Type typeToImpl = typeof(TypeToImpl);
-
-            if (typeToImpl.IsInterface)
-            {
-                return this.FindOrCreateTypeConf<TypeToImpl, NoClass, TWrapperInterface>(className);
-            }
-            else if (typeToImpl.IsClass)
-            {
-                return this.FindOrCreateTypeConf<NoInterface, TypeToImpl, TWrapperInterface>(className);
-            }
-
-            throw new Exception($"Type '{typeToImpl.Name}' is neither a class, no an interface");
+            return this.FindOrCreateTypeConf<TypeToImpl, NoType, TWrapperInterface>(className);
         }
 
         public ITypeConfig FindOrCreateTypeConfByTypeToImpl<TypeToImpl>(string className = null)
         {
-            return this.FindOrCreateTypeConfByTypeToImpl<TypeToImpl, NoInterface>(className);
+            return this.FindOrCreateTypeConfByTypeToImpl<TypeToImpl, NoType>(className);
         }
 
         private List<INamedTypeSymbol> GetAllWrapperSymbols(INamedTypeSymbol typeToImpl)
@@ -561,7 +521,7 @@ namespace NP.Roxy
         public ITypeConfig GetDefaultWrapperTypeConf(INamedTypeSymbol typeToImpl)
         {
             IEnumerable<INamedTypeSymbol> implementationTypes =
-                GetAllWrapperSymbols(typeToImpl).Union(new[] { typeof(NoInterface).GetTypeSymbol(this.TheCompilation) }).Distinct(TypeSymbolComparer.TheTypeSymbolComparer).ToList();
+                GetAllWrapperSymbols(typeToImpl).Union(new[] { typeof(NoType).GetTypeSymbol(this.TheCompilation) }).Distinct(TypeSymbolComparer.TheTypeSymbolComparer).ToList();
 
             string defaultWrapperName =
                 typeToImpl.GetDefaultWrapperName();
@@ -608,7 +568,7 @@ namespace NP.Roxy
         {
             core = core.GetCore();
 
-            return core.FindOrCreateTypeConf<TImplementedInterface, NoClass, TWrapperInterface>(className);
+            return core.FindOrCreateTypeConf<TImplementedInterface, NoType, TWrapperInterface>(className);
         }
 
         public static ITypeConfig<SingleWrapperInterface<TWrapped>> 
@@ -628,7 +588,7 @@ namespace NP.Roxy
             concreteClassName = concreteClassName ?? typeToConcretizeSymbol.Name.GetConcretizationName();
 
             ITypeConfig typeConfig =
-                TheCore.FindOrCreateTypeConfByTypeToImpl<NoInterface>(concreteClassName, typeToConcretizeSymbol);
+                TheCore.FindOrCreateTypeConfByTypeToImpl<NoType>(concreteClassName, typeToConcretizeSymbol);
 
             if (typeConfig.TheGeneratedCode == null)
             {
@@ -643,7 +603,7 @@ namespace NP.Roxy
 
         public ITypeConfig FindOrCreateConcretizationTypeConf<T>(string concreteClassName = null)
         {
-            AddTypesToReference((new[] { typeof(T), typeof(NoInterface)}));
+            AddTypesToReference((new[] { typeof(T), typeof(NoType)}));
 
             INamedTypeSymbol typeSymbol = typeof(T).GetTypeSymbol(this.TheCompilation);
 
