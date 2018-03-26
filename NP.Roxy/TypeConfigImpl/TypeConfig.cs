@@ -93,26 +93,26 @@ namespace NP.Roxy.TypeConfigImpl
         void SetInit(string propName, INamedTypeSymbol typeSymbol);
 
         void SetInit<TInit>(string propName);
-
-        void SetPropGetter<TImpl, TProp>
-        (
-            Expression<Func<TImpl, TProp>> propNameGetter,
-            Expression<Func<TImpl, TProp>> propGetter
-        );
     }
 
-    public interface ITypeConfig<TWrapperInterface> : ITypeConfig
+    public interface ITypeConfig<TToImplement, TWrapperInterface> : ITypeConfig
     {
-        void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        void SetPropGetter<TProp>
+        (
+            Expression<Func<TToImplement, TProp>> propNameGetter,
+            Expression<Func<TToImplement, TProp>> propGetter
+        );
+
+        void SetWrappedPropGetter<TWrappedObj, TProp>
         (
             string propName, 
             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
             Expression<Func<TWrappedObj, TProp>> propGetter
         );
 
-        void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        void SetWrappedPropGetter<TWrappedObj, TProp>
         (
-            Expression<Func<TImpl, TProp>> propNameGetter,
+            Expression<Func<TToImplement, TProp>> propNameGetter,
             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
             Expression<Func<TWrappedObj, TProp>> propGetter
         );
@@ -124,145 +124,146 @@ namespace NP.Roxy.TypeConfigImpl
             Expression<Func<TWrappedObj, TWrapperProp>> wrappedPropChooser,
             Expression<Func<TWrapper, TWrapperProp>> wrapperPropChooser);
 
-        void SetReturningMethodMap<TImpl, TWrappedObj, TOut>
+        void SetReturningMethodMap<TWrappedObj, TOut>
         (
-             Expression<Func<TImpl, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TOut>> wrappedMethod
         );
 
-        void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TOut>
+        void SetReturningMethodMap<TWrappedObj, TIn1, TOut>
         (
-             Expression<Func<TImpl, TIn1, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TOut>> wrappedMethod
         );
 
-        void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TOut>
+        void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TOut>> wrappedMethod
         );
 
-        void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TOut>
+        void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TOut>
          (
-              Expression<Func<TImpl, TIn1, TIn2, TIn3, TOut>> methodNameGetter,
+              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TOut>> methodNameGetter,
               Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
               Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TOut>> wrappedMethod
          );
 
-        void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TOut>
+        void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TOut>> wrappedMethod
         );
 
 
-        void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>
+        void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>> wrappedMethod
         );
 
-        void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>
+        void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>> wrappedMethod
         );
 
-        void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>
+        void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>> wrappedMethod
         );
 
-        void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>
+        void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>> wrappedMethod
         );
 
-        void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>
+        void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>> wrappedMethod
         );
 
 
-        void SetVoidMethodMap<TImpl, TWrappedObj, TIn1>
+        void SetVoidMethodMap<TWrappedObj, TIn1>
         (
-             Expression<Func<TImpl, TIn1>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1>> wrappedMethod
         );
 
-        void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2>
+        void SetVoidMethodMap<TWrappedObj, TIn1, TIn2>
         (
-             Expression<Func<TImpl, TIn1, TIn2>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2>> wrappedMethod
         );
 
-        void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3>
+        void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3>
          (
-              Expression<Func<TImpl, TIn1, TIn2, TIn3>> methodNameGetter,
+              Expression<Func<TToImplement, TIn1, TIn2, TIn3>> methodNameGetter,
               Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
               Expression<Func<TWrappedObj, TIn1, TIn2, TIn3>> wrappedMethod
          );
 
-        void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4>
+        void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4>> wrappedMethod
         );
 
 
-        void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5>
+        void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5>> wrappedMethod
         );
 
-        void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>
+        void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>> wrappedMethod
         );
 
-        void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>
+        void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>> wrappedMethod
         );
 
-        void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>
+        void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>> wrappedMethod
         );
 
-        void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>
+        void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>> wrappedMethod
         );
     }
 
 
-    public interface ITypeConfig<TToImplement, TImplemenetationSuperClass, TWrapperInterface> : ITypeConfig<TWrapperInterface>
+    public interface ITypeConfig<TToImplement, TImplemenetationSuperClass, TWrapperInterface> : 
+        ITypeConfig<TToImplement, TWrapperInterface>
     {
     }
 
@@ -271,7 +272,10 @@ namespace NP.Roxy.TypeConfigImpl
         internal const string INIT_METHOD_NAME = "__Init";
     }
 
-    public class TypeConfigBySymbols<TWrapperInterface> : TypeConfigBase, ITypeConfig<TWrapperInterface>, ICompilationContainer
+    public class TypeConfigBySymbols<TToImplement, TWrapperInterface> : 
+        TypeConfigBase, 
+        ITypeConfig<TToImplement, TWrapperInterface>, 
+        ICompilationContainer
     {
         public INamedTypeSymbol TypeToImplementSymbol { get; private set; }
 
@@ -514,10 +518,10 @@ namespace NP.Roxy.TypeConfigImpl
             return propBuilderInfo;
         }
 
-        public void SetPropGetter<TImpl, TProp>
+        public void SetPropGetter<TProp>
         (
-            Expression<Func<TImpl, TProp>> propNameGetter,
-            Expression<Func<TImpl, TProp>> propGetter
+            Expression<Func<TToImplement, TProp>> propNameGetter,
+            Expression<Func<TToImplement, TProp>> propGetter
         )
         {
             PropertyWrapperMemberBuilderInfo propBuilderInfo =
@@ -527,7 +531,7 @@ namespace NP.Roxy.TypeConfigImpl
         }
 
 
-        public void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        public void SetWrappedPropGetter<TWrappedObj, TProp>
         (
             string propName,
             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
@@ -543,14 +547,14 @@ namespace NP.Roxy.TypeConfigImpl
         }
 
 
-        public void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+        public void SetWrappedPropGetter<TWrappedObj, TProp>
         (
-            Expression<Func<TImpl, TProp>> propNameGetter,
+            Expression<Func<TToImplement, TProp>> propNameGetter,
             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
             Expression<Func<TWrappedObj, TProp>> propGetter
         )
         {
-            this.SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+            this.SetWrappedPropGetter<TWrappedObj, TProp>
             (
                 propNameGetter.GetMemberName(), 
                 wrappedObjChooser, 
@@ -558,9 +562,9 @@ namespace NP.Roxy.TypeConfigImpl
             );
         }
 
-        public void SetVoidMethod<TImpl, TWrappedObj>
+        public void SetVoidMethod<TWrappedObj>
         (
-             Expression<Func<TImpl>> methodNameGetter,
+             Expression<Func<TToImplement>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Action<TWrappedObj>> wrappedMethod
         )
@@ -568,7 +572,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         }
 
-        private void SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>
+        private void SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>
         (
              LambdaExpression methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
@@ -579,178 +583,178 @@ namespace NP.Roxy.TypeConfigImpl
             WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjChooser);
 
             IMethodSymbol callingMethodSymbol =
-                this.TheCompilation.FindMatchingMethodSymbol<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>(methodNameGetter.GetMemberName());
+                this.TheCompilation.FindMatchingMethodSymbol<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>(methodNameGetter.GetMemberName());
 
             wrappedObjInfo.SetExpressionMemberMap<TWrappedObj>(callingMethodSymbol, wrappedMethod);
         }
 
-        public void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>
+        public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
-        public void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>
+        public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
 
-        public void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>
+        public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
-        public void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>
+        public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
 
-        public void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>
+        public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
-        public void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>
+        public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
-        public void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>
+        public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
-        public void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>
+        public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
 
-        public void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>
+        public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
-        public void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5>
+        public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TIn5>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
 
-        public void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, TOut>
+        public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TOut>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
-        public void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4>
+        public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TIn4>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TIn4, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
 
-        public void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3, TOut>
+        public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TOut>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
-        public void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TIn3>
+        public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TIn3>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TIn3>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, TIn3, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
-        public void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TIn2, TOut>
+        public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TOut>
         (
-             Expression<Func<TImpl, TIn1, TIn2, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TOut>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, NoType, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, NoType, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
-        public void SetVoidMethodMap<TImpl, TWrappedObj, TIn1, TIn2>
+        public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2>
         (
-             Expression<Func<TImpl, TIn1, TIn2>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TIn2>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, TIn2, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
-        public void SetReturningMethodMap<TImpl, TWrappedObj, TIn1, TOut>
+        public void SetReturningMethodMap<TWrappedObj, TIn1, TOut>
         (
-             Expression<Func<TImpl, TIn1, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TOut>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
 
-        public void SetVoidMethodMap<TImpl, TWrappedObj, TIn1>
+        public void SetVoidMethodMap<TWrappedObj, TIn1>
         (
-             Expression<Func<TImpl, TIn1>> methodNameGetter,
+             Expression<Func<TToImplement, TIn1>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, TIn1, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, TIn1, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
 
-        public void SetReturningMethodMap<TImpl, TWrappedObj, TOut>
+        public void SetReturningMethodMap<TWrappedObj, TOut>
         (
-             Expression<Func<TImpl, TOut>> methodNameGetter,
+             Expression<Func<TToImplement, TOut>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TOut>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
 
-        public void SetVoidMethodMap<TImpl, TWrappedObj>
+        public void SetVoidMethodMap<TWrappedObj>
         (
-             Expression<Func<TImpl>> methodNameGetter,
+             Expression<Func<TToImplement>> methodNameGetter,
              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj>> wrappedMethod
         )
-            => SetReturningMethodMapImpl<TImpl, TWrappedObj, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
+            => SetReturningMethodMapImpl<TWrappedObj, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
 
 
         public void SetPropMemberMap<TImplementer, TWrappedObj, TWrapperProp>
@@ -1255,8 +1259,8 @@ namespace NP.Roxy.TypeConfigImpl
     }
 
 
-    internal class TypeConfig<TWrapperInterface> : 
-        TypeConfigBySymbols<TWrapperInterface>        
+    internal class TypeConfig<TToImplement, TWrapperInterface> : 
+        TypeConfigBySymbols<TToImplement, TWrapperInterface>        
     {
         public Type TypeToImplement { get; private set; }
 
@@ -1268,13 +1272,12 @@ namespace NP.Roxy.TypeConfigImpl
         (
             Core core,
             string className = null,
-            Type typeToImpl = null,
             Type implementationSuperClassType = null,
             Type wrapInterfaceType = null
         )
             : base(core, className)
         {
-            TypeToImplement = typeToImpl.GetRealRoxyType();
+            TypeToImplement = typeof(TToImplement);
             ImplementationSuperClassType = implementationSuperClassType.GetRealRoxyType();
             WrapInterfaceType = wrapInterfaceType.GetRealRoxyType();
 
@@ -1297,7 +1300,7 @@ namespace NP.Roxy.TypeConfigImpl
             new[] { TypeToImplement, ImplementationSuperClassType, WrapInterfaceType };
     }
 
-    internal class InterfaceMergingTypeConfig : TypeConfig<NoType>
+    internal class InterfaceMergingTypeConfig<TToImplement> : TypeConfig<TToImplement, NoType>
     {
         protected override void SetFromSymbols
         (
@@ -1316,7 +1319,7 @@ namespace NP.Roxy.TypeConfigImpl
             string className,
             IEnumerable<INamedTypeSymbol> allInterfaceTypeSymbolsToMerge
         )
-            : base(core, className, null, null, null)
+            : base(core, className)
         {
             AllInterfaceTypeSymbolsToMerge = allInterfaceTypeSymbolsToMerge.ToArray();
         }
@@ -1351,11 +1354,11 @@ namespace NP.Roxy.TypeConfigImpl
 
 
     internal class TypeConfig<TToImplement, TImplementationSuperClass, TWrapperInterface> :
-        TypeConfig<TWrapperInterface>,
+        TypeConfig<TToImplement, TWrapperInterface>,
         ITypeConfig<TToImplement, TImplementationSuperClass, TWrapperInterface>
     {
         public TypeConfig(Core core, string className = null) : 
-            base(core, className, typeof(TToImplement), typeof(TImplementationSuperClass), typeof(TWrapperInterface))
+            base(core, className, typeof(TImplementationSuperClass), typeof(TWrapperInterface))
         {
         }
     }
@@ -1364,12 +1367,12 @@ namespace NP.Roxy.TypeConfigImpl
     {
         public static void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
         (
-            this ITypeConfig<SingleWrapperInterface<TWrappedObj>> typeConfig,
+            this ITypeConfig<TImpl, SingleWrapperInterface<TWrappedObj>> typeConfig,
             string propName,
             Expression<Func<TWrappedObj, TProp>> propGetter
         )
         {
-            typeConfig.SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+            typeConfig.SetWrappedPropGetter<TWrappedObj, TProp>
             (
                 propName,
                 (singleWrapperInt) => singleWrapperInt.TheWrappedType,
@@ -1379,14 +1382,15 @@ namespace NP.Roxy.TypeConfigImpl
 
         public static void SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
         (
-            this ITypeConfig<SingleWrapperInterface<TWrappedObj>> typeConfig,
+            this ITypeConfig<TImpl, SingleWrapperInterface<TWrappedObj>> typeConfig,
             Expression<Func<TImpl, TProp>> propNameGetter,
             Expression<Func<TWrappedObj, TProp>> propGetter
         )
         {
-            typeConfig.SetWrappedPropGetter<TImpl, TWrappedObj, TProp>
+            typeConfig.SetWrappedPropGetter<TWrappedObj, TProp>
             (
                 propNameGetter.GetMemberName(),
+                (singleWrapperInt) => singleWrapperInt.TheWrappedType,
                 propGetter
             );
         }
