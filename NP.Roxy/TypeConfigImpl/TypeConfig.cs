@@ -272,16 +272,17 @@ namespace NP.Roxy.TypeConfigImpl
         internal const string INIT_METHOD_NAME = "__Init";
     }
 
-    public class TypeConfigBySymbols<TToImplement, TWrapperInterface> : 
-        TypeConfigBase, 
-        ITypeConfig<TToImplement, TWrapperInterface>, 
+
+    public class TypeConfigBySymbols : 
+        TypeConfigBase,
+        ITypeConfig,
         ICompilationContainer
     {
         public INamedTypeSymbol TypeToImplementSymbol { get; private set; }
 
         public INamedTypeSymbol ImplSuperClassTypeSymbol { get; private set; }
 
-        public INamedTypeSymbol WrapInterfaceTypeSymbol { get; private set; }
+        public INamedTypeSymbol WrapInterfaceTypeSymbol { get; protected set; }
 
         // all types that can be used to reference the object
         protected IEnumerable<INamedTypeSymbol> AllReferenceTypesSymbols =>
@@ -297,7 +298,7 @@ namespace NP.Roxy.TypeConfigImpl
         public bool HasImplSuperClassType =>
             ImplSuperClassTypeSymbol.Name != nameof(NoType);
 
-        void ThrowErrorIfCompleted()
+        protected void ThrowErrorIfCompleted()
         {
             if (this.ConfigurationHasBeenCompleted)
             {
@@ -330,7 +331,7 @@ namespace NP.Roxy.TypeConfigImpl
         {
             ThrowErrorIfCompleted();
 
-            foreach(string propName in propNames)
+            foreach (string propName in propNames)
             {
                 PropertyWrapperMemberBuilderInfo propBuilderInfo =
                     GetPropWrapperMemberBuilderInfo(propName);
@@ -360,16 +361,9 @@ namespace NP.Roxy.TypeConfigImpl
         [XmlIgnore]
         public Core TheCore { get; }
 
-        protected virtual INamedTypeSymbol GetWrapperInterfaceSymbol(INamedTypeSymbol wrapperInterfaceSymbol)
+        protected virtual void SetWrapperInterfaceSymbol(INamedTypeSymbol wrapperInterfaceSymbol)
         {
-            if (wrapperInterfaceSymbol.Matches(typeof(NoType), this.TheCompilation))
-            {
-                return TheCore.GetDefaultWrapper(this.TypeToImplementSymbol);
-            }
-            else
-            {
-                return wrapperInterfaceSymbol;
-            }
+            this.WrapInterfaceTypeSymbol = wrapperInterfaceSymbol;
         }
 
         protected virtual void SetFromSymbols
@@ -382,35 +376,26 @@ namespace NP.Roxy.TypeConfigImpl
             this.TypeToImplementSymbol = typeToImplSymbol;
             this.ImplSuperClassTypeSymbol = implementationSuperClassTypeSymbol;
 
-            INamedTypeSymbol genericArgWrapperInterfaceTypeSymbol =
-                 typeof(TWrapperInterface).GetTypeSymbol(this.TheCompilation);
-
-            if (wrapperInterfaceSymbol == null)
+            if (this.ImplSuperClassTypeSymbol == null)
             {
-                wrapperInterfaceSymbol = genericArgWrapperInterfaceTypeSymbol;
+                this.ImplSuperClassTypeSymbol = this.GetTypeSymbol(RoslynAnalysisAndGenerationUtils.NoTypeType);
             }
 
-            this.WrapInterfaceTypeSymbol = wrapperInterfaceSymbol;
-
-            TheCore.AddTypeSymbolsToReference(AllImplementedTypesSymbols);
-
-            wrapperInterfaceSymbol = GetWrapperInterfaceSymbol(wrapperInterfaceSymbol);
-
-            if (!wrapperInterfaceSymbol.IsSelfOrSuperType(genericArgWrapperInterfaceTypeSymbol))
-            {
-                throw new Exception($"Roxy usage error: {wrapperInterfaceSymbol.GetFullTypeString()} does not derive from {genericArgWrapperInterfaceTypeSymbol.GetFullTypeString()}.");
-            }
-
-            this.WrapInterfaceTypeSymbol = wrapperInterfaceSymbol;
+            SetWrapperInterfaceSymbol(wrapperInterfaceSymbol);
 
             this.ClassName = TypeToImplementSymbol.GetClassName(this.ClassName);
 
-            if ( (ImplSuperClassTypeSymbol.TypeKind != TypeKind.Class) && (ImplSuperClassTypeSymbol.Name != nameof(NoType)))
+            if ((ImplSuperClassTypeSymbol != null) &&(ImplSuperClassTypeSymbol.TypeKind != TypeKind.Class) && (ImplSuperClassTypeSymbol.Name != nameof(NoType)))
             {
                 throw new Exception($"Error: Class to extend type '{ImplSuperClassTypeSymbol.Name}' is not a class.");
             }
 
-            if (WrapInterfaceTypeSymbol.TypeKind != TypeKind.Interface)
+            if (WrapInterfaceTypeSymbol == null)
+            {
+                WrapInterfaceTypeSymbol = this.GetTypeSymbol(RoslynAnalysisAndGenerationUtils.NoTypeType);
+            }
+
+            if ((WrapInterfaceTypeSymbol.TypeKind != TypeKind.Interface))
                 throw new Exception($"Error: WrappedInterface type '{WrapInterfaceTypeSymbol.Name}' is not interface.");
 
             if ((!HasTypeImplement) && (!HasImplSuperClassType))
@@ -438,29 +423,28 @@ namespace NP.Roxy.TypeConfigImpl
         (
             Core core,
             string className = null,
-            INamedTypeSymbol implInterfaceTypeSymbol = null,
-            INamedTypeSymbol superClassTypeSymbol = null,
+            INamedTypeSymbol typeToImplementSymbol = null,
+            INamedTypeSymbol implementationSuperClassTypeSymbol = null,
             INamedTypeSymbol wrapperInterfaceTypeSymbol = null
         )
         {
             TheCore = core;
             this.ClassName = className;
 
-            if ( (implInterfaceTypeSymbol == null) && 
-                 (superClassTypeSymbol == null) )
+            if (typeToImplementSymbol == null)
             {
                 return;
             }
 
             SetFromSymbols
             (
-                implInterfaceTypeSymbol, 
-                superClassTypeSymbol,
+                typeToImplementSymbol,
+                implementationSuperClassTypeSymbol,
                 wrapperInterfaceTypeSymbol
             );
         }
 
-        WrappedObjInfo GetWrappedObjInfo(string wrappedObjPropName)
+        internal WrappedObjInfo GetWrappedObjInfo(string wrappedObjPropName)
         {
             WrappedObjInfo wrappedObjInfo =
                 this._wrappedObjInfos.FirstOrDefault(wrObjInfo => wrObjInfo.WrappedObjPropName == wrappedObjPropName);
@@ -473,7 +457,7 @@ namespace NP.Roxy.TypeConfigImpl
             return wrappedObjInfo;
         }
 
-        WrappedObjInfo GetWrappedObjInfo<TWrappedObj, TProp>(Expression<Func<TWrappedObj, TProp>> expr)
+        internal WrappedObjInfo GetWrappedObjInfo<TWrappedObj, TProp>(Expression<Func<TWrappedObj, TProp>> expr)
         {
             string wrappedObjName = expr.GetMemberName();
 
@@ -489,10 +473,524 @@ namespace NP.Roxy.TypeConfigImpl
 
         public void SetAllowNonPublicForAllMembers()
         {
-            foreach(WrappedObjInfo wrappedObjInfo in this._wrappedObjInfos)
+            foreach (WrappedObjInfo wrappedObjInfo in this._wrappedObjInfos)
             {
                 wrappedObjInfo.AllowNonPublicForAllMemberMaps = true;
             }
+        }
+
+        public ISymbol GetWrapperMemberSymbolByName(string wrapperMemberName)
+        {
+            IEnumerable<ISymbol> wrapperMemberSymbols = ImplementableSymbols.Where(symbol => symbol.Name == wrapperMemberName).ToList();
+
+            if (wrapperMemberSymbols.IsNullOrEmpty())
+            {
+                throw new Exception($"Roxy Usage Error: no implementable symbol for member name {wrapperMemberName}");
+            }
+            else if (wrapperMemberSymbols.Count() > 1)
+            {
+                throw new Exception($"Roxy Usage Error: there is more than one implementable member corresponding to member name {wrapperMemberName}. Cannot resolve the member by name.");
+            }
+
+            ISymbol wrapperMemberSymbol = wrapperMemberSymbols.Single();
+
+            return wrapperMemberSymbol;
+        }
+
+        public void SetMemberMap
+        (
+            string wrappedObjPropName,
+            string wrappedMemberName,
+            string wrapperMemberName,
+            bool? allowNonPublic = null
+        )
+        {
+            ThrowErrorIfCompleted();
+
+            WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjPropName);
+
+            ISymbol wrapperMemberSymbol = null;
+
+            if (wrapperMemberName != RoslynAnalysisAndGenerationUtils.THIS)
+            {
+                wrapperMemberSymbol = GetWrapperMemberSymbolByName(wrapperMemberName);
+            }
+
+            wrappedObjInfo.SetMap(wrappedMemberName, wrapperMemberSymbol, allowNonPublic);
+        }
+
+        public void SetThisMemberMap
+        (
+            string wrappedObjPropName,
+            string wrappedMemberName,
+            bool? allowNonPublic = null
+        )
+        {
+            SetMemberMap(wrappedObjPropName, wrappedMemberName, RoslynAnalysisAndGenerationUtils.THIS, allowNonPublic);
+        }
+
+        public void SetMemberMapAllowNonPublic
+        (
+            string wrappedObjPropName,
+            params string[] wrapperMemberNames // we pass wrapper member names (not wrapped)
+        )
+        {
+            ThrowErrorIfCompleted();
+
+            WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjPropName);
+
+            wrapperMemberNames
+                .DoForEach(wrapperMemberName => SetMemberMap(wrappedObjPropName, null, wrapperMemberName, true));
+        }
+
+        public Compilation TheCompilation => TheCore.TheCompilation;
+
+        public void AddStaticUtilsClass(string wrappedObjPropName, Type staticMethodsContainerClass)
+        {
+            WrappedObjInfo wrappedObjInfo =
+                _wrappedObjInfos.Single(wrappedObj => wrappedObj.WrappedObjPropName == wrappedObjPropName);
+
+            wrappedObjInfo.AddStaticMethodsContainerType(staticMethodsContainerClass);
+        }
+
+        private void SetMembersFromCompilation()
+        {
+            foreach (WrappedObjInfo wrappedObjInfo in this._wrappedObjInfos)
+            {
+                wrappedObjInfo.SetFromParentSymbol(WrapInterfaceTypeSymbol);
+            }
+
+            SetMemberSymbols();
+        }
+
+        public void SetEventArgThisIdx(string eventName, int idx)
+        {
+            ThrowErrorIfCompleted();
+
+            EventWrapperMemberBuilderInfo eventMemberInfo =
+                this.EventBuilderInfos?.FirstOrDefault(evt => evt.WrapperSymbolName == eventName);
+
+            if (eventMemberInfo != null)
+                eventMemberInfo.IndexInputParamToReplaceByThis = idx;
+        }
+
+
+        // at this point I assume there are no overrides
+        // so each name uniquely maps into the corresponding
+        // property or method or event
+        // I also assume that there is no name mismatch between
+        // the interface and implementation class
+        // i.e. if name is a property in interface, 
+        // it can only be a property within the class
+        public IEnumerable<ISymbol> ImplementableSymbols
+        {
+            get
+            {
+                if (this.TypeToImplementSymbol.TypeKind == TypeKind.Interface)
+                {
+                    return ((this.TypeToImplementSymbol?.GetAllMembers()).NullToEmpty<ISymbol>())
+                                .Except
+                                (
+                                    this.ImplSuperClassTypeSymbol.GetAllPublicMembers(),
+                                    RoslynAnalysisAndGenerationUtils.TheSymbolByNameAndSignatureComparer
+                                ).Union(ImplSuperClassTypeSymbol.GetMembers().Where(member => member.IsOverridable()));
+                }
+                else
+                {
+                    return TypeToImplementSymbol.GetMembers().Where(member => member.IsOverridable());
+                }
+            }
+        }
+
+
+        void SetMemberSymbols()
+        {
+            this.EventBuilderInfos =
+                this.ImplementableSymbols.GetSymbolsOfType<IEventSymbol>()
+                    .Select(symbol => new EventWrapperMemberBuilderInfo(symbol, this.TheCore)).ToList();
+
+            this.PropBuilderInfos =
+                 this.ImplementableSymbols.GetSymbolsOfType<IPropertySymbol>()
+                     .Select(symbol => new PropertyWrapperMemberBuilderInfo(symbol, this.TheCore)).ToList();
+
+            this.MethodBuilderInfos =
+                this.ImplementableSymbols.GetSymbolsOfType<IMethodSymbol>()
+                    .Where(symbol => symbol.AssociatedSymbol == null)
+                    .Select(symbol => new MethodWrapperMemberBuilderInfo(symbol, this.TheCore)).ToList();
+        }
+
+        void SetMissingMaps()
+        {
+            this._wrappedObjInfos
+                .DoForEach(wrappedObjInfo => wrappedObjInfo.AddMissingMaps(ImplementableSymbols.Distinct()));
+        }
+
+
+        // sets wrapped member for every builder info
+        void SetWrappedMembers()
+        {
+            this.EventBuilderInfos.Cast<WrapperMemberBuilderInfoBase>()
+                .Union(PropBuilderInfos.Where(propBuilderInfo => propBuilderInfo.MustImplement))
+                .Union(MethodBuilderInfos.Where(propBuilderInfo => propBuilderInfo.MustImplement))
+                .DoForEach(builderInfo => builderInfo.SetWrappedMembers(GetWrappedMemberInfos(builderInfo.WrapperSymbolBase)));
+        }
+
+        public void SetOverrideVirtual(string memberName, bool includeBase = false)
+        {
+            WrapperMemberBuilderInfoBase builderInfoToSet =
+                PropBuilderInfos.Cast<WrapperMemberBuilderInfoBase>()
+                                .Union(MethodBuilderInfos).First(builderInfo => builderInfo.WrapperSymbolName == memberName);
+
+            builderInfoToSet.SetOverrideVirtual(includeBase);
+        }
+
+        public void SetOverrideVirtualMembers(bool includeBase, params string[] memberNames)
+        {
+            memberNames.DoForEach(memberName => SetOverrideVirtual(memberName, includeBase));
+        }
+
+        string SuperClassName => ImplSuperClassTypeSymbol?.GetFullTypeString();
+
+        IEnumerable<INamedTypeSymbol> AllImplementedInterfaces =>
+            TypeToImplementSymbol.ToCollection().Union(WrapInterfaceTypeSymbol.ToCollection());
+
+        IEnumerable<EventWrapperMemberBuilderInfo> EventBuilderInfos { get; set; }
+
+        IEnumerable<PropertyWrapperMemberBuilderInfo> PropBuilderInfos { get; set; }
+
+        IEnumerable<MethodWrapperMemberBuilderInfo> MethodBuilderInfos { get; set; }
+
+        IEnumerable<WrapperMemberBuilderInfoBase> AllWrapperMemberInfos =>
+            EventBuilderInfos.NullToEmpty().Cast<WrapperMemberBuilderInfoBase>().Union(PropBuilderInfos.NullToEmpty()).Union(MethodBuilderInfos.NullToEmpty());
+
+        void OpenClassDeclaration(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            roslynCodeBuilder.AddClass
+            (
+                ClassName,
+                null,
+                ImplSuperClassTypeSymbol.GetNullForNoType(TheCompilation),
+                true,
+                AllImplementedInterfaces.ToArray()
+            );
+        }
+
+        private IEnumerable<MemberMapInfoBase>
+            GetWrappedMemberInfos(ISymbol wrapperSymbol)
+        {
+            return
+                _wrappedObjInfos
+                    .SelectMany(wrappedObj => wrappedObj.GetWrappedMemberInfo(wrapperSymbol).ToCollection().ToList()).ToList();
+        }
+
+        private void ImplementEvents(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            if (this.EventBuilderInfos.IsNullOrEmpty())
+                return;
+
+            roslynCodeBuilder.PushRegion("The Wrapped Events Definitions");
+
+            foreach (var eventBuilder in this.EventBuilderInfos)
+            {
+                eventBuilder.Build(roslynCodeBuilder);
+            }
+
+            roslynCodeBuilder.PopRegion();
+        }
+
+        private void AddWrappedClasses(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            if (this._wrappedObjInfos.IsNullOrEmpty())
+                return;
+
+            roslynCodeBuilder.PushRegion("Wrapped Classes");
+
+            foreach (WrappedObjInfo wrappedClassInfo in this._wrappedObjInfos)
+            {
+                wrappedClassInfo.AddWrappedClass(roslynCodeBuilder);
+            }
+
+            roslynCodeBuilder.PopRegion();
+        }
+
+        private void AddPropWraps(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            if (PropBuilderInfos.IsNullOrEmpty())
+                return;
+
+            roslynCodeBuilder.PushRegion("Generated Properties");
+
+            foreach (WrapperMemberBuilderInfo<IPropertySymbol> propBuilderInfo in this.PropBuilderInfos)
+            {
+                propBuilderInfo.Build(roslynCodeBuilder);
+            }
+
+            roslynCodeBuilder.PopRegion();
+        }
+
+        private void AddMethodWraps(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            if (MethodBuilderInfos.IsNullOrEmpty())
+                return;
+
+            roslynCodeBuilder.PushRegion("Wrapped Methods");
+
+            foreach (WrapperMemberBuilderInfo<IMethodSymbol> methodBuilderInfo in this.MethodBuilderInfos)
+            {
+                methodBuilderInfo.Build(roslynCodeBuilder);
+            }
+
+            roslynCodeBuilder.PopRegion();
+        }
+
+        private void AddInit(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            roslynCodeBuilder.PushRegion("Init Method");
+
+            roslynCodeBuilder.AddLine($"void {INIT_METHOD_NAME}()");
+            roslynCodeBuilder.Push();
+
+            this.PropBuilderInfos.DoForEach(propBuilderInfo => propBuilderInfo.AddInit(roslynCodeBuilder));
+
+            roslynCodeBuilder.Pop();
+
+            roslynCodeBuilder.PopRegion();
+        }
+
+        private void AddDefaultConstructor(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            roslynCodeBuilder.PushRegion("Default Constructor");
+
+            roslynCodeBuilder.AddDefaultConstructorOpening(this.ClassName);
+
+            foreach (WrappedObjInfo wrappedObj in _wrappedObjInfos)
+            {
+                wrappedObj.AddDefaultConstructor(roslynCodeBuilder);
+            }
+
+            roslynCodeBuilder.AddLine($"{INIT_METHOD_NAME}()", true);
+
+            roslynCodeBuilder.Pop();
+
+            roslynCodeBuilder.PopRegion();
+        }
+
+        private string GetWrappedObjConstructorParamStr()
+        {
+            return _wrappedObjInfos.StrConcat((wrappedObjInfo) => $"{wrappedObjInfo.ConcreteWrappedObjNamedTypeSymbol.GetFullTypeString()} {wrappedObjInfo.WrappedObjClassName.FirstCharToLowerCase(true)}");
+        }
+
+        void AddWrappedObjsConstructor(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            string paramsLine = GetWrappedObjConstructorParamStr();
+
+            if (paramsLine.IsNullOrEmpty())
+                return;
+
+            roslynCodeBuilder.PushRegion("Wrappers Constructor");
+
+            roslynCodeBuilder.AddLine($"public {this.ClassName}({paramsLine})");
+            roslynCodeBuilder.Push();
+
+            foreach (WrappedObjInfo wrapObjInfo in _wrappedObjInfos)
+            {
+                string assignmentLine =
+                    $"{wrapObjInfo.WrappedObjPropName} = {wrapObjInfo.WrappedObjClassName.FirstCharToLowerCase(true)}";
+
+                roslynCodeBuilder.AddLine(assignmentLine, true);
+            }
+
+            roslynCodeBuilder.AddLine($"{INIT_METHOD_NAME}()", true);
+
+            roslynCodeBuilder.Pop(true);
+
+            roslynCodeBuilder.PopRegion();
+        }
+
+        public const string STATIC_CORE_MEMBER_NAME = "TheCore";
+
+        protected void AddStaticCoreReference(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            roslynCodeBuilder.AddLine($"public static Core {STATIC_CORE_MEMBER_NAME} {{ get; set; }}");
+        }
+
+        protected virtual string GenerateCode()
+        {
+            Compilation compilation = this.TheCompilation;
+
+            SetMissingMaps();
+
+            SetWrappedMembers();
+
+            RoslynCodeBuilder roslynCodeBuilder = new RoslynCodeBuilder();
+            RoslynAnalysisAndGenerationUtils.TheNamespaces =
+                roslynCodeBuilder.AllNamespaces;
+
+            RoslynAnalysisAndGenerationUtils.TheNamespaces.Add("NP.Utilities");
+            RoslynAnalysisAndGenerationUtils.TheNamespaces.Add("NP.Roxy");
+            RoslynAnalysisAndGenerationUtils.TheNamespaces.Add("NP.Roxy.Attributes");
+
+            RoslynAnalysisAndGenerationUtils.InitTypeNamespace<Action<int>>();
+
+            roslynCodeBuilder.AddNamespace(AssemblerNames.GENERATED_NAMESPACE_NAME);
+
+            OpenClassDeclaration(roslynCodeBuilder);
+
+            AddStaticCoreReference(roslynCodeBuilder);
+
+            ImplementEvents(roslynCodeBuilder);
+
+            AddWrappedClasses(roslynCodeBuilder);
+
+            AddInit(roslynCodeBuilder);
+
+            AddDefaultConstructor(roslynCodeBuilder);
+
+            AddWrappedObjsConstructor(roslynCodeBuilder);
+
+            AddPropWraps(roslynCodeBuilder);
+
+            AddMethodWraps(roslynCodeBuilder);
+
+            roslynCodeBuilder.PopAll();
+
+            TheGeneratedCode = roslynCodeBuilder.ToStr();
+
+            return TheGeneratedCode;
+        }
+
+        // adds the class to compilation.
+        public void ConfigurationCompleted()
+        {
+            if (TheSelfTypeSymbol != null)
+                return;
+
+            this.GenerateCode();
+
+            TheCore.AddClass(this);
+
+            TheSelfTypeSymbol =
+                TheCore.TheCompilation.GetTypeByMetadataName(FullTypeName);
+        }
+
+        public bool ConfigurationHasBeenCompleted =>
+            TheSelfTypeSymbol != null;
+
+        protected string FullTypeName => this.ClassName.GetFullTypeName();
+
+        public INamedTypeSymbol TheSelfTypeSymbol { get; private set; }
+
+        public string TheGeneratedCode { get; protected set; }
+
+
+        Type _generatedType = null;
+        public Type TheGeneratedType
+        {
+            get => _generatedType;
+
+            private set
+            {
+                if (_generatedType == value)
+                    return;
+
+                _generatedType = value;
+
+                PostTypeSet();
+            }
+        }
+
+        protected virtual void PostTypeSet()
+        {
+            TheGeneratedType.SetStaticPropValue(STATIC_CORE_MEMBER_NAME, TheCore);
+        }
+
+        public void SetGeneratedType()
+        {
+            //if (TheGeneratedType != null)
+            //    return;
+
+            this.TheGeneratedType =
+                this.TheCore.TheGeneratedAssembly.GetType(this.FullTypeName);
+        }
+
+        IMemberBuilderSetter _builderSetter;
+        public IMemberBuilderSetter TheBuilderSetter
+        {
+            get => _builderSetter;
+
+            set
+            {
+                if (ReferenceEquals(_builderSetter, value))
+                    return;
+
+                _builderSetter = value;
+
+                foreach (PropertyWrapperMemberBuilderInfo propBuilderInfo in this.PropBuilderInfos)
+                {
+                    propBuilderInfo.TheCodeBuilder =
+                        _builderSetter.ChoosePropertyCodeBuilder(propBuilderInfo.WrapperSymbol);
+                }
+
+                foreach (MethodWrapperMemberBuilderInfo methodBuilderInfo in this.MethodBuilderInfos)
+                {
+                    methodBuilderInfo.TheCodeBuilder =
+                        _builderSetter.ChooseMethodCodeBuilder(methodBuilderInfo.WrapperSymbol);
+                }
+            }
+        }
+
+        void TestObjPartTypes<TObj, TPart>()
+        {
+            INamedTypeSymbol objSymbol = typeof(TObj).GetTypeSymbol(TheCompilation);
+
+            //if (this.WrapInterfaceTypeSymbol)
+
+            //INamedTypeSymbol partSymbol = typeof(TPart).GetTypeSymbol(TheCompilation);
+        }
+
+        public void SetInit
+        (
+            string propName,
+            INamedTypeSymbol typeSymbol
+        )
+        {
+            PropertyWrapperMemberBuilderInfo propertyWrapperMemberBuilder =
+                GetPropWrapperMemberBuilderInfo(propName);
+
+            propertyWrapperMemberBuilder.SetInit(typeSymbol);
+        }
+
+        public void SetInit<TInit>(string propName)
+        {
+            INamedTypeSymbol typeSymbol = typeof(TInit).GetTypeSymbol(this.TheCompilation);
+
+            SetInit(propName, typeSymbol);
+        }
+    }
+
+    public class TypeConfigBySymbols<TToImplement, TWrapperInterface> : 
+        TypeConfigBySymbols, 
+        ITypeConfig<TToImplement, TWrapperInterface>, 
+        ICompilationContainer
+    {
+        public TypeConfigBySymbols
+        (
+            Core core, 
+            string className = null, 
+            INamedTypeSymbol implInterfaceTypeSymbol = null, 
+            INamedTypeSymbol superClassTypeSymbol = null, 
+            INamedTypeSymbol wrapperInterfaceTypeSymbol = null
+        ) :     
+            base
+            (
+                core, 
+                className, 
+                implInterfaceTypeSymbol, 
+                superClassTypeSymbol, 
+                wrapperInterfaceTypeSymbol
+            )
+        {
+
         }
 
         private PropertyWrapperMemberBuilderInfo GetPropWrapperMemberBuilderInfoByExpr<TImpl, TProp>(Expression<Func<TImpl, TProp>> propNameGetter)
@@ -517,6 +1015,43 @@ namespace NP.Roxy.TypeConfigImpl
 
             return propBuilderInfo;
         }
+
+        protected virtual INamedTypeSymbol GetWrapperInterfaceSymbol(INamedTypeSymbol wrapperInterfaceSymbol)
+        {
+            if (wrapperInterfaceSymbol.Matches(typeof(NoType), this.TheCompilation))
+            {
+                return TheCore.GetDefaultWrapper(this.TypeToImplementSymbol);
+            }
+            else
+            {
+                return wrapperInterfaceSymbol;
+            }
+        }
+
+        protected override void SetWrapperInterfaceSymbol(INamedTypeSymbol wrapperInterfaceSymbol)
+        {
+            INamedTypeSymbol genericArgWrapperInterfaceTypeSymbol =
+                 typeof(TWrapperInterface).GetTypeSymbol(this.TheCompilation);
+
+            if (wrapperInterfaceSymbol == null)
+            {
+                wrapperInterfaceSymbol = genericArgWrapperInterfaceTypeSymbol;
+            }
+
+            this.WrapInterfaceTypeSymbol = wrapperInterfaceSymbol;
+
+            TheCore.AddTypeSymbolsToReference(AllImplementedTypesSymbols);
+
+            wrapperInterfaceSymbol = GetWrapperInterfaceSymbol(wrapperInterfaceSymbol);
+
+            if (!wrapperInterfaceSymbol.IsSelfOrSuperType(genericArgWrapperInterfaceTypeSymbol))
+            {
+                throw new Exception($"Roxy usage error: {wrapperInterfaceSymbol.GetFullTypeString()} does not derive from {genericArgWrapperInterfaceTypeSymbol.GetFullTypeString()}.");
+            }
+
+            this.WrapInterfaceTypeSymbol = wrapperInterfaceSymbol;
+        }
+
 
         public void SetPropGetter<TProp>
         (
@@ -767,494 +1302,6 @@ namespace NP.Roxy.TypeConfigImpl
             string wrappedMemberName = wrappedPropChooser.GetMemberName();
             string wrapperMemberName = wrapperPropChooser.GetMemberName();
             SetMemberMap(wrappedObjPropName, wrappedMemberName, wrapperMemberName);
-        }
-
-        public ISymbol GetWrapperMemberSymbolByName(string wrapperMemberName)
-        {
-            IEnumerable<ISymbol> wrapperMemberSymbols = ImplementableSymbols.Where(symbol => symbol.Name == wrapperMemberName).ToList();
-
-            if (wrapperMemberSymbols.IsNullOrEmpty())
-            {
-                throw new Exception($"Roxy Usage Error: no implementable symbol for member name {wrapperMemberName}");
-            }
-            else if (wrapperMemberSymbols.Count() > 1)
-            {
-                throw new Exception($"Roxy Usage Error: there is more than one implementable member corresponding to member name {wrapperMemberName}. Cannot resolve the member by name.");
-            }
-
-            ISymbol wrapperMemberSymbol = wrapperMemberSymbols.Single();
-
-            return wrapperMemberSymbol;
-        }
-
-        public void SetMemberMap
-        (
-            string wrappedObjPropName,
-            string wrappedMemberName,
-            string wrapperMemberName,
-            bool? allowNonPublic = null
-        )
-        {
-            ThrowErrorIfCompleted();
-
-            WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjPropName);
-
-            ISymbol wrapperMemberSymbol = null;
-
-            if (wrapperMemberName != RoslynAnalysisAndGenerationUtils.THIS)
-            {
-                wrapperMemberSymbol = GetWrapperMemberSymbolByName(wrapperMemberName);
-            }
-
-            wrappedObjInfo.SetMap(wrappedMemberName, wrapperMemberSymbol, allowNonPublic);
-        }
-
-        public void SetThisMemberMap
-        (
-            string wrappedObjPropName,
-            string wrappedMemberName,
-            bool? allowNonPublic = null
-        )
-        {
-            SetMemberMap(wrappedObjPropName, wrappedMemberName, RoslynAnalysisAndGenerationUtils.THIS, allowNonPublic);
-        }
-
-        public void SetMemberMapAllowNonPublic
-        (
-            string wrappedObjPropName, 
-            params string[] wrapperMemberNames // we pass wrapper member names (not wrapped)
-        )
-        {
-            ThrowErrorIfCompleted();
-
-            WrappedObjInfo wrappedObjInfo = GetWrappedObjInfo(wrappedObjPropName);
-
-            wrapperMemberNames
-                .DoForEach(wrapperMemberName => SetMemberMap(wrappedObjPropName, null, wrapperMemberName, true));
-        }
-
-        public Compilation TheCompilation => TheCore.TheCompilation;
-
-        public void AddStaticUtilsClass(string wrappedObjPropName, Type staticMethodsContainerClass)
-        {
-            WrappedObjInfo wrappedObjInfo =
-                _wrappedObjInfos.Single(wrappedObj => wrappedObj.WrappedObjPropName == wrappedObjPropName);
-
-            wrappedObjInfo.AddStaticMethodsContainerType(staticMethodsContainerClass);
-        }
-
-        private void SetMembersFromCompilation()
-        {
-            foreach (WrappedObjInfo wrappedObjInfo in this._wrappedObjInfos)
-            {
-                wrappedObjInfo.SetFromParentSymbol(WrapInterfaceTypeSymbol);
-            }
-
-            SetMemberSymbols();
-        }
-
-        public void SetEventArgThisIdx(string eventName, int idx)
-        {
-            ThrowErrorIfCompleted();
-
-            EventWrapperMemberBuilderInfo eventMemberInfo =
-                this.EventBuilderInfos?.FirstOrDefault(evt => evt.WrapperSymbolName == eventName);
-
-            if (eventMemberInfo != null)
-                eventMemberInfo.IndexInputParamToReplaceByThis = idx;
-        }
-
-
-        // at this point I assume there are no overrides
-        // so each name uniquely maps into the corresponding
-        // property or method or event
-        // I also assume that there is no name mismatch between
-        // the interface and implementation class
-        // i.e. if name is a property in interface, 
-        // it can only be a property within the class
-        public IEnumerable<ISymbol> ImplementableSymbols
-        {
-            get
-            {
-                if (this.TypeToImplementSymbol.TypeKind == TypeKind.Interface)
-                {
-                    return ((this.TypeToImplementSymbol?.GetAllMembers()).NullToEmpty<ISymbol>())
-                                .Except
-                                (
-                                    this.ImplSuperClassTypeSymbol.GetAllPublicMembers(),
-                                    RoslynAnalysisAndGenerationUtils.TheSymbolByNameAndSignatureComparer
-                                ).Union(ImplSuperClassTypeSymbol.GetMembers().Where(member => member.IsOverridable()));
-                }
-                else
-                {
-                    return ImplSuperClassTypeSymbol.GetMembers().Where(member => member.IsOverridable());
-                }
-            }
-        }
-
-
-        void SetMemberSymbols()
-        {
-            this.EventBuilderInfos =
-                this.ImplementableSymbols.GetSymbolsOfType<IEventSymbol>()
-                    .Select(symbol => new EventWrapperMemberBuilderInfo(symbol, this.TheCore)).ToList();
-
-            this.PropBuilderInfos =
-                 this.ImplementableSymbols.GetSymbolsOfType<IPropertySymbol>()
-                     .Select(symbol => new PropertyWrapperMemberBuilderInfo(symbol, this.TheCore)).ToList();
-
-            this.MethodBuilderInfos =
-                this.ImplementableSymbols.GetSymbolsOfType<IMethodSymbol>()
-                    .Where(symbol => symbol.AssociatedSymbol == null)
-                    .Select(symbol => new MethodWrapperMemberBuilderInfo(symbol, this.TheCore)).ToList();
-        }
-
-        void SetMissingMaps()
-        {
-            this._wrappedObjInfos
-                .DoForEach(wrappedObjInfo => wrappedObjInfo.AddMissingMaps(ImplementableSymbols.Distinct()));
-        }
-
-
-        // sets wrapped member for every builder info
-        void SetWrappedMembers()
-        {
-            this.EventBuilderInfos.Cast<WrapperMemberBuilderInfoBase>()
-                .Union(PropBuilderInfos.Where(propBuilderInfo => propBuilderInfo.MustImplement))
-                .Union(MethodBuilderInfos.Where(propBuilderInfo => propBuilderInfo.MustImplement))
-                .DoForEach(builderInfo => builderInfo.SetWrappedMembers(GetWrappedMemberInfos(builderInfo.WrapperSymbolBase)));
-        }
-
-        public void SetOverrideVirtual(string memberName, bool includeBase = false)
-        {
-            WrapperMemberBuilderInfoBase builderInfoToSet = 
-                PropBuilderInfos.Cast<WrapperMemberBuilderInfoBase>()
-                                .Union(MethodBuilderInfos).First(builderInfo => builderInfo.WrapperSymbolName == memberName);
-
-            builderInfoToSet.SetOverrideVirtual(includeBase);
-        }
-
-        public void SetOverrideVirtualMembers(bool includeBase, params string[] memberNames)
-        {
-            memberNames.DoForEach(memberName => SetOverrideVirtual(memberName, includeBase));
-        }
-
-        string SuperClassName => ImplSuperClassTypeSymbol?.GetFullTypeString();
-
-        IEnumerable<INamedTypeSymbol> AllImplementedInterfaces =>
-            TypeToImplementSymbol.ToCollection().Union(WrapInterfaceTypeSymbol.ToCollection());
-
-        IEnumerable<EventWrapperMemberBuilderInfo> EventBuilderInfos { get; set; }
-
-        IEnumerable<PropertyWrapperMemberBuilderInfo> PropBuilderInfos { get; set; }
-
-        IEnumerable<MethodWrapperMemberBuilderInfo> MethodBuilderInfos { get; set; }
-
-        IEnumerable<WrapperMemberBuilderInfoBase> AllWrapperMemberInfos =>
-            EventBuilderInfos.NullToEmpty().Cast<WrapperMemberBuilderInfoBase>().Union(PropBuilderInfos.NullToEmpty()).Union(MethodBuilderInfos.NullToEmpty());
-
-        void OpenClassDeclaration(RoslynCodeBuilder roslynCodeBuilder)
-        {
-            roslynCodeBuilder.AddClass
-            (
-                ClassName,
-                null,
-                ImplSuperClassTypeSymbol.GetNullForNoType(TheCompilation),
-                true,
-                AllImplementedInterfaces.ToArray()
-            );
-        }
-
-        private IEnumerable<MemberMapInfoBase>
-            GetWrappedMemberInfos(ISymbol wrapperSymbol)
-        {
-            return 
-                _wrappedObjInfos
-                    .SelectMany(wrappedObj => wrappedObj.GetWrappedMemberInfo(wrapperSymbol).ToCollection().ToList()).ToList();
-        }
-
-        private void ImplementEvents(RoslynCodeBuilder roslynCodeBuilder)
-        {
-            if (this.EventBuilderInfos.IsNullOrEmpty())
-                return;
-
-            roslynCodeBuilder.PushRegion("The Wrapped Events Definitions");
-
-            foreach (var eventBuilder in this.EventBuilderInfos)
-            {
-                eventBuilder.Build(roslynCodeBuilder);
-            }
-
-            roslynCodeBuilder.PopRegion();
-        }
-
-        private void AddWrappedClasses(RoslynCodeBuilder roslynCodeBuilder)
-        {
-            if (this._wrappedObjInfos.IsNullOrEmpty())
-                return;
-
-            roslynCodeBuilder.PushRegion("Wrapped Classes");
-
-            foreach (WrappedObjInfo wrappedClassInfo in this._wrappedObjInfos)
-            {
-                wrappedClassInfo.AddWrappedClass(roslynCodeBuilder);
-            }
-
-            roslynCodeBuilder.PopRegion();
-        }
-
-        private void AddPropWraps(RoslynCodeBuilder roslynCodeBuilder)
-        {
-            if (PropBuilderInfos.IsNullOrEmpty())
-                return;
-
-            roslynCodeBuilder.PushRegion("Generated Properties");
-
-            foreach (WrapperMemberBuilderInfo<IPropertySymbol> propBuilderInfo in this.PropBuilderInfos)
-            {
-                propBuilderInfo.Build(roslynCodeBuilder);
-            }
-
-            roslynCodeBuilder.PopRegion();
-        }
-
-        private void AddMethodWraps(RoslynCodeBuilder roslynCodeBuilder)
-        {
-            if (MethodBuilderInfos.IsNullOrEmpty())
-                return;
-
-            roslynCodeBuilder.PushRegion("Wrapped Methods");
-
-            foreach (WrapperMemberBuilderInfo<IMethodSymbol> methodBuilderInfo in this.MethodBuilderInfos)
-            {
-                methodBuilderInfo.Build(roslynCodeBuilder);
-            }
-
-            roslynCodeBuilder.PopRegion();
-        }
-
-        private void AddInit(RoslynCodeBuilder roslynCodeBuilder)
-        {
-            roslynCodeBuilder.PushRegion("Init Method");
-
-            roslynCodeBuilder.AddLine($"void {INIT_METHOD_NAME}()");
-            roslynCodeBuilder.Push();
-
-            this.PropBuilderInfos.DoForEach(propBuilderInfo => propBuilderInfo.AddInit(roslynCodeBuilder));
-
-            roslynCodeBuilder.Pop();
-
-            roslynCodeBuilder.PopRegion();
-        }
-
-        private void AddDefaultConstructor(RoslynCodeBuilder roslynCodeBuilder)
-        {
-            roslynCodeBuilder.PushRegion("Default Constructor");
-
-            roslynCodeBuilder.AddDefaultConstructorOpening(this.ClassName);
-
-            foreach (WrappedObjInfo wrappedObj in _wrappedObjInfos)
-            {
-                wrappedObj.AddDefaultConstructor(roslynCodeBuilder);
-            }
-
-            roslynCodeBuilder.AddLine($"{INIT_METHOD_NAME}()", true);
-
-            roslynCodeBuilder.Pop();
-
-            roslynCodeBuilder.PopRegion();
-        }
-
-        private string GetWrappedObjConstructorParamStr()
-        {
-            return _wrappedObjInfos.StrConcat((wrappedObjInfo) => $"{wrappedObjInfo.ConcreteWrappedObjNamedTypeSymbol.GetFullTypeString()} {wrappedObjInfo.WrappedObjClassName.FirstCharToLowerCase(true)}");
-        }
-
-        void AddWrappedObjsConstructor(RoslynCodeBuilder roslynCodeBuilder)
-        {
-            string paramsLine = GetWrappedObjConstructorParamStr();
-
-            if (paramsLine.IsNullOrEmpty())
-                return;
-            
-            roslynCodeBuilder.PushRegion("Wrappers Constructor");
-
-            roslynCodeBuilder.AddLine($"public {this.ClassName}({paramsLine})");
-            roslynCodeBuilder.Push();
-
-            foreach (WrappedObjInfo wrapObjInfo in _wrappedObjInfos)
-            {
-                string assignmentLine =
-                    $"{wrapObjInfo.WrappedObjPropName} = {wrapObjInfo.WrappedObjClassName.FirstCharToLowerCase(true)}";
-
-                roslynCodeBuilder.AddLine(assignmentLine, true);
-            }
-
-            roslynCodeBuilder.AddLine($"{INIT_METHOD_NAME}()", true);
-
-            roslynCodeBuilder.Pop(true);
-
-            roslynCodeBuilder.PopRegion();
-        }
-
-        public const string STATIC_CORE_MEMBER_NAME = "TheCore";
-
-        protected void AddStaticCoreReference(RoslynCodeBuilder roslynCodeBuilder)
-        {
-            roslynCodeBuilder.AddLine($"public static Core {STATIC_CORE_MEMBER_NAME} {{ get; set; }}");
-        }
-
-        protected virtual string GenerateCode()
-        {
-            Compilation compilation = this.TheCompilation;
-
-            SetMissingMaps();
-
-            SetWrappedMembers();
-
-            RoslynCodeBuilder roslynCodeBuilder = new RoslynCodeBuilder();
-            RoslynAnalysisAndGenerationUtils.TheNamespaces =
-                roslynCodeBuilder.AllNamespaces;
-
-            RoslynAnalysisAndGenerationUtils.TheNamespaces.Add("NP.Utilities");
-            RoslynAnalysisAndGenerationUtils.TheNamespaces.Add("NP.Roxy");
-            RoslynAnalysisAndGenerationUtils.TheNamespaces.Add("NP.Roxy.Attributes");
-
-            RoslynAnalysisAndGenerationUtils.InitTypeNamespace<Action<int>>();
-
-            roslynCodeBuilder.AddNamespace(AssemblerNames.GENERATED_NAMESPACE_NAME);
-
-            OpenClassDeclaration(roslynCodeBuilder);
-
-            AddStaticCoreReference(roslynCodeBuilder);
-
-            ImplementEvents(roslynCodeBuilder);
-
-            AddWrappedClasses(roslynCodeBuilder);
-
-            AddInit(roslynCodeBuilder);
-
-            AddDefaultConstructor(roslynCodeBuilder);
-
-            AddWrappedObjsConstructor(roslynCodeBuilder);
-
-            AddPropWraps(roslynCodeBuilder);
-
-            AddMethodWraps(roslynCodeBuilder);
-
-            roslynCodeBuilder.PopAll();
-
-            TheGeneratedCode = roslynCodeBuilder.ToStr();
-
-            return TheGeneratedCode;
-        }
-
-        // adds the class to compilation.
-        public void ConfigurationCompleted()
-        {
-            if (TheSelfTypeSymbol != null)
-                return;
-
-            this.GenerateCode();
-
-            TheCore.AddClass(this);
-
-            TheSelfTypeSymbol =
-                TheCore.TheCompilation.GetTypeByMetadataName(FullTypeName);
-        }
-
-        public bool ConfigurationHasBeenCompleted =>
-            TheSelfTypeSymbol != null;
-
-        protected string FullTypeName => this.ClassName.GetFullTypeName();
-
-        public INamedTypeSymbol TheSelfTypeSymbol { get; private set; }
-
-        public string TheGeneratedCode { get; protected set; }
-
-
-        Type _generatedType = null;
-        public Type TheGeneratedType
-        {
-            get => _generatedType;
-
-            private set
-            {
-                if (_generatedType == value)
-                    return;
-
-                _generatedType = value;
-
-                PostTypeSet();
-            }
-        }
-
-        protected virtual void PostTypeSet()
-        {
-            TheGeneratedType.SetStaticPropValue(STATIC_CORE_MEMBER_NAME, TheCore);
-        }
-
-        public void SetGeneratedType()
-        {
-            //if (TheGeneratedType != null)
-            //    return;
-
-            this.TheGeneratedType =
-                this.TheCore.TheGeneratedAssembly.GetType(this.FullTypeName);
-        }
-
-        IMemberBuilderSetter _builderSetter;
-        public IMemberBuilderSetter TheBuilderSetter
-        {
-            get => _builderSetter;
-
-            set
-            {
-                if (ReferenceEquals(_builderSetter, value))
-                    return;
-
-                _builderSetter = value;
-
-                foreach (PropertyWrapperMemberBuilderInfo propBuilderInfo in this.PropBuilderInfos)
-                {
-                    propBuilderInfo.TheCodeBuilder =
-                        _builderSetter.ChoosePropertyCodeBuilder(propBuilderInfo.WrapperSymbol);
-                }
-
-                foreach (MethodWrapperMemberBuilderInfo methodBuilderInfo in this.MethodBuilderInfos)
-                {
-                    methodBuilderInfo.TheCodeBuilder =
-                        _builderSetter.ChooseMethodCodeBuilder(methodBuilderInfo.WrapperSymbol);
-                }
-            }
-        }
-
-        void TestObjPartTypes<TObj, TPart>()
-        {
-            INamedTypeSymbol objSymbol = typeof(TObj).GetTypeSymbol(TheCompilation);
-            
-            //if (this.WrapInterfaceTypeSymbol)
-
-            //INamedTypeSymbol partSymbol = typeof(TPart).GetTypeSymbol(TheCompilation);
-        }
-
-        public void SetInit
-        (
-            string propName, 
-            INamedTypeSymbol typeSymbol
-        )
-        {
-            PropertyWrapperMemberBuilderInfo propertyWrapperMemberBuilder = 
-                GetPropWrapperMemberBuilderInfo(propName);
-
-            propertyWrapperMemberBuilder.SetInit(typeSymbol);
-        }
-
-        public void SetInit<TInit>(string propName)
-        {
-            INamedTypeSymbol typeSymbol = typeof(TInit).GetTypeSymbol(this.TheCompilation);
-
-            SetInit(propName, typeSymbol);
         }
     }
 

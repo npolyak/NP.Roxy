@@ -779,6 +779,9 @@ namespace NP.Roxy
 
             INamedTypeSymbol namedTypeSymbol = type.GetGenericTypeSymbol(compilation);
 
+            if (namedTypeSymbol == null)
+                return null;
+
             IEnumerable<Type> genericArgs = type.GetGenericArguments();
 
             if (genericArgs.IsNullOrEmpty())

@@ -37,7 +37,7 @@ namespace NP.Roxy.MethodOverloadingTest
         {
             Core.SetSaveOnErrorPath("GeneratedCode");
 
-            ITypeConfig<IWrapper> typeConfig = Core.FindOrCreateTypeConfig<IMyData, IWrapper>();
+            ITypeConfig<IMyData, IWrapper> typeConfig = Core.FindOrCreateTypeConfig<IMyData, IWrapper>();
 
             typeConfig.ConfigurationCompleted();
 

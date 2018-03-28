@@ -37,7 +37,7 @@ namespace NP.Roxy.StrongTypeEnumTest
     {
         static void Main(string[] args)
         {
-            ITypeConfig<SingleWrapperInterface<ProductKind>> adapterTypeConfig =
+            ITypeConfig<IProduct, SingleWrapperInterface<ProductKind>> adapterTypeConfig =
                 Core.FindOrCreateSingleWrapperTypeConfig<IProduct, ProductKind>();
 
             adapterTypeConfig.SetWrappedPropGetter<IProduct, ProductKind, string>

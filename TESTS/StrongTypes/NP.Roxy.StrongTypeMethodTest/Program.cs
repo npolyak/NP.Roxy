@@ -37,9 +37,9 @@ namespace NP.Roxy.StrongTypeMethodTest
         {
             Core.SetSaveOnErrorPath("GeneratedCode");
 
-            ITypeConfig<IWrapper> typeConfig = Core.FindOrCreateTypeConfig<IMyData, IWrapper>();
+            ITypeConfig<IMyData, IWrapper> typeConfig = Core.FindOrCreateTypeConfig<IMyData, IWrapper>();
 
-            typeConfig.SetReturningMethodMap<IMyData, MyDataImpl, string, string>
+            typeConfig.SetReturningMethodMap<MyDataImpl, string, string>
             (
                 (data, inputStr) => data.GetGreeting(inputStr),
                 (wrapper) => wrapper.TheDataImpl,

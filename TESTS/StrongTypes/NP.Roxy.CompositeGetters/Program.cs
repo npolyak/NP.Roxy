@@ -59,10 +59,10 @@ namespace NP.Roxy.OverloadingTest
             #endregion TypeSave prop map setting
 
             #region Prop Getter 
-            ITypeConfig typeConfig =
+            ITypeConfig<IMyData, NoType> typeConfig =
                 Core.FindOrCreateTypeConfig<IMyData, NoType>();
 
-            typeConfig.SetPropGetter<IMyData, string>
+            typeConfig.SetPropGetter<string>
             (
                 (data) => data.FullName,
                 (data) => data.LastName + ", " + data.FirstName

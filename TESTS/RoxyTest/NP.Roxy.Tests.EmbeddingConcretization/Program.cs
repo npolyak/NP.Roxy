@@ -47,6 +47,8 @@ namespace NP.Roxy.Tests.EmbeddingConcretization
     {
         static void Main(string[] args)
         {
+            Core.SetSaveOnErrorPath("GeneratedCode");
+
             #region CONCRETIZATION SAMPLE
             //MyDataImplementorClass classConcretization =
             //    Core.Concretize<MyDataImplementorClass>();
