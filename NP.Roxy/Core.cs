@@ -35,6 +35,7 @@ namespace NP.Roxy
         internal Core()
         {
             StartProj();
+            this.AddTypesToReference(new[] { RoslynAnalysisAndGenerationUtils.NoTypeType });
         }
 
         INamedTypeSymbol NoTypeSymbol =>
