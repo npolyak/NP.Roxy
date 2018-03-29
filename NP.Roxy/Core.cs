@@ -45,6 +45,7 @@ namespace NP.Roxy
 
         internal List<ITypeConfig> AllTypesAddedToCompilation { get; } = new List<ITypeConfig>();
 
+        #region DEFAULT WRAPPERS REGION
         Dictionary<INamedTypeSymbol, INamedTypeSymbol> _wrapperDictionary = 
             new Dictionary<INamedTypeSymbol, INamedTypeSymbol>(TypeSymbolComparer.TheTypeSymbolComparer);
 
@@ -159,7 +160,8 @@ namespace NP.Roxy
 
         public INamedTypeSymbol GetTWrapper<TToImplement>() =>
             GetTWrapper(typeof(TToImplement));
-
+        
+        #endregion DEFAULT WRAPPERS REGION
 
         IEnumerable<Assembly> _addedAssemblies = new List<Assembly>();
         public void AddAssembly(Assembly assembly)
@@ -261,9 +263,14 @@ namespace NP.Roxy
         {
             ITypeConfig typeConfig = null;
 
+            typeToImplementSymbol = typeToImplementSymbol.NoTypeToNull();
+            implementationSuperClassTypeSymbol = implementationSuperClassTypeSymbol.NoTypeToNull();
+            wrapperTypeSymbol = wrapperTypeSymbol.NoTypeToNull();
+
             if (!className.IsNullOrEmpty())
             {
-                typeConfig = this.AllTypesAddedToCompilation.FirstOrDefault(tConfig => tConfig.ClassName == className);
+                typeConfig = 
+                    this.AllTypesAddedToCompilation.FirstOrDefault(tConfig => tConfig.ClassName == className);
 
                 return typeConfig;
             }
@@ -274,9 +281,9 @@ namespace NP.Roxy
                     .FirstOrDefault
                     (
                         tConfig =>
-                            (tConfig.TypeToImplementSymbol?.TypesStrictlyMatch(typeToImplementSymbol) != false) &&
-                            (tConfig.ImplSuperClassTypeSymbol?.TypesStrictlyMatch(implementationSuperClassTypeSymbol) != false) &&
-                            (tConfig.WrapInterfaceTypeSymbol?.TypesStrictlyMatch(wrapperTypeSymbol) != false)
+                            (typeToImplementSymbol?.TypesStrictlyMatch(tConfig.TypeToImplementSymbol) != false) &&
+                            (implementationSuperClassTypeSymbol?.TypesStrictlyMatch(tConfig.ImplSuperClassTypeSymbol) != false) &&
+                            (wrapperTypeSymbol?.TypesStrictlyMatch(tConfig.WrapInterfaceTypeSymbol) != false)
                     );
             }
 
@@ -286,54 +293,25 @@ namespace NP.Roxy
 
         public ITypeConfig<TToImplement, TImplementationClass, TWrapper> FindTypeConfig<TToImplement, TImplementationClass, TWrapper>(string className = null)
         {
-            INamedTypeSymbol typeToImplementSymbol = this.GetRealTypeSymbol<TToImplement>();
-
-            if (typeToImplementSymbol == null)
-                return null;
-
-            INamedTypeSymbol implementationSuperClassTypeSymbol = this.GetRealTypeSymbol<TImplementationClass>();
-            if (implementationSuperClassTypeSymbol == null)
-                return null;
-
-            INamedTypeSymbol wrapperTypeSymbol = this.GetRealTypeSymbol<TWrapper>();
-            if (wrapperTypeSymbol == null)
-                return null;
-            
-
             ITypeConfig<TToImplement, TImplementationClass, TWrapper> typeConfig =
-                FindTypeConfig(className, typeToImplementSymbol, implementationSuperClassTypeSymbol, wrapperTypeSymbol)
-                as ITypeConfig<TToImplement, TImplementationClass, TWrapper>;
+                FindTypeConfig
+                (
+                    className,
+                    this.GetRealTypeSymbol<TToImplement>(),
+                    this.GetRealTypeSymbol<TImplementationClass>(),
+                    this.GetRealTypeSymbol<TWrapper>()
+                ) as ITypeConfig<TToImplement, TImplementationClass, TWrapper>;
 
             return typeConfig;
         }
         public ITypeConfig FindTypeConfig<T, TWrapper>(string className = null)
         {
-            Type type = typeof(T);
-            Type wrapperType = typeof(TWrapper);
-
-            ITypeConfig typeConfig = null;
-
-            if (className.IsNullOrEmpty())
-            {
-                typeConfig = this.AllTypesAddedToCompilation
-                    .FirstOrDefault
-                    (
-                        tConfig =>
-                            (tConfig.TypeToImplementSymbol.Matches(type, this.TheCompilation) ||
-                             tConfig.ImplSuperClassTypeSymbol.Matches(type, this.TheCompilation)
-                            )
-                            &&
-                            (
-                                (wrapperType == typeof(NoType)) ||
-                                tConfig.WrapInterfaceTypeSymbol.Matches(wrapperType, this.TheCompilation)
-                            ));
-            }
-            else
-            {
-                typeConfig = this.AllTypesAddedToCompilation.FirstOrDefault(tConfig => tConfig.ClassName == className);
-            }
-
-            return typeConfig;
+            return FindTypeConfig
+            (
+                className,
+                this.GetRealTypeSymbol<T>(),
+                null,
+                this.GetRealTypeSymbol<TWrapper>());
         }
 
         public ITypeConfig FindTypeConfig<T>(string className = null)

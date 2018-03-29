@@ -58,6 +58,19 @@ namespace NP.Roxy
         public static INamedTypeSymbol GetRealRoxyTypeSymbol<T>(Compilation compilation) =>
             GetRealRoxyType<T>()?.GetTypeSymbol(compilation);
 
+        public static INamedTypeSymbol NoTypeToNull(this INamedTypeSymbol namedTypeSymbol)
+        {
+            if (namedTypeSymbol == null)
+                return null;
+
+            string typeStr = namedTypeSymbol.GetUniqueTypeStr();
+
+            if (typeStr == NoTypeType.GetFullTypeStr())
+                return null;
+
+            return namedTypeSymbol;
+        }
+
         public static ICollection<string> TheNamespaces { get; set; }
 
         public static ICollection<IAssemblySymbol> TheAssemblies { get; set; }
@@ -1168,12 +1181,14 @@ namespace NP.Roxy
 
         public static string GetUniqueTypeStr(this ITypeSymbol type)
         {
+            string fullNamespace = type.GetFullNamespace();
+
             if (type is INamedTypeSymbol namedType1)
             {
-                return namedType1.GetFullTypeString();
+                return fullNamespace + "." + namedType1.GetFullTypeString();
             }
 
-            return type.GetFullNamespace() + "." + type.Name;
+            return fullNamespace + "." + type.Name;
         }
 
         public static bool TypesStrictlyMatch
