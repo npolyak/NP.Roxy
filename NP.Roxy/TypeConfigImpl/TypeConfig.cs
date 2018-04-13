@@ -652,7 +652,7 @@ namespace NP.Roxy.TypeConfigImpl
         string SuperClassName => ImplSuperClassTypeSymbol?.GetFullTypeString();
 
         IEnumerable<INamedTypeSymbol> AllImplementedInterfaces =>
-            TypeToImplementSymbol.ToCollection().Union(WrapInterfaceTypeSymbol.ToCollection());
+            TypeToImplementSymbol.ToCollection();
 
         IEnumerable<EventWrapperMemberBuilderInfo> EventBuilderInfos { get; set; }
 

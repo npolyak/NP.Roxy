@@ -293,6 +293,11 @@ namespace NP.Roxy
 
         public ITypeConfig<TToImplement, TImplementationClass, TWrapper> FindTypeConfig<TToImplement, TImplementationClass, TWrapper>(string className = null)
         {
+            this.AddTypesToReference
+            (
+                new[] { typeof(TToImplement), typeof(TImplementationClass), typeof(TWrapper) }
+            );
+
             ITypeConfig<TToImplement, TImplementationClass, TWrapper> typeConfig =
                 FindTypeConfig
                 (
