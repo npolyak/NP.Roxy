@@ -163,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\ConcretizationDelegateAttribute.cs" />
+    <Compile Include="ClassMemberType.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="CoreBase.cs" />
     <Compile Include="ICompilationContainer.cs" />
@@ -195,6 +196,10 @@
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\NP.Concepts\NP.Concepts.csproj">
+      <Project>{2ea8d043-51c1-4498-bd74-7f7f75c8739a}</Project>
+      <Name>NP.Concepts</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NP.Utilities\NP.Utilities.csproj">
       <Project>{503d6544-570d-4e07-9101-0f574624cb49}</Project>
       <Name>NP.Utilities</Name>

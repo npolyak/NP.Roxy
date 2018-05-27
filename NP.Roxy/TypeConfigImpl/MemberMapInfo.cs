@@ -11,7 +11,7 @@
 
 using Microsoft.CodeAnalysis;
 using NP.Utilities;
-using NP.Utilities.Expressions;
+using NP.Concepts.Expressions;
 using System;
 using System.Collections.Generic;
 using System.Linq;

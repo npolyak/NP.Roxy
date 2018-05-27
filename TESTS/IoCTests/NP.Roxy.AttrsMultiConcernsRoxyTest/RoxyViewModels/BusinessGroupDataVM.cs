@@ -1,4 +1,4 @@
-﻿using NP.Utilities.Behaviors;
+﻿using NP.Concepts.Behaviors;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

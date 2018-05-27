@@ -19,6 +19,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using System.Linq.Expressions;
+using NP.Concepts;
 
 namespace NP.Roxy.TypeConfigImpl
 {

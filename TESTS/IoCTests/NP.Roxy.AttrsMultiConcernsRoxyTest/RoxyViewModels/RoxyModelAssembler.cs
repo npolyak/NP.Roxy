@@ -1,14 +1,7 @@
-﻿using NP.Roxy;
-using NP.Roxy.TypeConfigImpl;
-using NP.Utilities;
-using NP.Utilities.Behaviors;
-using System;
+﻿using NP.Roxy.TypeConfigImpl;
+using NP.Concepts.Behaviors;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NP.Roxy.AttrsMultiConcernsRoxyTest.RoxyViewModels
 {

@@ -67,6 +67,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Attrs", "Attrs", "{3579E6EA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NP.Roxy.AttrsSelectableDataTest", "TESTS\Attrs\NP.Roxy.AttrsSelectableDataTest\NP.Roxy.AttrsSelectableDataTest.csproj", "{93C9FBB1-87E2-4029-ADDA-CBB9A10AC086}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NP.Concepts", "NP.Concepts\NP.Concepts.csproj", "{2EA8D043-51C1-4498-BD74-7F7F75C8739A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -173,6 +175,10 @@ Global
 		{93C9FBB1-87E2-4029-ADDA-CBB9A10AC086}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93C9FBB1-87E2-4029-ADDA-CBB9A10AC086}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93C9FBB1-87E2-4029-ADDA-CBB9A10AC086}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2EA8D043-51C1-4498-BD74-7F7F75C8739A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EA8D043-51C1-4498-BD74-7F7F75C8739A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2EA8D043-51C1-4498-BD74-7F7F75C8739A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EA8D043-51C1-4498-BD74-7F7F75C8739A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

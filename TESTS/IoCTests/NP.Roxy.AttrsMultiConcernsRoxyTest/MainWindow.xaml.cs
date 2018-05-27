@@ -1,9 +1,8 @@
 ﻿using NP.Roxy.AttrsMultiConcernsRoxyTest.RoxyViewModels;
-using NP.Roxy;
-using NP.Utilities;
-using NP.Utilities.Behaviors;
+using NP.Concepts.Behaviors;
 using System.ComponentModel;
 using System.Windows;
+using NP.Concepts;
 
 namespace NP.Roxy.AttrsMultiConcernsRoxyTest
 {

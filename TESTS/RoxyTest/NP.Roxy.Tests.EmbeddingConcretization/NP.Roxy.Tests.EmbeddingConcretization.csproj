@@ -175,6 +175,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\NP.Concepts\NP.Concepts.csproj">
+      <Project>{2ea8d043-51c1-4498-bd74-7f7f75c8739a}</Project>
+      <Name>NP.Concepts</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\NP.Roxy\NP.Roxy.csproj">
       <Project>{a8ebd3f9-d0b9-4acc-a700-27d1914b6922}</Project>
       <Name>NP.Roxy</Name>

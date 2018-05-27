@@ -1,0 +1,110 @@
+<h1>What Needs to be Done before Roxy can Be Used</h1>
+<h2>Introduction</h2>
+<p>
+  <ol>
+    <li>
+      Make everyting attribute base, so that in 99% of cases the
+      user of the code could get a type without dealing with 
+      <code>ITypeConfig</code>. 
+    </li>
+    <li>
+      Create and IoC container and use it for Roxy. 
+    </li>
+    <li>
+      Work on AOP orthogonal concern mixing. 
+    </li>
+  </ol>
+</p>
+<h2>Make Everything Attribute Based</h2>
+<p>
+  So that in 99% of cases, one would have to call just one method, e.g.
+  <code>Core.GetTypeObj&lt;TInterface, TClassToExtend, TWrapper&gt;()</code>
+  to get the object of the type. <code>ITypeConfig</code> should be used
+  in less than 1% of cases. 
+</p>
+<p>
+  Of course most of the information will be contained in TWrapper and the
+  classes that it refers to and a lot of information will be provided by 
+  the attributes. 
+</p>
+<p>
+  In particular I need to create the following functionality based on
+  attributes of the wrapper:
+<ol>
+  <li>
+    Specifying non-public members within the wrapper
+  </li>
+  <li>
+    Renaming wrapper members
+  </li>
+  <li>
+    Ways to initialize the members (at construction, from
+    parent, allow re-initialization later in the game)
+  </li>
+  <li>
+    Specifying mapping to the static classes members?
+  </li>
+  <li>
+    Specifying reference to 'this'
+  </li>
+</ol>
+</p>
+<h2>Create a true IoC Container and Use it for Roxy</h2>
+<p>
+  It should be possible to use the
+  IoC container outside of roxy as a stand alone container without 
+  code generation. 
+</p>
+<p>
+  It should cover the most used MEF2 functionality, but should be much 
+  simpler. 
+</p>
+<p>
+  The IoC Container will be called <b>IoC</b>?
+</p>
+<p>
+  Here are some methods:
+  <ol>
+    <li>
+      <code>Core.Map(Type rypeToResolve, Type resolutionType, object resolutionKey = null, bool allowMultipleResolutions = false )</code>
+    </li>
+    <li>
+      <code>Core.Map&lt;TypeToResolve, ResolutionType&gt;(object resolutionKey = null, bool allowMultipleResolutions = false)</code>
+    </li>
+    <li>
+      <code>Core.MapSingleton(Type typeToResolve, object objToResolve, object resolutionKey = null)</code>
+    </li>
+    <li>
+      <code>Core.MapSingleton&lt;TypeToResolve&gt;(TypeToResolve objToResolve, object resolutionKey)</code>
+    </li>
+    <li>
+      <code>Core.CreateAndMapSingleton(Type typeToResolve, Type resolutionType, object resolutionKey = null)</code>
+    </li>
+    <li>
+      <code>Core.MapSingleton&lt;TypeToResolve, ResolutionType&gt;(object resolutionKey)</code>
+    </li>
+    <li>
+      <code>Type Core.ResolveType(Type typeToResolve);</code>
+    </li>
+    <li>
+      <code>T Core.ResolveType&lt;TypeToResolve&gt;();</code>
+    </li>
+    <li>
+      <code>object Core.Resolve(Type typeToResolve)</code>
+    </li>
+    <li>
+      <code>TypeToResolve Core.Resolve&lt;TypeToResolve&gt;()</code>
+    </li>
+    <li>
+      <code>List&lt;object&gt; Core.ResolveMany(Type typeToResolve)</code>
+    </li>
+    <li>
+      <code>List&lt;TypeToResolve&gt; Core.ResolveMany&lt;TypeToResolve&gt;()</code>
+    </li>
+    <li>
+      Reassemble();
+    </li>
+  </ol>
+  
+</p>
+<h3></h3>

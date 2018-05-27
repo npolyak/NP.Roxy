@@ -1,6 +1,6 @@
 ﻿using MultiConcernsRoxyTest.RoxyViewModels;
 using NP.Roxy;
-using NP.Utilities.Behaviors;
+using NP.Concepts.Behaviors;
 using System.Windows;
 
 namespace MultiConcernsRoxyTest

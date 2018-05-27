@@ -11,14 +11,15 @@
 
 using Microsoft.CodeAnalysis;
 using NP.Utilities;
-using NP.Utilities.Attributes;
-using NP.Utilities.Expressions;
+using NP.Concepts.Attributes;
+using NP.Concepts.Expressions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using NP.Concepts;
 
 namespace NP.Roxy.TypeConfigImpl
 {

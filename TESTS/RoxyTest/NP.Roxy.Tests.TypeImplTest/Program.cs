@@ -9,16 +9,7 @@
 // Also, please, mention this software in any documentation for the 
 // products that use it.
 
-using Microsoft.CodeAnalysis;
-using NP.Roxy;
 using NP.Roxy.TypeConfigImpl;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using TestProj;
 
 namespace NP.Roxy.TypeImplTest

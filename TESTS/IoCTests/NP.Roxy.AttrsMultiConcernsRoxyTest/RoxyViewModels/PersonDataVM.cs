@@ -1,10 +1,4 @@
-﻿using NP.Utilities;
-using NP.Utilities.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using NP.Concepts.Attributes;
 
 namespace NP.Roxy.AttrsMultiConcernsRoxyTest.RoxyViewModels
 {
