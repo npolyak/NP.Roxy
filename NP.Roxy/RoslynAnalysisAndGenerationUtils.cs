@@ -50,7 +50,7 @@ namespace NP.Roxy
 
         public static INamedTypeSymbol GetRealRoxyTypeSymbol
         (
-            this Type type, 
+            this Type type,
             Compilation compilation
         ) =>
             GetRealRoxyType(type)?.GetTypeSymbol(compilation);
@@ -176,6 +176,13 @@ namespace NP.Roxy
         {
             if (typeName == null)
                 typeName = type.Name;
+
+            INamedTypeSymbol containingTypeSymbol = type.ContainingType;
+
+            if (containingTypeSymbol != null)
+            {
+                typeName = containingTypeSymbol.GetFullTypeString() + "." + typeName;
+            }
 
             string result =
                 typeName + type.GetTypeArgsStr(type.TypeArguments);
@@ -769,7 +776,7 @@ namespace NP.Roxy
             if (type == null)
                 return null;
 
-            string basicType = type.GetFullTypeStr();
+            string basicType = type.FullName;//type.GetFullTypeStr();
 
             INamedTypeSymbol namedTypeSymbol = compilation.GetTypeByMetadataName(basicType);
 
