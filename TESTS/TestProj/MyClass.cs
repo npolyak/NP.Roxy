@@ -27,9 +27,14 @@ namespace TestProj
 
         public string MyStr { get; set; }
 
+        public string GetResultingStr(string str, int i)
+        {
+            return $"The resulting string is: {str}_{MyInt}";
+        }
+
         public void MyMethod(string str, int i)
         {
-            Console.WriteLine($"The resulting string is: {str}_{MyInt}");
+            Console.WriteLine();
         }
 
         public int MethodWithReturn(string str)

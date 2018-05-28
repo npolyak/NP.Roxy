@@ -28,6 +28,8 @@ namespace TestProj
 
         string TheStr { get; set; }
 
+        string GetResultingStr(string str, int i);
+
         void MyMethod(string str, int i);
     }
 }
