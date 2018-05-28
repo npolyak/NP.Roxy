@@ -19,7 +19,7 @@ namespace NP.XUnitRoxyTests
         {
 
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<IMyInterface, WrapperInterface>("MyGeneratedClass");
+                Core.FindOrCreateTypeConfig<IMyInterface, WrapperInterface>("MyGeneratedClass1");
             typeConfig.SetMemberMap(nameof(WrapperInterface.TheClass), nameof(MyClass.MyInt), nameof(IMyInterface.TheInt));
             typeConfig.SetMemberMap(nameof(WrapperInterface.TheClass), nameof(MyClass.MyStr), nameof(IMyInterface.TheStr));
 
@@ -118,7 +118,7 @@ namespace NP.XUnitRoxyTests
         public static void RunTest()
         {
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<MyDataImplementorClass, NoType, NoType>("MyGeneratedClass");
+                Core.FindOrCreateTypeConfig<MyDataImplementorClass, NoType, NoType>("MyGeneratedClass2");
 
             typeConfig.SetPropBuilder
             (
@@ -206,11 +206,11 @@ namespace NP.XUnitRoxyTests
 
             #region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
             ITypeConfig<IMyData, WrapperInterface> typeConfig =
-                Core.FindOrCreateTypeConfig<IMyData, MyData, WrapperInterface>("MyType");
+                Core.FindOrCreateTypeConfig<IMyData, MyData, WrapperInterface>("MyType7");
 
             typeConfig.ConfigurationCompleted();
 
-            MyData myData = Core.GetInstanceOfGeneratedType<MyData>("MyType");
+            MyData myData = Core.GetInstanceOfGeneratedType<MyData>("MyType7");
             myData.FirstName = "Joe";
             myData.LastName = "Doe";
 
@@ -219,11 +219,11 @@ namespace NP.XUnitRoxyTests
             #endregion WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
 
             ITypeConfig typeConfig1 =
-                Core.FindOrCreateTypeConfig<IMyData, WrapperInterface1>("MyType1");
+                Core.FindOrCreateTypeConfig<IMyData, WrapperInterface1>("MyType9");
 
             typeConfig1.ConfigurationCompleted();
 
-            IMyData myData1 = Core.GetInstanceOfGeneratedType<IMyData>("MyType1");
+            IMyData myData1 = Core.GetInstanceOfGeneratedType<IMyData>("MyType9");
 
             myData1.FirstName = "Joe";
             myData1.LastName = "Doe";
@@ -291,7 +291,7 @@ namespace NP.XUnitRoxyTests
         {
             #region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<IMyData, NoType, WrapperInterface>("MyType");
+                Core.FindOrCreateTypeConfig<IMyData, NoType, WrapperInterface>("MyType10");
 
             typeConfig.SetMemberMap
             (
@@ -305,7 +305,7 @@ namespace NP.XUnitRoxyTests
 
             typeConfig.ConfigurationCompleted();
 
-            IMyData myData = Core.GetInstanceOfGeneratedType<IMyData>("MyType");
+            IMyData myData = Core.GetInstanceOfGeneratedType<IMyData>("MyType10");
             myData.FirstName = "Joe";
             myData.LastName = "Doe";
 
@@ -315,7 +315,7 @@ namespace NP.XUnitRoxyTests
     }
 
     [Collection("Sequential")]
-    public static class OverridingVertualsTest
+    public static class OverridingVirtualsTest
     {
         public interface IMyData
         {
@@ -341,7 +341,7 @@ namespace NP.XUnitRoxyTests
             }
         }
 
-        public abstract class MyDataImplementorClass
+        public abstract class OverridingVirtuals_MyDataImplementorClass
         {
             public abstract string FirstName { get; }
 
@@ -355,7 +355,7 @@ namespace NP.XUnitRoxyTests
 
         public interface WrapperInterface
         {
-            MyDataImplementorClass TheClass { get; }
+            OverridingVirtuals_MyDataImplementorClass TheClass { get; }
         }
 
         // default and other implementations test
@@ -372,13 +372,14 @@ namespace NP.XUnitRoxyTests
         {
             #region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<IMyData, MyData, WrapperInterface>("MyType");
+                Core.FindOrCreateTypeConfig<OverridingVirtualsTest.IMyData, OverridingVirtualsTest.MyData, OverridingVirtualsTest.WrapperInterface>("MyType3");
 
             typeConfig.SetOverrideVirtual(nameof(MyData.GetFullName), false);
 
             typeConfig.ConfigurationCompleted();
 
-            MyData myData = Core.GetInstanceOfGeneratedType<MyData>("MyType");
+            OverridingVirtualsTest.MyData myData = 
+                Core.GetInstanceOfGeneratedType<OverridingVirtualsTest.MyData>("MyType3");
             myData.FirstName = "Joe";
             myData.LastName = "Doe";
 
@@ -438,11 +439,11 @@ namespace NP.XUnitRoxyTests
         {
             #region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<IMyData, WrapperInterface>("MyType");
+                Core.FindOrCreateTypeConfig<IMyData, WrapperInterface>("MyType5");
 
             typeConfig.AddStaticUtilsClass
             (
-                nameof(WrapperInterface.TheClass),
+                nameof(StaticMethodsTests.WrapperInterface.TheClass),
                 typeof(MyDataUtils)
             );
 
@@ -457,7 +458,7 @@ namespace NP.XUnitRoxyTests
 
             typeConfig.ConfigurationCompleted();
 
-            IMyData myData = Core.GetInstanceOfGeneratedType<IMyData>("MyType");
+            IMyData myData = Core.GetInstanceOfGeneratedType<IMyData>("MyType5");
             myData.FirstName = "Joe";
             myData.LastName = "Doe";
 
@@ -479,17 +480,18 @@ namespace NP.XUnitRoxyTests
         public static void RunTest()
         {
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<IMyInterface, WrapperInterface>("MyGeneratedClass");
+                Core.FindOrCreateTypeConfig<IMyInterface, WrapperInterface>("MyGeneratedClass3");
+            typeConfig.SetMemberMap(nameof(WrapperInterface.TheClass), nameof(MyClass.MyInt), nameof(IMyInterface.TheInt));
 
-            typeConfig.SetPropBuilder(DelegatePropBuilder.TheDelegatePropBuilder, nameof(IMyInterface.TheStr));
+            //typeConfig.SetPropBuilder(DelegatePropBuilder.TheDelegatePropBuilder, nameof(IMyInterface.TheStr));
 
             typeConfig.ConfigurationCompleted();
 
-            IMyInterface myObj = Core.GetInstanceOfGeneratedType<IMyInterface>();
+            IMyInterface myObj = Core.GetInstanceOfGeneratedType<IMyInterface>("MyGeneratedClass3");
 
             myObj.TheInt = 123;
 
-            Assert.Equal("The resulting string is: blabla_0", myObj.GetResultingStr("blabla", 123));
+            Assert.Equal("The resulting string is: blabla_123", myObj.GetResultingStr("blabla", 123));
         }
     }
 }
