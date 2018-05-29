@@ -776,7 +776,7 @@ namespace NP.Roxy
             if (type == null)
                 return null;
 
-            string basicType = type.FullName;//type.GetFullTypeStr();
+            string basicType = type.GetFullGenericTypeName();//type.GetFullTypeStr();
 
             INamedTypeSymbol namedTypeSymbol = compilation.GetTypeByMetadataName(basicType);
 
