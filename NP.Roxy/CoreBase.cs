@@ -193,7 +193,7 @@ namespace NP.Roxy
 
         private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
-            return TheGeneratedAssembly;
+            return TheGeneratedAssembly.FullName == args.Name ? this.TheGeneratedAssembly : null;
         }
 
 
