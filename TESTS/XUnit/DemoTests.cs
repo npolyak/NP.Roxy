@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace XUnitRoxyTests
+namespace NP.XUnitRoxyTests.Demos
 {
     public enum ProductKind
     {

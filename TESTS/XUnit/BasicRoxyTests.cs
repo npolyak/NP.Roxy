@@ -4,7 +4,7 @@ using NP.Roxy.TypeConfigImpl;
 using TestProj;
 using Xunit;
 
-namespace NP.XUnitRoxyTests
+namespace NP.XUnitRoxyTests.Basic
 {
     [Collection("Sequential")]
     public static class InterfaceWrapperImplementation
