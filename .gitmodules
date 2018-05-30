@@ -6,3 +6,7 @@
 	path = NP.Concepts
 	url = https://github.com/npolyak/NP.Concepts.git
 	branch = master
+[submodule "NP.IoCy"]
+	path = NP.IoCy
+	url = https://github.com/npolyak/NP.IoCy.git
+	branch = master
