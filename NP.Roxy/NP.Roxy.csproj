@@ -174,7 +174,7 @@
     <Compile Include="Attributes\ConcretizationDelegateAttribute.cs" />
     <Compile Include="ClassMemberType.cs" />
     <Compile Include="Core.cs" />
-    <Compile Include="CoreBase.cs" />
+    <Compile Include="Core_Compilation.cs" />
     <Compile Include="ICompilationContainer.cs" />
     <Compile Include="TypeConfigImpl\AutoPropBuilder.cs" />
     <Compile Include="TypeConfigImpl\DefaultConcretizationMemberBuilderSetter.cs" />

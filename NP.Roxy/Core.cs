@@ -25,13 +25,14 @@ namespace NP.Roxy
         WrappedType TheWrappedType { get; }
     }
 
-    public class Core : CoreBase
+    public partial class Core
     {
         internal static Core TheCore { get; } =
             new Core();
 
         internal Core()
         {
+            CoreInit();
             StartProj();
             this.AddTypesToReference(new[] { RoslynAnalysisAndGenerationUtils.NoTypeType });
         }
@@ -222,7 +223,7 @@ namespace NP.Roxy
             GeneratedAssemblyUpToDate = false;
         }
 
-        protected override void OnRegeneratingAssembly()
+        protected void OnRegeneratingAssembly()
         {
             IEnumerable<ITypeConfig> uncompiledTypes =
                 AllCreatedTypes.Except(AllTypesAddedToCompilation).ToList();
@@ -237,7 +238,7 @@ namespace NP.Roxy
         }
 
 
-        protected override void OnAssemblyRegenerated()
+        protected void OnAssemblyRegenerated()
         {
             foreach (ITypeConfig typeConfig in this.AllTypesAddedToCompilation)
             {

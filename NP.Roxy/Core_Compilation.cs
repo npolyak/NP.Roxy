@@ -43,13 +43,13 @@ namespace NP.Roxy
         }
     }
 
-    public abstract class CoreBase : ICompilationContainer
+    public partial class Core : ICompilationContainer
     {
         MefHostServices _host = null;
 
-        internal RoslynWorkspaceBase TheWorkspace { get; }
+        internal RoslynWorkspaceBase TheWorkspace { get; private set; }
 
-        ProjectId TheProjId { get; }
+        ProjectId TheProjId { get; set; }
 
         Project TheProj { get; set; }
 
@@ -65,10 +65,14 @@ namespace NP.Roxy
 
         internal ParseOptions TheParseOptions { get; } = new CSharpParseOptions();
 
-        internal static CSharpCompilationOptions TheAssemblyCompilationsOptions { get; }
+        internal static CSharpCompilationOptions TheAssemblyCompilationsOptions { get; private set; }
 
-        static CoreBase()
+        static bool _initialized = false;
+        static void StaticInit()
         {
+            if (_initialized)
+                return;
+
             TheAssemblyCompilationsOptions = new CSharpCompilationOptions
             (
                 OutputKind.DynamicallyLinkedLibrary
@@ -77,6 +81,8 @@ namespace NP.Roxy
             // this is a hack to allow the compilation to contain the non-public members
             TheAssemblyCompilationsOptions = 
                 (CSharpCompilationOptions) TheAssemblyCompilationsOptions.CallMethod("WithMetadataImportOptions", true, false, (byte) 2);
+
+            _initialized = true;
         }
 
         public INamedTypeSymbol GetTypeSymbol(Type type)
@@ -84,8 +90,10 @@ namespace NP.Roxy
             return type.GetTypeSymbol(this.TheCompilation);
         }
 
-        protected CoreBase()
+        protected void CoreInit()
         {
+            StaticInit();
+
             CompositionHost compositionContext =
                 new ContainerConfiguration()
                 .WithAssemblies(MefHostServices.DefaultAssemblies)
@@ -153,10 +161,6 @@ namespace NP.Roxy
         }
 
         internal bool GeneratedAssemblyUpToDate { get; set; } = false;
-
-        protected abstract void OnAssemblyRegenerated();
-
-        protected abstract void OnRegeneratingAssembly();
 
         public void RegenerateAssembly()
         {
