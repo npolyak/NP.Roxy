@@ -1077,7 +1077,33 @@ namespace NP.Roxy
             return GetClassName(typeSymbol.Name, className);
         }
 
-        internal static string GetClassName<TToImplement, TImplBaseClass>(this string className)
+        internal static string CreateClassName(Type typeToImpl, Type baseType, Type wrapperType)
+        {
+            if (typeToImpl == typeof(NoType))
+            {
+                throw new Exception("Roxy Usage Error: Cannot create a type class without Type to Implement.");
+            }
+
+            string result = "";
+
+            result += typeToImpl.NestedTypeToName() + "_";
+
+            if (baseType != typeof(NoType))
+            {
+                result += baseType.GetTypeName() + "_";
+            }
+
+            if ((wrapperType != typeof(NoType)) && (wrapperType != null))
+            {
+                result += wrapperType.GetTypeName() + "_";
+            }
+
+            result += "Default";
+
+            return result;
+        }
+
+        internal static string GetClassName<TToImplement, TImplBaseClass, TWrapper>(this string className)
         {
             if (!className.IsNullOrEmpty())
                 return className;
@@ -1086,23 +1112,9 @@ namespace NP.Roxy
 
             Type implBaseClassType = typeof(TImplBaseClass);
 
-            if (typeToImpl == typeof(NoType))
-            {
-                throw new Exception("Roxy Usage Error: Cannot create a type class without Type to Implement.");
-            }
+            Type wrapperType = typeof(TWrapper);
 
-            string result = "";
-
-            result += typeToImpl.GetTypeName() + "_";
-
-            if (implBaseClassType != typeof(NoType))
-            {
-                result += implBaseClassType.GetTypeName() + "_";
-            }
-
-            result += "Default";
-
-            return result;
+            return CreateClassName(typeToImpl, implBaseClassType, wrapperType);
         }
 
         internal static bool Matches(this INamedTypeSymbol typeSymbol, Type type, Compilation compilation)

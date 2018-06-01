@@ -507,7 +507,7 @@ namespace NP.Roxy
 
             if (result == null)
             {
-                className = className.GetClassName<TToImplement, TImplementationSuperClass>();
+                className = className.GetClassName<TToImplement, TImplementationSuperClass, TWrapperInterface>();
                 result = CreateTypeConf<TToImplement, TImplementationSuperClass, TWrapperInterface>(className);
             }
 
