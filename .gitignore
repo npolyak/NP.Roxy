@@ -79,3 +79,5 @@
 /TESTS/RoxyTest/NP.Roxy.SelectableDataTest/NP.Roxy.SelectableDataTest.csproj.user
 /TESTS/XUnit/obj/Debug
 /TESTS/XUnit/bin/Debug
+/TESTS/Attrs/NP.XUnitAttrRoxyTests/bin/Debug
+/TESTS/Attrs/NP.XUnitAttrRoxyTests/obj/Debug
