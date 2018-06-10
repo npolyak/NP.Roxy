@@ -127,10 +127,37 @@ namespace NP.Roxy
             );
         }
 
+        public void AddConstructorOpening
+        (
+            string className, 
+            Accessibility accessibility = Accessibility.Public, 
+            params IPropertySymbol[] argSymbols
+        )
+        {
+            this.AddLine($"{accessibility.ConvertAccessabilityToString()} {className} (");
+
+            bool isFirstIteration = true;
+            foreach(IPropertySymbol argSymbol in argSymbols)
+            {
+                if (isFirstIteration)
+                {
+                    isFirstIteration = false;
+                }
+                else
+                {
+                    this.AddText(" ,");
+                }
+
+                this.AddText($"{(argSymbol.Type as INamedTypeSymbol).GetFullTypeString()} {argSymbol.Name.FirstCharToLowerCase()}");
+            }
+            this.AddText(")");
+
+            Push();
+        }
+
         public void AddDefaultConstructorOpening(string className, Accessibility accessibility = Accessibility.Public)
         {
-            this.AddLine($"{accessibility.ConvertAccessabilityToString()} {className} ()");
-            Push();
+            AddConstructorOpening(className, accessibility);
         }
 
         public void AddTypedName

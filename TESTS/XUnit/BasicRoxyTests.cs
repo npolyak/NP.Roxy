@@ -1,5 +1,6 @@
 ﻿using NP.Concepts.Behaviors;
 using NP.Roxy;
+using NP.Roxy.Attributes;
 using NP.Roxy.TypeConfigImpl;
 using TestProj;
 using Xunit;
@@ -494,4 +495,5 @@ namespace NP.XUnitRoxyTests.Basic
             Assert.Equal("The resulting string is: blabla_123", myObj.GetResultingStr("blabla", 123));
         }
     }
+
 }

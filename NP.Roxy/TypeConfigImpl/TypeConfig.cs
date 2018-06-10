@@ -30,7 +30,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         INamedTypeSymbol ImplSuperClassTypeSymbol { get; }
 
-        INamedTypeSymbol WrapInterfaceTypeSymbol { get; }
+        INamedTypeSymbol ImplementorTypeSymbol { get; }
 
         INamedTypeSymbol TheSelfTypeSymbol { get; }
 
@@ -95,7 +95,7 @@ namespace NP.Roxy.TypeConfigImpl
         void SetInit<TInit>(string propName);
     }
 
-    public interface ITypeConfig<TToImplement, TWrapperInterface> : ITypeConfig
+    public interface ITypeConfig<TToImplement, TImplementor> : ITypeConfig
     {
         void SetPropGetter<TProp>
         (
@@ -106,56 +106,56 @@ namespace NP.Roxy.TypeConfigImpl
         void SetWrappedPropGetter<TWrappedObj, TProp>
         (
             string propName, 
-            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
             Expression<Func<TWrappedObj, TProp>> propGetter
         );
 
         void SetWrappedPropGetter<TWrappedObj, TProp>
         (
             Expression<Func<TToImplement, TProp>> propNameGetter,
-            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
             Expression<Func<TWrappedObj, TProp>> propGetter
         );
 
 
         void SetPropMemberMap<TWrapper, TWrappedObj, TWrapperProp>
         (
-            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
             Expression<Func<TWrappedObj, TWrapperProp>> wrappedPropChooser,
             Expression<Func<TWrapper, TWrapperProp>> wrapperPropChooser);
 
         void SetReturningMethodMap<TWrappedObj, TOut>
         (
              Expression<Func<TToImplement, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TOut>> wrappedMethod
         );
 
         void SetReturningMethodMap<TWrappedObj, TIn1, TOut>
         (
              Expression<Func<TToImplement, TIn1, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TOut>> wrappedMethod
         );
 
         void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TOut>> wrappedMethod
         );
 
         void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TOut>
          (
               Expression<Func<TToImplement, TIn1, TIn2, TIn3, TOut>> methodNameGetter,
-              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+              Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
               Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TOut>> wrappedMethod
          );
 
         void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TOut>> wrappedMethod
         );
 
@@ -163,35 +163,35 @@ namespace NP.Roxy.TypeConfigImpl
         void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>> wrappedMethod
         );
 
         void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>> wrappedMethod
         );
 
         void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>> wrappedMethod
         );
 
         void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>> wrappedMethod
         );
 
         void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>> wrappedMethod
         );
 
@@ -199,28 +199,28 @@ namespace NP.Roxy.TypeConfigImpl
         void SetVoidMethodMap<TWrappedObj, TIn1>
         (
              Expression<Func<TToImplement, TIn1>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1>> wrappedMethod
         );
 
         void SetVoidMethodMap<TWrappedObj, TIn1, TIn2>
         (
              Expression<Func<TToImplement, TIn1, TIn2>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2>> wrappedMethod
         );
 
         void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3>
          (
               Expression<Func<TToImplement, TIn1, TIn2, TIn3>> methodNameGetter,
-              Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+              Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
               Expression<Func<TWrappedObj, TIn1, TIn2, TIn3>> wrappedMethod
          );
 
         void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4>> wrappedMethod
         );
 
@@ -228,42 +228,42 @@ namespace NP.Roxy.TypeConfigImpl
         void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5>> wrappedMethod
         );
 
         void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>> wrappedMethod
         );
 
         void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>> wrappedMethod
         );
 
         void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>> wrappedMethod
         );
 
         void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>> wrappedMethod
         );
     }
 
 
-    public interface ITypeConfig<TToImplement, TImplemenetationSuperClass, TWrapperInterface> : 
-        ITypeConfig<TToImplement, TWrapperInterface>
+    public interface ITypeConfig<TToImplement, TImplemenetationSuperClass, TImplementor> : 
+        ITypeConfig<TToImplement, TImplementor>
     {
     }
 
@@ -282,7 +282,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         public INamedTypeSymbol ImplSuperClassTypeSymbol { get; private set; }
 
-        public INamedTypeSymbol WrapInterfaceTypeSymbol { get; protected set; }
+        public INamedTypeSymbol ImplementorTypeSymbol { get; protected set; }
 
         // all types that can be used to reference the object
         protected IEnumerable<INamedTypeSymbol> AllReferenceTypesSymbols =>
@@ -290,7 +290,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         // all implemented types 
         protected IEnumerable<INamedTypeSymbol> AllImplementedTypesSymbols =>
-            AllReferenceTypesSymbols.Union(WrapInterfaceTypeSymbol.ToCollection());
+            AllReferenceTypesSymbols.Union(ImplementorTypeSymbol.ToCollection());
 
         public bool HasTypeImplement =>
             TypeToImplementSymbol.Name != nameof(NoType);
@@ -361,16 +361,16 @@ namespace NP.Roxy.TypeConfigImpl
         [XmlIgnore]
         public Core TheCore { get; }
 
-        protected virtual void SetWrapperInterfaceSymbol(INamedTypeSymbol wrapperInterfaceSymbol)
+        protected virtual void SetImplementorSymbol(INamedTypeSymbol implementorSymbol)
         {
-            this.WrapInterfaceTypeSymbol = wrapperInterfaceSymbol;
+            this.ImplementorTypeSymbol = implementorSymbol;
         }
 
         protected virtual void SetFromSymbols
         (
             INamedTypeSymbol typeToImplSymbol,
             INamedTypeSymbol implementationSuperClassTypeSymbol,
-            INamedTypeSymbol wrapperInterfaceSymbol = null
+            INamedTypeSymbol implementorSymbol = null
         )
         {
             this.TypeToImplementSymbol = typeToImplSymbol;
@@ -381,7 +381,7 @@ namespace NP.Roxy.TypeConfigImpl
                 this.ImplSuperClassTypeSymbol = this.GetTypeSymbol(RoslynAnalysisAndGenerationUtils.NoTypeType);
             }
 
-            SetWrapperInterfaceSymbol(wrapperInterfaceSymbol);
+            SetImplementorSymbol(implementorSymbol);
 
             this.ClassName = TypeToImplementSymbol.GetClassName(this.ClassName);
 
@@ -390,13 +390,13 @@ namespace NP.Roxy.TypeConfigImpl
                 throw new Exception($"Error: Class to extend type '{ImplSuperClassTypeSymbol.Name}' is not a class.");
             }
 
-            if (WrapInterfaceTypeSymbol == null)
+            if (ImplementorTypeSymbol == null)
             {
-                WrapInterfaceTypeSymbol = this.GetTypeSymbol(RoslynAnalysisAndGenerationUtils.NoTypeType);
+                ImplementorTypeSymbol = this.GetTypeSymbol(RoslynAnalysisAndGenerationUtils.NoTypeType);
             }
 
-            if ((WrapInterfaceTypeSymbol.TypeKind != TypeKind.Interface))
-                throw new Exception($"Error: WrappedInterface type '{WrapInterfaceTypeSymbol.Name}' is not interface.");
+            //if ((WrapInterfaceTypeSymbol.TypeKind != TypeKind.Interface))
+            //    throw new Exception($"Error: WrappedInterface type '{WrapInterfaceTypeSymbol.Name}' is not interface.");
 
             if ((!HasTypeImplement) && (!HasImplSuperClassType))
             {
@@ -404,7 +404,7 @@ namespace NP.Roxy.TypeConfigImpl
             }
 
             IEnumerable<ISymbol> props =
-                WrapInterfaceTypeSymbol
+                ImplementorTypeSymbol
                     .GetAllMembers()
                     .Where(symbol => symbol is IPropertySymbol);
 
@@ -425,7 +425,7 @@ namespace NP.Roxy.TypeConfigImpl
             string className = null,
             INamedTypeSymbol typeToImplementSymbol = null,
             INamedTypeSymbol implementationSuperClassTypeSymbol = null,
-            INamedTypeSymbol wrapperInterfaceTypeSymbol = null
+            INamedTypeSymbol implementorTypeSymbol = null
         )
         {
             TheCore = core;
@@ -440,7 +440,7 @@ namespace NP.Roxy.TypeConfigImpl
             (
                 typeToImplementSymbol,
                 implementationSuperClassTypeSymbol,
-                wrapperInterfaceTypeSymbol
+                implementorTypeSymbol
             );
         }
 
@@ -557,7 +557,7 @@ namespace NP.Roxy.TypeConfigImpl
         {
             foreach (WrappedObjInfo wrappedObjInfo in this._wrappedObjInfos)
             {
-                wrappedObjInfo.SetFromParentSymbol(WrapInterfaceTypeSymbol);
+                wrappedObjInfo.SetFromParentSymbol(ImplementorTypeSymbol);
             }
 
             SetMemberSymbols();
@@ -601,7 +601,6 @@ namespace NP.Roxy.TypeConfigImpl
                 }
             }
         }
-
 
         void SetMemberSymbols()
         {
@@ -757,15 +756,39 @@ namespace NP.Roxy.TypeConfigImpl
             roslynCodeBuilder.PopRegion();
         }
 
-        private void AddDefaultConstructor(RoslynCodeBuilder roslynCodeBuilder)
+        private void AddConstructor(RoslynCodeBuilder roslynCodeBuilder)
         {
-            roslynCodeBuilder.PushRegion("Default Constructor");
+            roslynCodeBuilder.PushRegion("Constructor");
 
-            roslynCodeBuilder.AddDefaultConstructorOpening(this.ClassName);
+           var wrappedObjInfosInitializedThroughConstructor = 
+                _wrappedObjInfos.Where(wrappedObj => wrappedObj.InitializedThroughConstructor).ToList();
+
+
+            //roslynCodeBuilder
+            //    .AddConstructorOpening
+            //    (
+            //        this.ClassName,
+            //        Accessibility.Public
+            //    );
+
+            roslynCodeBuilder
+                .AddConstructorOpening
+                (
+                    this.ClassName,
+                    Accessibility.Public,
+                    wrappedObjInfosInitializedThroughConstructor.Select(wrappedObj => wrappedObj.WrappedObjPropSymbol).ToArray()
+                );
+
+            foreach(WrappedObjInfo wrappedObjInitializedThroughConstructor in wrappedObjInfosInitializedThroughConstructor)
+            {
+                string propName = wrappedObjInitializedThroughConstructor.WrappedObjPropName;
+                string assignName = propName.FirstCharToLowerCase();
+                roslynCodeBuilder.AddAssignmentLine(propName, assignName);
+            }
 
             foreach (WrappedObjInfo wrappedObj in _wrappedObjInfos)
             {
-                wrappedObj.AddDefaultConstructor(roslynCodeBuilder);
+                wrappedObj.AddWrappedObjDefaultConstructorInitialization(roslynCodeBuilder);
             }
 
             roslynCodeBuilder.AddLine($"{INIT_METHOD_NAME}()", true);
@@ -844,9 +867,9 @@ namespace NP.Roxy.TypeConfigImpl
 
             AddInit(roslynCodeBuilder);
 
-            AddDefaultConstructor(roslynCodeBuilder);
+            AddConstructor(roslynCodeBuilder);
 
-            AddWrappedObjsConstructor(roslynCodeBuilder);
+            //AddWrappedObjsConstructor(roslynCodeBuilder);
 
             AddPropWraps(roslynCodeBuilder);
 
@@ -968,9 +991,9 @@ namespace NP.Roxy.TypeConfigImpl
         }
     }
 
-    public class TypeConfigBySymbols<TToImplement, TWrapperInterface> : 
+    public class TypeConfigBySymbols<TToImplement, TImplementor> : 
         TypeConfigBySymbols, 
-        ITypeConfig<TToImplement, TWrapperInterface>, 
+        ITypeConfig<TToImplement, TImplementor>, 
         ICompilationContainer
     {
         public TypeConfigBySymbols
@@ -979,7 +1002,7 @@ namespace NP.Roxy.TypeConfigImpl
             string className = null, 
             INamedTypeSymbol implInterfaceTypeSymbol = null, 
             INamedTypeSymbol superClassTypeSymbol = null, 
-            INamedTypeSymbol wrapperInterfaceTypeSymbol = null
+            INamedTypeSymbol implementorTypeSymbol = null
         ) :     
             base
             (
@@ -987,7 +1010,7 @@ namespace NP.Roxy.TypeConfigImpl
                 className, 
                 implInterfaceTypeSymbol, 
                 superClassTypeSymbol, 
-                wrapperInterfaceTypeSymbol
+                implementorTypeSymbol
             )
         {
 
@@ -1016,40 +1039,40 @@ namespace NP.Roxy.TypeConfigImpl
             return propBuilderInfo;
         }
 
-        protected virtual INamedTypeSymbol GetWrapperInterfaceSymbol(INamedTypeSymbol wrapperInterfaceSymbol)
+        protected virtual INamedTypeSymbol GetImplementorSymbol(INamedTypeSymbol implementorSymbol)
         {
-            if (wrapperInterfaceSymbol.Matches(typeof(NoType), this.TheCompilation))
+            if (implementorSymbol.Matches(typeof(NoType), this.TheCompilation))
             {
                 return TheCore.GetDefaultWrapper(this.TypeToImplementSymbol);
             }
             else
             {
-                return wrapperInterfaceSymbol;
+                return implementorSymbol;
             }
         }
 
-        protected override void SetWrapperInterfaceSymbol(INamedTypeSymbol wrapperInterfaceSymbol)
+        protected override void SetImplementorSymbol(INamedTypeSymbol implementorSymbol)
         {
-            INamedTypeSymbol genericArgWrapperInterfaceTypeSymbol =
-                 typeof(TWrapperInterface).GetTypeSymbol(this.TheCompilation);
+            INamedTypeSymbol genericArgImplementorTypeSymbol =
+                 typeof(TImplementor).GetTypeSymbol(this.TheCompilation);
 
-            if (wrapperInterfaceSymbol == null)
+            if (implementorSymbol == null)
             {
-                wrapperInterfaceSymbol = genericArgWrapperInterfaceTypeSymbol;
+                implementorSymbol = genericArgImplementorTypeSymbol;
             }
 
-            this.WrapInterfaceTypeSymbol = wrapperInterfaceSymbol;
+            this.ImplementorTypeSymbol = implementorSymbol;
 
             TheCore.AddTypeSymbolsToReference(AllImplementedTypesSymbols);
 
-            wrapperInterfaceSymbol = GetWrapperInterfaceSymbol(wrapperInterfaceSymbol);
+            implementorSymbol = GetImplementorSymbol(implementorSymbol);
 
-            if (!wrapperInterfaceSymbol.IsSelfOrSuperType(genericArgWrapperInterfaceTypeSymbol))
+            if (!implementorSymbol.IsSelfOrSuperType(genericArgImplementorTypeSymbol))
             {
-                throw new Exception($"Roxy usage error: {wrapperInterfaceSymbol.GetFullTypeString()} does not derive from {genericArgWrapperInterfaceTypeSymbol.GetFullTypeString()}.");
+                throw new Exception($"Roxy usage error: {implementorSymbol.GetFullTypeString()} does not derive from {genericArgImplementorTypeSymbol.GetFullTypeString()}.");
             }
 
-            this.WrapInterfaceTypeSymbol = wrapperInterfaceSymbol;
+            this.ImplementorTypeSymbol = implementorSymbol;
         }
 
 
@@ -1069,7 +1092,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetWrappedPropGetter<TWrappedObj, TProp>
         (
             string propName,
-            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
             Expression<Func<TWrappedObj, TProp>> propGetter
         )
         {
@@ -1085,7 +1108,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetWrappedPropGetter<TWrappedObj, TProp>
         (
             Expression<Func<TToImplement, TProp>> propNameGetter,
-            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+            Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
             Expression<Func<TWrappedObj, TProp>> propGetter
         )
         {
@@ -1100,7 +1123,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetVoidMethod<TWrappedObj>
         (
              Expression<Func<TToImplement>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Action<TWrappedObj>> wrappedMethod
         )
         {
@@ -1110,7 +1133,7 @@ namespace NP.Roxy.TypeConfigImpl
         private void SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>
         (
              LambdaExpression methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression wrappedMethod
         )
         {
@@ -1126,7 +1149,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1134,7 +1157,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1143,7 +1166,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1151,7 +1174,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1160,7 +1183,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1168,7 +1191,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1176,7 +1199,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1184,7 +1207,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1193,7 +1216,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1201,7 +1224,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TIn5>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TIn5, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1210,7 +1233,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4, TOut>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1218,7 +1241,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TIn4>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TIn4>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TIn4>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, TIn4, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1227,7 +1250,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TIn3, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3, TOut>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1235,7 +1258,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2, TIn3>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TIn3>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TIn3>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, TIn3, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1243,7 +1266,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetReturningMethodMap<TWrappedObj, TIn1, TIn2, TOut>
         (
              Expression<Func<TToImplement, TIn1, TIn2, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2, TOut>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, NoType, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1251,7 +1274,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetVoidMethodMap<TWrappedObj, TIn1, TIn2>
         (
              Expression<Func<TToImplement, TIn1, TIn2>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TIn2>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, TIn2, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1259,7 +1282,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetReturningMethodMap<TWrappedObj, TIn1, TOut>
         (
              Expression<Func<TToImplement, TIn1, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1, TOut>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1268,7 +1291,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetVoidMethodMap<TWrappedObj, TIn1>
         (
              Expression<Func<TToImplement, TIn1>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TIn1>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, TIn1, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1277,7 +1300,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetReturningMethodMap<TWrappedObj, TOut>
         (
              Expression<Func<TToImplement, TOut>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj, TOut>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1286,7 +1309,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void SetVoidMethodMap<TWrappedObj>
         (
              Expression<Func<TToImplement>> methodNameGetter,
-             Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser,
+             Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser,
              Expression<Func<TWrappedObj>> wrappedMethod
         )
             => SetReturningMethodMapImpl<TWrappedObj, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(methodNameGetter, wrappedObjChooser, wrappedMethod);
@@ -1294,7 +1317,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         public void SetPropMemberMap<TImplementer, TWrappedObj, TWrapperProp>
         (
-            Expression<Func<TWrapperInterface, TWrappedObj>> wrappedObjChooser, 
+            Expression<Func<TImplementor, TWrappedObj>> wrappedObjChooser, 
             Expression<Func<TWrappedObj, TWrapperProp>> wrappedPropChooser, 
             Expression<Func<TImplementer, TWrapperProp>> wrapperPropChooser)
         {
@@ -1306,8 +1329,8 @@ namespace NP.Roxy.TypeConfigImpl
     }
 
 
-    internal class TypeConfig<TToImplement, TWrapperInterface> : 
-        TypeConfigBySymbols<TToImplement, TWrapperInterface>        
+    internal class TypeConfig<TToImplement, TImplementor> : 
+        TypeConfigBySymbols<TToImplement, TImplementor>        
     {
         public Type TypeToImplement { get; private set; }
 
@@ -1353,7 +1376,7 @@ namespace NP.Roxy.TypeConfigImpl
         (
             INamedTypeSymbol typeToImplSymbol, 
             INamedTypeSymbol implementationSuperClassTypeSymbol, 
-            INamedTypeSymbol wrapperInterfaceSymbol = null)
+            INamedTypeSymbol implementorSymbol = null)
         {
             
         }
@@ -1371,9 +1394,9 @@ namespace NP.Roxy.TypeConfigImpl
             AllInterfaceTypeSymbolsToMerge = allInterfaceTypeSymbolsToMerge.ToArray();
         }
 
-        protected override INamedTypeSymbol GetWrapperInterfaceSymbol(INamedTypeSymbol wrapperInterfaceSymbol)
+        protected override INamedTypeSymbol GetImplementorSymbol(INamedTypeSymbol implementorSymbol)
         {
-            return wrapperInterfaceSymbol;
+            return implementorSymbol;
         }
 
         protected override string GenerateCode()
@@ -1400,12 +1423,12 @@ namespace NP.Roxy.TypeConfigImpl
     }
 
 
-    internal class TypeConfig<TToImplement, TImplementationSuperClass, TWrapperInterface> :
-        TypeConfig<TToImplement, TWrapperInterface>,
-        ITypeConfig<TToImplement, TImplementationSuperClass, TWrapperInterface>
+    internal class TypeConfig<TToImplement, TImplementationSuperClass, TImplementor> :
+        TypeConfig<TToImplement, TImplementor>,
+        ITypeConfig<TToImplement, TImplementationSuperClass, TImplementor>
     {
         public TypeConfig(Core core, string className = null) : 
-            base(core, className, typeof(TImplementationSuperClass), typeof(TWrapperInterface))
+            base(core, className, typeof(TImplementationSuperClass), typeof(TImplementor))
         {
         }
     }

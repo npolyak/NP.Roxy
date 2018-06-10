@@ -62,6 +62,14 @@ namespace NP.Roxy.TypeConfigImpl
             this.TheCore = core;
         }
 
+        public bool InitializedThroughConstructor
+        {
+            get
+            {
+                return (this.WrappedObjPropSymbol?.GetAttrSymbol(typeof(ConstructorInitAttribute)) != null);
+            }
+        }
+
         public void AddStaticMethodsContainerType(INamedTypeSymbol staticMethodsContainerTypeSymbol)
         {
             (StaticMethodContainers as List<INamedTypeSymbol>).Add(staticMethodsContainerTypeSymbol);
@@ -410,10 +418,12 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
-        public void AddDefaultConstructor(RoslynCodeBuilder roslynCodeBuilder)
+        public void AddWrappedObjDefaultConstructorInitialization(RoslynCodeBuilder roslynCodeBuilder)
         {
             //if (!WrappedObjNamedTypeSymbol.HasPublicDefaultConstructor())
             //    return;
+            if (InitializedThroughConstructor)
+                return;
 
             if (WrappedObjNamedTypeSymbol.TypeKind == TypeKind.Enum)
                 return;

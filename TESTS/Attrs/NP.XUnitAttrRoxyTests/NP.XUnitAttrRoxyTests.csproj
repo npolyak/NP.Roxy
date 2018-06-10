@@ -185,7 +185,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MainTests.cs" />
+    <Compile Include="AttrBasicRoxyTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

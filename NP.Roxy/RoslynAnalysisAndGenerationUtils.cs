@@ -894,23 +894,7 @@ namespace NP.Roxy
             return attributeData.AttributeClass.Name == attrType.Name;
         }
 
-        //public static bool MatchesArguments(this ISymbol symbol, ISymbol symbolToMatch)
-        //{
-        //    if (symbol.ObjEquals(symbolToMatch))
-        //        return true;
 
-        //    ClassMemberType symbMemberType = symbol.GetMemberType();
-
-        //    ClassMemberType symbToMatchMemberType = symbolToMatch.GetMemberType();
-
-        //    if (symbMemberType != symbToMatchMemberType)
-        //        return false;
-
-        //    if (symbMemberType == ClassMemberType.None)
-        //        return false;
-
-
-        //}
 
 
         public static TSymbol GetMemberByName<TSymbol>
