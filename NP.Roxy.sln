@@ -31,6 +31,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Attrs", "Attrs", "{87EEDE13
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NP.XUnitAttrRoxyTests", "TESTS\Attrs\NP.XUnitAttrRoxyTests\NP.XUnitAttrRoxyTests.csproj", "{2FFB0681-084C-4B3E-88CC-731686A4137D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AttrsMultiConcernsRoxyTest", "TESTS\Concerns\AttrsMultiConcernsRoxyTest\AttrsMultiConcernsRoxyTest.csproj", "{EEA99941-F570-472F-B691-BE6CA7001650}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,6 +75,10 @@ Global
 		{2FFB0681-084C-4B3E-88CC-731686A4137D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FFB0681-084C-4B3E-88CC-731686A4137D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FFB0681-084C-4B3E-88CC-731686A4137D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEA99941-F570-472F-B691-BE6CA7001650}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEA99941-F570-472F-B691-BE6CA7001650}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEA99941-F570-472F-B691-BE6CA7001650}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEA99941-F570-472F-B691-BE6CA7001650}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -87,6 +93,7 @@ Global
 		{AC1445D0-B374-4E4E-8CDF-B5BE56D680B3} = {41B233D1-E336-4846-95B8-AC817302805F}
 		{87EEDE13-8107-420A-B054-97E8F9B84B27} = {41B233D1-E336-4846-95B8-AC817302805F}
 		{2FFB0681-084C-4B3E-88CC-731686A4137D} = {87EEDE13-8107-420A-B054-97E8F9B84B27}
+		{EEA99941-F570-472F-B691-BE6CA7001650} = {76873D2C-C05E-4EA5-A997-AA438BB23516}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {63B2F242-8654-4FBD-A762-D369E201F590}

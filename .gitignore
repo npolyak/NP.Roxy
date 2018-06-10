@@ -81,3 +81,5 @@
 /TESTS/XUnit/bin/Debug
 /TESTS/Attrs/NP.XUnitAttrRoxyTests/bin/Debug
 /TESTS/Attrs/NP.XUnitAttrRoxyTests/obj/Debug
+/TESTS/Concerns/AttrsMultiConcernsRoxyTest/bin/Debug
+/TESTS/Concerns/AttrsMultiConcernsRoxyTest/obj/Debug
