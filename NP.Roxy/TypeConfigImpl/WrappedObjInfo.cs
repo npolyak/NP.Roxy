@@ -20,11 +20,18 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using System.Linq.Expressions;
 using NP.Concepts;
+using NP.Concepts.Attributes;
 
 namespace NP.Roxy.TypeConfigImpl
 {
     internal class WrappedObjInfo
     {
+        // shared property means it is not a plugin, but a property 
+        // within the implemented class
+        public INamedTypeSymbol SharedInitializationType { get; set; }
+
+        public bool IsSharedProperty => SharedInitializationType != null;
+
         bool _allowNonPublicForAllMemberMaps = false;
         [XmlAttribute]
         internal bool AllowNonPublicForAllMemberMaps
@@ -153,6 +160,18 @@ namespace NP.Roxy.TypeConfigImpl
         {
             this.WrappedObjPropSymbol = 
                 parentTypeSymbol.GetMemberByName<IPropertySymbol>(WrappedObjPropName);
+
+            AttributeData sharedAttrData = WrappedObjPropSymbol.GetAttrSymbol(typeof(SharedPropertyAttribute));
+
+            if (sharedAttrData != null)
+            {
+                SharedInitializationType = WrappedObjPropSymbol.Type as INamedTypeSymbol;
+
+                TypedConstant initTypeConst =
+                    (TypedConstant) sharedAttrData.GetAttrValueByArgName(nameof(SharedPropertyAttribute.InitType));
+
+                SharedInitializationType = initTypeConst.Value as INamedTypeSymbol;
+            }
         }
 
         MemberMapInfoBase FindMapImpl<T>(T symbol, Func<MemberMapInfoBase, T> findMethod)
@@ -378,6 +397,13 @@ namespace NP.Roxy.TypeConfigImpl
 
         public void AddWrappedClass(RoslynCodeBuilder roslynCodeBuilder)
         {
+            if (IsSharedProperty)
+            {
+                roslynCodeBuilder.AddPropWithBackingStore(WrappedObjPropSymbol);
+
+                return;
+            }
+
             if (this.WrappedObjNamedTypeSymbol.IsAbstract)
             {
                 // here, the concretization is created
@@ -428,12 +454,24 @@ namespace NP.Roxy.TypeConfigImpl
             if (WrappedObjNamedTypeSymbol.TypeKind == TypeKind.Enum)
                 return;
 
-            roslynCodeBuilder.AddAssignCoreObj
-            (
-                this.WrappedObjPropName, 
-                WrappedObjNamedTypeSymbol, 
-                ConcreteWrappedObjClassName
-            );
+            if (IsSharedProperty)
+            {
+                roslynCodeBuilder.AddAssignCoreObj
+                (
+                    this.WrappedObjPropName,
+                    SharedInitializationType,
+                    ConcreteWrappedObjClassName
+                );
+            }
+            else
+            {
+                roslynCodeBuilder.AddAssignCoreObj
+                (
+                    this.WrappedObjPropName,
+                    WrappedObjNamedTypeSymbol,
+                    ConcreteWrappedObjClassName
+                );
+            }
         }
     }
 }

@@ -29,6 +29,31 @@ namespace NP.Roxy
 
     public partial class Core
     {
+        private Dictionary<string, int> EventMap = new Dictionary<string, int>(); 
+
+        internal void AddEvent(string fullEventName, int idx)
+        {
+            if (EventMap.TryGetValue(fullEventName, out int currentIdx))
+            {
+                if (currentIdx == idx)
+                    return;
+
+                throw new Exception($"Roxy Usage Error: different index {idx} vs old index {currentIdx} for the event {fullEventName}.");
+            }
+
+            EventMap.Add(fullEventName, idx);
+        }
+
+        internal int GetEventIdx(string fullEventName)
+        {
+            if (EventMap.TryGetValue(fullEventName, out int idx))
+            {
+                return idx;
+            }
+
+            return -1;
+        }
+
         internal static Core TheCore { get; } =
             new Core();
 
@@ -550,7 +575,14 @@ namespace NP.Roxy
 
                     foreach (PullMemberAttribute pullAttr in pullAttrs)
                     {
-                        typeConfig.SetMemberMap(memberInfo.Name, pullAttr.WrappedMemberName, pullAttr.WrapperMemberName, pullAttr.AllowNonPublic);
+                        if (pullAttr.WrapperMemberName != null)
+                        {
+                            typeConfig.SetMemberMap(memberInfo.Name, pullAttr.WrappedMemberName, pullAttr.WrapperMemberName, pullAttr.AllowNonPublic);
+                        }
+                        else
+                        {
+                            typeConfig.SetThisMemberMap(memberInfo.Name, pullAttr.WrappedMemberName, pullAttr.AllowNonPublic);
+                        }
 
                         if (pullAttr.OverrideVirtual)
                         {

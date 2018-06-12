@@ -157,6 +157,11 @@ namespace NP.Roxy.TypeConfigImpl
                 }
             }
 
+            if (idx < 0)
+            {
+                idx = core.GetEventIdx(wrapperSymbol.GetUniqueEventId());
+            }
+
             if (idx >= 0)
             {
                 this.IndexInputParamToReplaceByThis = idx;
@@ -187,6 +192,8 @@ namespace NP.Roxy.TypeConfigImpl
         public bool HasInit => TheInitTypeSymbol != null;
 
         public bool AddBackingField { get; private set; } = false;
+
+        public bool IsImplementedBySharedProperty { get; set; } = false;
 
         public void AddInit(RoslynCodeBuilder roslynCodeBuilder)
         {

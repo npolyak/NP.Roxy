@@ -557,6 +557,11 @@ namespace NP.Roxy
             return result;
         }
 
+        public static object GetAttrValueByArgName(this AttributeData attributeData, string argName)
+        {
+            return attributeData.NamedArguments.FirstOrDefault(kvp => kvp.Key == argName).Value;
+        }
+
         public static object
             GetAttributeConstructorValueByParameterName(this AttributeData attributeData, string argName)
         {
@@ -882,20 +887,43 @@ namespace NP.Roxy
                 typeSymbol.GetSelfAndAllBaseTypesAndInterfaces().FirstOrDefault(t => t.TypesStrictlyMatch(superTypeSymbol)) != null;
         }
 
-        public static AttributeData GetAttrSymbol(this ISymbol symbol, Type attrType)
+        public static IEnumerable<ITypeSymbol> SelfAndSuperInterfaces(this ITypeSymbol typeSymbol)
+        {
+            yield return typeSymbol;
+
+            if (typeSymbol.Interfaces == null)
+                yield break;
+
+            foreach (ITypeSymbol interfaceTypeSymbol in typeSymbol.Interfaces)
+            {
+                foreach (ITypeSymbol tS in interfaceTypeSymbol.SelfAndSuperInterfaces())
+                    yield return tS;
+            }
+        }
+
+        public static IEnumerable<AttributeData> GetAttrSymbols(this ISymbol symbol, Type attrType)
         {
             return
                 symbol.GetAttributes()
-                      .FirstOrDefault(attrData => attrData.AttributeClass.IsSelfOrSuperClass(attrType.Name));
+                      .Where(attrData => attrData.MatchesAttrType(attrType));
+        }
+
+        public static AttributeData GetAttrSymbol(this ISymbol symbol, Type attrType)
+        {
+            return
+                symbol.GetAttrSymbols(attrType).FirstOrDefault();
+        }
+
+        public static AttributeData GetTypeAttrSymbol(this ITypeSymbol typeSymbol, Type attrType)
+        {
+            return
+                typeSymbol.SelfAndSuperInterfaces().SelectMany(typeSymb => typeSymb.GetAttrSymbols(attrType)).FirstOrDefault();
         }
 
         public static bool MatchesAttrType(this AttributeData attributeData, Type attrType)
         {
             return attributeData.AttributeClass.Name == attrType.Name;
         }
-
-
-
 
         public static TSymbol GetMemberByName<TSymbol>
         (
@@ -1181,6 +1209,10 @@ namespace NP.Roxy
         public static bool HasPublicDefaultConstructor(this INamedTypeSymbol typeSymbol) =>
             typeSymbol.GetPublicDefaultConstructor() != null;
 
+        public static string GetUniqueEventId(this IEventSymbol eventSymbol)
+        {
+            return eventSymbol.Type.GetUniqueTypeStr() + "#" + eventSymbol.Name;
+        }
 
         public static string GetUniqueTypeStr(this ITypeSymbol type)
         {

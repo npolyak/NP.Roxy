@@ -10,6 +10,7 @@
 // products that use it.
 
 using Microsoft.CodeAnalysis;
+using NP.Concepts.Attributes;
 using NP.Utilities;
 using System;
 using System.Collections.Generic;
@@ -355,6 +356,15 @@ namespace NP.Roxy.TypeConfigImpl
 
         internal List<WrappedObjInfo> _wrappedObjInfos = new List<WrappedObjInfo>();
 
+        internal IEnumerable<WrappedObjInfo> PluginInfos =>
+            _wrappedObjInfos?.Where(pluginInfo => !pluginInfo.IsSharedProperty);
+
+        internal IEnumerable<WrappedObjInfo> SharedProps =>
+            _wrappedObjInfos?.Where(objInfo => objInfo.IsSharedProperty);
+
+        public IEnumerable<string> SharedPropNames =>
+            SharedProps?.Select(sharedProp => sharedProp.WrappedObjPropName);
+
         [XmlAttribute]
         public string ClassName { get; set; }
 
@@ -375,6 +385,28 @@ namespace NP.Roxy.TypeConfigImpl
         {
             this.TypeToImplementSymbol = typeToImplSymbol;
             this.ImplSuperClassTypeSymbol = implementationSuperClassTypeSymbol;
+
+            AttributeData attrData =
+                this.TypeToImplementSymbol.GetTypeAttrSymbol(typeof(ClassEventThisIdxAttribute));
+
+            if (attrData != null)
+            {
+                string eventName = attrData.GetAttributeConstructorValueByParameterName("eventName") as string;
+
+                IEventSymbol eventSymbol = 
+                    this.TypeToImplementSymbol.GetMemberByName<IEventSymbol>(eventName, true);
+
+                if (eventSymbol == null)
+                {
+                    throw new Exception($"Roxy Usage Error: ClassEventThisIdxAttribute's eventName {eventName} does not exist in the type {TypeToImplementSymbol.GetFullTypeString()}");
+                }
+
+                string fullEventName = eventSymbol.GetUniqueEventId();
+
+                int thisIdx = (int) attrData.GetAttributeConstructorValueByParameterName("thisIdx");
+
+                this.TheCore.AddEvent(fullEventName, thisIdx);
+            }
 
             if (this.ImplSuperClassTypeSymbol == null)
             {
@@ -612,6 +644,14 @@ namespace NP.Roxy.TypeConfigImpl
                  this.ImplementableSymbols.GetSymbolsOfType<IPropertySymbol>()
                      .Select(symbol => new PropertyWrapperMemberBuilderInfo(symbol, this.TheCore)).ToList();
 
+            foreach(PropertyWrapperMemberBuilderInfo propWrapperMemberBuilderInfo in this.PropBuilderInfos)
+            {
+                if (SharedPropNames.Contains(propWrapperMemberBuilderInfo.WrapperSymbol.Name))
+                {
+                    propWrapperMemberBuilderInfo.IsImplementedBySharedProperty = true;
+                }
+            }
+
             this.MethodBuilderInfos =
                 this.ImplementableSymbols.GetSymbolsOfType<IMethodSymbol>()
                     .Where(symbol => symbol.AssociatedSymbol == null)
@@ -697,14 +737,29 @@ namespace NP.Roxy.TypeConfigImpl
             roslynCodeBuilder.PopRegion();
         }
 
-        private void AddWrappedClasses(RoslynCodeBuilder roslynCodeBuilder)
+        private void AddPlugins(RoslynCodeBuilder roslynCodeBuilder)
         {
-            if (this._wrappedObjInfos.IsNullOrEmpty())
+            if (this.PluginInfos.IsNullOrEmpty())
                 return;
 
-            roslynCodeBuilder.PushRegion("Wrapped Classes");
+            roslynCodeBuilder.PushRegion("Plugins");
 
-            foreach (WrappedObjInfo wrappedClassInfo in this._wrappedObjInfos)
+            foreach (WrappedObjInfo wrappedClassInfo in this.PluginInfos)
+            {
+                wrappedClassInfo.AddWrappedClass(roslynCodeBuilder);
+            }
+
+            roslynCodeBuilder.PopRegion();
+        }
+
+        private void AddSharedProps(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            if (this.SharedProps.IsNullOrEmpty())
+                return;
+
+            roslynCodeBuilder.PushRegion("Shared Props");
+
+            foreach (WrappedObjInfo wrappedClassInfo in this.SharedProps)
             {
                 wrappedClassInfo.AddWrappedClass(roslynCodeBuilder);
             }
@@ -719,8 +774,11 @@ namespace NP.Roxy.TypeConfigImpl
 
             roslynCodeBuilder.PushRegion("Generated Properties");
 
-            foreach (WrapperMemberBuilderInfo<IPropertySymbol> propBuilderInfo in this.PropBuilderInfos)
+            foreach (PropertyWrapperMemberBuilderInfo propBuilderInfo in this.PropBuilderInfos)
             {
+                if (propBuilderInfo.IsImplementedBySharedProperty)
+                    continue;
+
                 propBuilderInfo.Build(roslynCodeBuilder);
             }
 
@@ -863,7 +921,9 @@ namespace NP.Roxy.TypeConfigImpl
 
             ImplementEvents(roslynCodeBuilder);
 
-            AddWrappedClasses(roslynCodeBuilder);
+            AddPlugins(roslynCodeBuilder);
+
+            AddSharedProps(roslynCodeBuilder);
 
             AddInit(roslynCodeBuilder);
 

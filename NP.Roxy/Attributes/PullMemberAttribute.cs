@@ -41,6 +41,8 @@ namespace NP.Roxy.Attributes
         // parametereless method that returns a single value to a property
         public bool MethodToProp { get; set; }
 
+        public bool MappedToThis => WrapperMemberName == null;
+
         public PullMemberAttribute()
         {
 

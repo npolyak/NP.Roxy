@@ -2,9 +2,13 @@
 using NP.Roxy.TypeConfigImpl;
 using NP.Concepts.Behaviors;
 using System.ComponentModel;
+using NP.Concepts.Attributes;
+using NP.Roxy.Attributes;
+using System.Collections.ObjectModel;
 
 namespace AttrsMultiConcernsRoxyTest.RoxyViewModels
 {
+    [ClassEventThisIdx(nameof(PropertyChanged))]
     public interface ISelectableRemovableItem<T> : ISelectableItem<T>, IRemovable, INotifyPropertyChanged
        where T : ISelectableItem<T>
     {
@@ -38,14 +42,22 @@ namespace AttrsMultiConcernsRoxyTest.RoxyViewModels
 
     public interface IRemovableCollectionBehaviorWrapper
     {
+        [PullMember(WrapperMemberName = null, WrappedMemberName = nameof(RemovableCollectionBehavior.TheCollection))]
         RemovableCollectionBehavior TheRemovableCollectionBehavior { get; }
     }
 
     public interface ISelectableRemovableBusinessGroupWrapper :
-        ISelectableRemovableWrapper<ISelectableRemovableBusinessGroup>,
-        IRemovableCollectionBehaviorWrapper
+        ISelectableRemovableWrapper<ISelectableRemovableBusinessGroup>
     {
+        [SharedProperty(InitType = typeof(SingleSelectionObservableCollection<ISelectableRemovablePerson>))]
+        ObservableCollection<ISelectableRemovablePerson> People { get; }
+
+        [PullMember(WrapperMemberName = null, WrappedMemberName = nameof(ParentChildSelectionBehavior<ISelectableRemovableBusinessGroup, ISelectableRemovablePerson>.Parent))]
+        [PullMember(WrapperMemberName = nameof(IBusinessGroup.People), WrappedMemberName = nameof(ParentChildSelectionBehavior <ISelectableRemovableBusinessGroup, ISelectableRemovablePerson>.Children))]
         ParentChildSelectionBehavior<ISelectableRemovableBusinessGroup, ISelectableRemovablePerson> TheParentChildSelectionBehavior { get; }
+
+        [PullMember(WrapperMemberName = nameof(IBusinessGroup.People), WrappedMemberName = nameof(RemovableCollectionBehavior.TheCollection))]
+        RemovableCollectionBehavior TheRemovableCollectionBehavior { get; }
     }
 
     public static class RoxyModelAssembler
@@ -55,8 +67,6 @@ namespace AttrsMultiConcernsRoxyTest.RoxyViewModels
             ITypeConfig typeConfig =
                 Core.FindOrCreateTypeConfig<ISelectableRemovablePerson, PersonDataVM, ISelectableRemovablePersonWrapper>();
 
-            typeConfig.SetEventArgThisIdx(nameof(INotifyPropertyChanged.PropertyChanged), 0);
-
             typeConfig.ConfigurationCompleted();
         }
 
@@ -64,10 +74,6 @@ namespace AttrsMultiConcernsRoxyTest.RoxyViewModels
         {
             ITypeConfig typeConfig =
                 Core.FindOrCreateTypeConfig<ISelectableRemovableBusinessGroup, ISelectableRemovableBusinessGroupWrapper>();
-
-            typeConfig.SetInit<SingleSelectionObservableCollection<ISelectableRemovablePerson>>(nameof(IBusinessGroup.People));
-
-            typeConfig.SetEventArgThisIdx(nameof(INotifyPropertyChanged.PropertyChanged), 0);
 
             typeConfig.SetThisMemberMap
             (
