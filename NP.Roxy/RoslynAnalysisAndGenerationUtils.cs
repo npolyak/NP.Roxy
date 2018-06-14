@@ -905,7 +905,7 @@ namespace NP.Roxy
         {
             return
                 symbol.GetAttributes()
-                      .Where(attrData => attrData.MatchesAttrType(attrType));
+                      .Where(attrData => attrData.AttributeClass.IsSelfOrSuperClass(attrType.Name));
         }
 
         public static AttributeData GetAttrSymbol(this ISymbol symbol, Type attrType)
@@ -1327,9 +1327,16 @@ namespace NP.Roxy
             IEnumerable<IMethodSymbol> methodsMatchedByName =
                 calledMethodContainerTypeSymbol.GetMembersByName<IMethodSymbol>(methodName, allowNonPublic);
 
-            IMethodSymbol result =
+            IEnumerable<IMethodSymbol> results =
                 methodsMatchedByName
-                    .FirstOrDefault(methodSymbol => compilation.MethodArgsMatch(methodSymbol, returnTypeSymbol, inputTypeSymbols));
+                    .Where(methodSymbol => compilation.MethodArgsMatch(methodSymbol, returnTypeSymbol, inputTypeSymbols));
+
+            IMethodSymbol result = results.FirstOrDefault(methodSymbol => !methodSymbol.IsAbstract);
+
+            if (result == null)
+            {
+                result = results.FirstOrDefault();
+            }
 
             return result;
         }

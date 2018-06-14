@@ -791,8 +791,19 @@ namespace NP.Roxy
             return result;
         }
 
-        public void AddAssignCoreObj(string propName, INamedTypeSymbol typeSymbol, string typeName = null)
+        public void AddAssignCoreObj(string propName, INamedTypeSymbol typeSymbol, string typeName = null, bool isImplemented = false)
         {
+            if (isImplemented)
+            {
+
+                AddAssignmentLine
+                (
+                    propName,
+                    $"TheCore.CreateImplInstance<{typeSymbol.GetFullTypeString()}, {typeName}>()"
+                );
+                return;
+            }
+
             string typeNameInsert = "";
 
             if (typeName != null)

@@ -670,7 +670,7 @@ namespace NP.Roxy.TypeConfigImpl
         {
             this.EventBuilderInfos.Cast<WrapperMemberBuilderInfoBase>()
                 .Union(PropBuilderInfos.Where(propBuilderInfo => propBuilderInfo.MustImplement))
-                .Union(MethodBuilderInfos.Where(propBuilderInfo => propBuilderInfo.MustImplement))
+                .Union(MethodBuilderInfos.Where(methodBuilderInfo => methodBuilderInfo.MustImplement))
                 .DoForEach(builderInfo => builderInfo.SetWrappedMembers(GetWrappedMemberInfos(builderInfo.WrapperSymbolBase)));
         }
 

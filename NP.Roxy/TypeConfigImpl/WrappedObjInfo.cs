@@ -26,6 +26,8 @@ namespace NP.Roxy.TypeConfigImpl
 {
     internal class WrappedObjInfo
     {
+        bool _concretizedOrImplemented = true; // concretized by default
+
         // shared property means it is not a plugin, but a property 
         // within the implemented class
         public INamedTypeSymbol SharedInitializationType { get; set; }
@@ -49,11 +51,22 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
+        HashSet<string> _membersNotToWrap = new HashSet<string>();
+
+        IPropertySymbol _wrappedObjPropSymbol;
         [XmlIgnore]
         public IPropertySymbol WrappedObjPropSymbol
         {
-            get;
-            protected set;
+            get => _wrappedObjPropSymbol;
+            protected set
+            {
+                if (_wrappedObjPropSymbol.ObjEquals(value))
+                    return;
+
+                _wrappedObjPropSymbol = value;
+
+                _wrappedObjPropSymbol.GetAttrSymbols(typeof(SuppressWrappingAttribute)).DoForEach(attrData => _membersNotToWrap.Add(attrData.ConstructorArguments[0].Value as string));
+            }
         }
 
         // INamedTypeSymbol do not seem to carry information about
@@ -170,7 +183,10 @@ namespace NP.Roxy.TypeConfigImpl
                 TypedConstant initTypeConst =
                     (TypedConstant) sharedAttrData.GetAttrValueByArgName(nameof(SharedPropertyAttribute.InitType));
 
-                SharedInitializationType = initTypeConst.Value as INamedTypeSymbol;
+                if (initTypeConst.Value != null)
+                {
+                    SharedInitializationType = initTypeConst.Value as INamedTypeSymbol;
+                }
             }
         }
 
@@ -297,11 +313,23 @@ namespace NP.Roxy.TypeConfigImpl
             if (memberMap.IsAbstract == true)
                 return null;
 
+            if (memberMap is MemberMapInfo memberMapInfo)
+            {
+                if (this._membersNotToWrap.Contains(memberMapInfo.WrappedMemberName))
+                    return null;
+            }
+
+          
             return memberMap;
         }
 
         void SetOrUnsetConcretizationDelegates(RoslynCodeBuilder wrapperInitBuilder, bool setOrUnset)
         {
+            if (!_concretizedOrImplemented)
+            {
+                return;
+            }
+
             foreach (ISymbol concreteWrappedObjMember in this.ConcreteWrappedObjNamedTypeSymbol.GetAllMembers())
             {
                 AttributeData concretizationAttrData =
@@ -406,9 +434,20 @@ namespace NP.Roxy.TypeConfigImpl
 
             if (this.WrappedObjNamedTypeSymbol.IsAbstract)
             {
-                // here, the concretization is created
-                this.ConcreteWrappedObjNamedTypeSymbol =
-                    this.TheCore.FindOrCreateConcretizationTypeConf(this.WrappedObjNamedTypeSymbol).TheSelfTypeSymbol;
+                AttributeData attrData = WrappedObjPropSymbol.GetAttrSymbol(typeof(ImplementorAttribute));
+
+                if (attrData != null)
+                {
+                    _concretizedOrImplemented = false; // implemented by default
+                    this.ConcreteWrappedObjNamedTypeSymbol = 
+                        (INamedTypeSymbol) attrData.ConstructorArguments[0].Value;
+                }
+                else
+                {
+                    // here, the concretization is created
+                    this.ConcreteWrappedObjNamedTypeSymbol =
+                        this.TheCore.FindOrCreateConcretizationTypeConf(this.WrappedObjNamedTypeSymbol).TheSelfTypeSymbol;
+                }
             }
 
             string beforeSetterStr = BuildWrapperInit(EventWrappedMemberNameMaps, PropWrappedMemberNameMaps, false);
@@ -433,7 +472,7 @@ namespace NP.Roxy.TypeConfigImpl
                 setterAccessibility
             );
 
-            if (ConcreteWrappedObjClassName != WrappedObjClassName)
+            if ( (_concretizedOrImplemented) && (ConcreteWrappedObjClassName != WrappedObjClassName))
             {
                 roslynCodeBuilder.AddEmptyLine();
                 roslynCodeBuilder.AddPropOpening(WrapperObjConcretizedPropName, ConcreteWrappedObjNamedTypeSymbol);
@@ -460,7 +499,8 @@ namespace NP.Roxy.TypeConfigImpl
                 (
                     this.WrappedObjPropName,
                     SharedInitializationType,
-                    ConcreteWrappedObjClassName
+                    ConcreteWrappedObjClassName,
+                    !_concretizedOrImplemented
                 );
             }
             else
@@ -469,7 +509,8 @@ namespace NP.Roxy.TypeConfigImpl
                 (
                     this.WrappedObjPropName,
                     WrappedObjNamedTypeSymbol,
-                    ConcreteWrappedObjClassName
+                    ConcreteWrappedObjClassName,
+                    !_concretizedOrImplemented
                 );
             }
         }
