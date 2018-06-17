@@ -541,7 +541,6 @@ namespace NP.Roxy
             return result;
         }
 
-
         public TToImplement CreateImplInstance<TToImplement, TImplementationSuperClass, TImplementor>
         (
             params object[] args)
@@ -550,7 +549,7 @@ namespace NP.Roxy
 
             string className = implementorType.GetCustomAttribute<ImplementationClassNameAttribute>()?.ClassName;
 
-            ITypeConfig<TToImplement, TImplementor> typeConfig =
+            ITypeConfig typeConfig =
                 FindOrCreateTypeConf<TToImplement, TImplementationSuperClass, TImplementor>(className);
 
             if (implementorType == typeof(NoType))

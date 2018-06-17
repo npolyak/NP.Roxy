@@ -66,6 +66,16 @@ namespace NP.Roxy.TypeConfigImpl
                 _wrappedObjPropSymbol = value;
 
                 _wrappedObjPropSymbol.GetAttrSymbols(typeof(SuppressWrappingAttribute)).DoForEach(attrData => _membersNotToWrap.Add(attrData.ConstructorArguments[0].Value as string));
+
+                AttributeData implAttrData = WrappedObjPropSymbol.GetAttrSymbol(typeof(ImplementorAttribute));
+
+                if (implAttrData != null)
+                {
+                    _concretizedOrImplemented = false; // implemented by default
+
+                    this.ConcreteWrappedObjNamedTypeSymbol =
+                        (INamedTypeSymbol)implAttrData.ConstructorArguments[0].Value;
+                }
             }
         }
 
@@ -432,22 +442,11 @@ namespace NP.Roxy.TypeConfigImpl
                 return;
             }
 
-            if (this.WrappedObjNamedTypeSymbol.IsAbstract)
+            if (this.WrappedObjNamedTypeSymbol.IsAbstract && _concretizedOrImplemented)
             {
-                AttributeData attrData = WrappedObjPropSymbol.GetAttrSymbol(typeof(ImplementorAttribute));
-
-                if (attrData != null)
-                {
-                    _concretizedOrImplemented = false; // implemented by default
-                    this.ConcreteWrappedObjNamedTypeSymbol = 
-                        (INamedTypeSymbol) attrData.ConstructorArguments[0].Value;
-                }
-                else
-                {
-                    // here, the concretization is created
-                    this.ConcreteWrappedObjNamedTypeSymbol =
-                        this.TheCore.FindOrCreateConcretizationTypeConf(this.WrappedObjNamedTypeSymbol).TheSelfTypeSymbol;
-                }
+                // here, the concretization is created
+                this.ConcreteWrappedObjNamedTypeSymbol =
+                    this.TheCore.FindOrCreateConcretizationTypeConf(this.WrappedObjNamedTypeSymbol).TheSelfTypeSymbol;
             }
 
             string beforeSetterStr = BuildWrapperInit(EventWrappedMemberNameMaps, PropWrappedMemberNameMaps, false);
