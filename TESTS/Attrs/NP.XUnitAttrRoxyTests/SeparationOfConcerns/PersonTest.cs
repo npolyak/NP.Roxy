@@ -19,7 +19,7 @@ namespace NP.XUnitAttrRoxyTests.PersonTest
 
         public void Walk()
         {
-            Console.WriteLine($"Person {Name} is walking");
+            Console.WriteLine($"The Person {Name} is walking");
         }
     }
 
@@ -34,7 +34,7 @@ namespace NP.XUnitAttrRoxyTests.PersonTest
         [ImplementationClassName("PersonImplementation")]
         public interface IPersonWrapper
         {
-            Person ThePerson { get; }
+             Person ThePerson { get; }
         }
 
         [Fact]

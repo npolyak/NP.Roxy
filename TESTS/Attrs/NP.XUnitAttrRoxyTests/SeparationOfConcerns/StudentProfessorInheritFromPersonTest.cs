@@ -1,4 +1,5 @@
-﻿using NP.Roxy;
+﻿using NP.Concepts.Attributes;
+using NP.Roxy;
 using NP.Roxy.Attributes;
 using System;
 using Xunit;
@@ -80,7 +81,7 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorInheritFromPersonTest
         {
             Student TheStudent { get; }
 
-            //[SuppressWrapping(nameof(IPerson.Walk))]
+            [SuppressWrapping(nameof(IPerson.Walk))]
             Professor TheProfessor { get; }
         }
 
