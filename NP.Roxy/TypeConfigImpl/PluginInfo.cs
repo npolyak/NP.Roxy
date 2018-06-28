@@ -24,16 +24,8 @@ using NP.Concepts.Attributes;
 
 namespace NP.Roxy.TypeConfigImpl
 {
-    internal class WrappedObjInfo
+    internal class PluginInfo
     {
-        bool _concretizedOrImplemented = true; // concretized by default
-
-        // shared property means it is not a plugin, but a property 
-        // within the implemented class
-        public INamedTypeSymbol SharedInitializationType { get; set; }
-
-        public bool IsSharedProperty => SharedInitializationType != null;
-
         bool _allowNonPublicForAllMemberMaps = false;
         [XmlAttribute]
         internal bool AllowNonPublicForAllMemberMaps
@@ -46,34 +38,32 @@ namespace NP.Roxy.TypeConfigImpl
 
                 _allowNonPublicForAllMemberMaps = value;
 
-                this.WrappedMemberNameMaps
+                this.PluginMemberNameMaps
                     .ForEach(memberMap => memberMap.SetAllowNonPublic(_allowNonPublicForAllMemberMaps));
             }
         }
 
         HashSet<string> _membersNotToWrap = new HashSet<string>();
 
-        IPropertySymbol _wrappedObjPropSymbol;
+        IPropertySymbol _pluginPropSymbol;
         [XmlIgnore]
-        public IPropertySymbol WrappedObjPropSymbol
+        public IPropertySymbol PluginPropSymbol
         {
-            get => _wrappedObjPropSymbol;
+            get => _pluginPropSymbol;
             protected set
             {
-                if (_wrappedObjPropSymbol.ObjEquals(value))
+                if (_pluginPropSymbol.ObjEquals(value))
                     return;
 
-                _wrappedObjPropSymbol = value;
+                _pluginPropSymbol = value;
 
-                _wrappedObjPropSymbol.GetAttrSymbols(typeof(SuppressWrappingAttribute)).DoForEach(attrData => _membersNotToWrap.Add(attrData.ConstructorArguments[0].Value as string));
+                _pluginPropSymbol.GetAttrSymbols(typeof(SuppressWrappingAttribute)).DoForEach(attrData => _membersNotToWrap.Add(attrData.ConstructorArguments[0].Value as string));
 
-                AttributeData implAttrData = WrappedObjPropSymbol.GetAttrSymbol(typeof(ImplementorAttribute));
+                AttributeData implAttrData = PluginPropSymbol.GetAttrSymbol(typeof(ImplementorAttribute));
 
                 if (implAttrData != null)
                 {
-                    _concretizedOrImplemented = false; // implemented by default
-
-                    this.ConcreteWrappedObjNamedTypeSymbol =
+                    this.ConcretePluginNamedTypeSymbol =
                         (INamedTypeSymbol)implAttrData.ConstructorArguments[0].Value;
                 }
             }
@@ -86,9 +76,9 @@ namespace NP.Roxy.TypeConfigImpl
         public IEnumerable<INamedTypeSymbol> StaticMethodContainers { get; } =
             new List<INamedTypeSymbol>();
 
-        public WrappedObjInfo(Core core, string wrappedObjPropName)
+        public PluginInfo(Core core, string wrappedObjPropName)
         {
-            this.WrappedObjPropName = wrappedObjPropName;
+            this.PluginPropName = wrappedObjPropName;
             this.TheCore = core;
         }
 
@@ -96,7 +86,7 @@ namespace NP.Roxy.TypeConfigImpl
         {
             get
             {
-                return (this.WrappedObjPropSymbol?.GetAttrSymbol(typeof(ConstructorInitAttribute)) != null);
+                return (this.PluginPropSymbol?.GetAttrSymbol(typeof(ConstructorInitAttribute)) != null);
             }
         }
 
@@ -118,50 +108,50 @@ namespace NP.Roxy.TypeConfigImpl
         }
 
         [XmlIgnore]
-        public INamedTypeSymbol WrappedObjNamedTypeSymbol =>
-            WrappedObjPropSymbol?.Type as INamedTypeSymbol;
+        public INamedTypeSymbol PluginNamedTypeSymbol =>
+            PluginPropSymbol?.Type as INamedTypeSymbol;
 
         [XmlIgnore]
-        public string WrappedObjClassName =>
-            WrappedObjNamedTypeSymbol.Name;
+        public string PluginClassName =>
+            PluginNamedTypeSymbol.Name;
 
 
-        INamedTypeSymbol _concreteWrappedObjNamedTypeSymbol = null;
+        INamedTypeSymbol _concretePluginNamedTypeSymbol = null;
         [XmlIgnore]
-        public INamedTypeSymbol ConcreteWrappedObjNamedTypeSymbol
+        public INamedTypeSymbol ConcretePluginNamedTypeSymbol
         {
-            get => _concreteWrappedObjNamedTypeSymbol ?? WrappedObjNamedTypeSymbol;
+            get => _concretePluginNamedTypeSymbol ?? PluginNamedTypeSymbol;
 
             protected set
             {
-                if (ReferenceEquals(_concreteWrappedObjNamedTypeSymbol, value))
+                if (ReferenceEquals(_concretePluginNamedTypeSymbol, value))
                     return;
 
-                if (ReferenceEquals(WrappedObjNamedTypeSymbol, value))
+                if (ReferenceEquals(PluginNamedTypeSymbol, value))
                 {
-                    _concreteWrappedObjNamedTypeSymbol = null;
+                    _concretePluginNamedTypeSymbol = null;
 
                     return;
                 }
 
-                _concreteWrappedObjNamedTypeSymbol = value;
+                _concretePluginNamedTypeSymbol = value;
             }
         }
 
         [XmlIgnore]
-        public string ConcreteWrappedObjClassName =>
-            this.ConcreteWrappedObjNamedTypeSymbol.Name;
+        public string ConcretePluginClassName =>
+            this.ConcretePluginNamedTypeSymbol.Name;
 
         [XmlAttribute]
-        public string WrappedObjPropName { get; private set; }
+        public string PluginPropName { get; private set; }
 
         [XmlIgnore]
         public string WrapperObjConcretizedPropName =>
-            WrappedObjPropName + RoslynAnalysisAndGenerationUtils.CONCRETIZATION_SUFFIX;
+            PluginPropName + RoslynAnalysisAndGenerationUtils.CONCRETIZATION_SUFFIX;
 
         [XmlIgnore]
-        public string WrappedObjBackingFieldName =>
-            WrappedObjPropName?.PropToFieldName();
+        public string PluginPropBackingFieldName =>
+            PluginPropName?.PropToFieldName();
 
         [XmlIgnore]
         public Core TheCore { get; private set; }
@@ -170,45 +160,30 @@ namespace NP.Roxy.TypeConfigImpl
         public Compilation TheCompilation =>
             TheCore.TheCompilation;
 
-        List<MemberMapInfoBase> WrappedMemberNameMaps { get; } =
+        List<MemberMapInfoBase> PluginMemberNameMaps { get; } =
             new List<MemberMapInfoBase>();
 
-        public IEnumerable<MemberMapInfoBase> EventWrappedMemberNameMaps =>
-            WrappedMemberNameMaps.Where(memberMap => memberMap.TheMemberType == ClassMemberType.Event);
+        public IEnumerable<MemberMapInfoBase> EventPluginMemberNameMaps =>
+            PluginMemberNameMaps.Where(memberMap => memberMap.TheMemberType == ClassMemberType.Event);
 
-        public IEnumerable<MemberMapInfoBase> PropWrappedMemberNameMaps =>
-            WrappedMemberNameMaps.Where(memberMap => memberMap.TheMemberType == ClassMemberType.Property);
+        public IEnumerable<MemberMapInfoBase> PropPluginMemberNameMaps =>
+            PluginMemberNameMaps.Where(memberMap => memberMap.TheMemberType == ClassMemberType.Property);
 
         public void SetFromParentSymbol(INamedTypeSymbol parentTypeSymbol)
         {
-            this.WrappedObjPropSymbol = 
-                parentTypeSymbol.GetMemberByName<IPropertySymbol>(WrappedObjPropName);
-
-            AttributeData sharedAttrData = WrappedObjPropSymbol.GetAttrSymbol(typeof(SharedPropertyAttribute));
-
-            if (sharedAttrData != null)
-            {
-                SharedInitializationType = WrappedObjPropSymbol.Type as INamedTypeSymbol;
-
-                TypedConstant initTypeConst =
-                    (TypedConstant) sharedAttrData.GetAttrValueByArgName(nameof(SharedPropertyAttribute.InitType));
-
-                if (initTypeConst.Value != null)
-                {
-                    SharedInitializationType = initTypeConst.Value as INamedTypeSymbol;
-                }
-            }
+            this.PluginPropSymbol = 
+                parentTypeSymbol.GetMemberByName<IPropertySymbol>(PluginPropName);
         }
 
         MemberMapInfoBase FindMapImpl<T>(T symbol, Func<MemberMapInfoBase, T> findMethod)
             where T : class
         {
-            return WrappedMemberNameMaps.FirstOrDefault(strMap => findMethod(strMap).ObjEquals(symbol));
+            return PluginMemberNameMaps.FirstOrDefault(strMap => findMethod(strMap).ObjEquals(symbol));
         }
 
-        MemberMapInfoBase FindMapByWrappedMemberSymbol(string wrappedMemberName)
+        MemberMapInfoBase FindMapByPluginMemberSymbol(string pluginMemberName)
         {
-            return FindMapImpl(wrappedMemberName, strMap => (strMap as MemberMapInfo)?.WrappedMemberName);
+            return FindMapImpl(pluginMemberName, strMap => (strMap as MemberMapInfo)?.PluginMemberName);
         }
 
         MemberMapInfoBase FindMapByWrapperMemberSymbol(ISymbol wrapperMemberSymbol)
@@ -216,9 +191,9 @@ namespace NP.Roxy.TypeConfigImpl
             return FindMapImpl(wrapperMemberSymbol, strMap => strMap.WrapperMemberSymbol);
         }
 
-        internal virtual string GetWrapperMemberSymbol(string wrappedMemberName)
+        internal virtual string GetWrapperMemberSymbol(string pluginMemberName)
         {
-            return FindMapByWrappedMemberSymbol(wrappedMemberName)?.WrapperMemberName ?? wrappedMemberName;
+            return FindMapByPluginMemberSymbol(pluginMemberName)?.WrapperMemberName ?? pluginMemberName;
         }
 
         void CheckMapExists(ISymbol wrapperMemberSymbol)
@@ -226,53 +201,32 @@ namespace NP.Roxy.TypeConfigImpl
             MemberMapInfoBase map = FindMapByWrapperMemberSymbol(wrapperMemberSymbol);
 
             if (map != null)
-                throw new Exception($"Roxy Usage Error: the member map for member {wrapperMemberSymbol.Name} of {this.WrappedObjPropName} wrapped obj has already been set.");
-        }
-
-        public void SetExpressionMemberMap<TWrappedObj>
-        (
-            ISymbol wrapperMemberSymbol, 
-            Expression expression
-        )
-        {
-            CheckMapExists(wrapperMemberSymbol);
-
-            Type wrappedObjType = typeof(TWrappedObj);
-
-            if (!this.WrappedObjNamedTypeSymbol.Matches(wrappedObjType, this.TheCompilation))
-            {
-                throw new Exception($"Roxy Usage Error: the type {wrappedObjType.Name} does not match the type {this.WrappedObjNamedTypeSymbol.Name} of the wrapped obj {this.WrappedObjPropName}.");
-            }
-
-            ExpressionMemberMapInfo expressionMap = 
-                new ExpressionMemberMapInfo(wrapperMemberSymbol, this.WrappedObjPropName, expression);
-
-            WrappedMemberNameMaps.Add(expressionMap);
+                throw new Exception($"Roxy Usage Error: the member map for member {wrapperMemberSymbol.Name} of {this.PluginPropName} plugin has already been set.");
         }
 
 
         // wrapperMemberSymbol == null means that this is 'this' map
-        public void SetMap(string wrappedMemberName, ISymbol wrapperMemberSymbol, bool? allowNonPublic = null)
+        public void SetMap(string pluginMemberName, ISymbol wrapperMemberSymbol, bool? allowNonPublic = null)
         {
             CheckMapExists(wrapperMemberSymbol);
 
-            if ((wrappedMemberName == null) && (wrapperMemberSymbol != null))
+            if ((pluginMemberName == null) && (wrapperMemberSymbol != null))
             {
-                wrappedMemberName = wrapperMemberSymbol.Name;
+                pluginMemberName = wrapperMemberSymbol.Name;
             }
 
             MemberMapInfo map = null;
 
             if (wrapperMemberSymbol != null)
             {
-                map = new MemberMapInfo(wrappedMemberName, wrapperMemberSymbol, this.WrappedObjPropName);
+                map = new MemberMapInfo(pluginMemberName, wrapperMemberSymbol, this.PluginPropName);
             }
             else
             {
-                map = new ThisMemberMapInfo(this.WrappedObjPropName, wrappedMemberName);
+                map = new ThisMemberMapInfo(this.PluginPropName, pluginMemberName);
             }
 
-            WrappedMemberNameMaps.Add(map);
+            PluginMemberNameMaps.Add(map);
 
             bool resultingAllowNonPublic = allowNonPublic ?? this.AllowNonPublicForAllMemberMaps;
 
@@ -281,12 +235,12 @@ namespace NP.Roxy.TypeConfigImpl
             map.SetFromContainingType
             (
                 this.TheCompilation,
-                this.WrappedObjNamedTypeSymbol,
+                this.PluginNamedTypeSymbol,
                 this.StaticMethodContainers);
 
-            if (map.WrappedMemberSymbol == null)
+            if (map.PluginMemberSymbol == null)
             {
-                WrappedMemberNameMaps.Remove(map);
+                PluginMemberNameMaps.Remove(map);
             }
         }
 
@@ -313,7 +267,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         // gets all member infos for the wrapperMemberName 
         // (including those that do not require renaming)
-        public MemberMapInfoBase GetWrappedMemberInfo(ISymbol wrapperMemberSymbol)
+        public MemberMapInfoBase GetPluginMemberInfo(ISymbol wrapperMemberSymbol)
         {
             MemberMapInfoBase memberMap = this.FindMapByWrapperMemberSymbol(wrapperMemberSymbol);
 
@@ -325,7 +279,7 @@ namespace NP.Roxy.TypeConfigImpl
 
             if (memberMap is MemberMapInfo memberMapInfo)
             {
-                if (this._membersNotToWrap.Contains(memberMapInfo.WrappedMemberName))
+                if (this._membersNotToWrap.Contains(memberMapInfo.PluginMemberName))
                     return null;
             }
 
@@ -335,15 +289,10 @@ namespace NP.Roxy.TypeConfigImpl
 
         void SetOrUnsetConcretizationDelegates(RoslynCodeBuilder wrapperInitBuilder, bool setOrUnset)
         {
-            if (!_concretizedOrImplemented)
-            {
-                return;
-            }
-
-            foreach (ISymbol concreteWrappedObjMember in this.ConcreteWrappedObjNamedTypeSymbol.GetAllMembers())
+            foreach (ISymbol concretePluginMember in this.ConcretePluginNamedTypeSymbol.GetAllMembers())
             {
                 AttributeData concretizationAttrData =
-                    concreteWrappedObjMember.GetAttrSymbol(typeof(ConcretizationDelegateAttribute));
+                    concretePluginMember.GetAttrSymbol(typeof(ConcretizationDelegateAttribute));
 
                 if (concretizationAttrData == null)
                     continue;
@@ -351,16 +300,16 @@ namespace NP.Roxy.TypeConfigImpl
                 TypedConstant constrArg =
                     concretizationAttrData.ConstructorArguments[0];
 
-                string wrappedMemberName = constrArg.Value as string;
+                string pluginMemberName = constrArg.Value as string;
 
-                string wrapperName = this.GetWrapperMemberSymbol(wrappedMemberName);
+                string wrapperName = this.GetWrapperMemberSymbol(pluginMemberName);
 
                 if (wrapperName == null)
                     continue;
 
-                string memberDelegateName = concreteWrappedObjMember.Name;
+                string memberDelegateName = concretePluginMember.Name;
 
-                wrapperInitBuilder.AddLine($"({this.WrappedObjPropName} as {this.ConcreteWrappedObjClassName}).{memberDelegateName} = ", false, false);
+                wrapperInitBuilder.AddLine($"({this.PluginPropName} as {this.ConcretePluginClassName}).{memberDelegateName} = ", false, false);
 
                 if (setOrUnset)
                 {
@@ -398,7 +347,7 @@ namespace NP.Roxy.TypeConfigImpl
             wrapperInitBuilder.AddEmptyLine();
             wrapperInitBuilder.AddLine
             (
-                $"if ({WrappedObjPropName} != null)"
+                $"if ({PluginPropName} != null)"
             );
 
             wrapperInitBuilder.Push();
@@ -433,85 +382,64 @@ namespace NP.Roxy.TypeConfigImpl
             return wrapperInitBuilder.ToStr();
         }
 
-        public void AddWrappedClass(RoslynCodeBuilder roslynCodeBuilder)
+        public void AddPluginClass(RoslynCodeBuilder roslynCodeBuilder)
         {
-            if (IsSharedProperty)
-            {
-                roslynCodeBuilder.AddPropWithBackingStore(WrappedObjPropSymbol);
-
-                return;
-            }
-
-            if (this.WrappedObjNamedTypeSymbol.IsAbstract && _concretizedOrImplemented)
+            if (this.PluginNamedTypeSymbol.IsAbstract)
             {
                 // here, the concretization is created
-                this.ConcreteWrappedObjNamedTypeSymbol =
-                    this.TheCore.FindOrCreateConcretizationTypeConf(this.WrappedObjNamedTypeSymbol).TheSelfTypeSymbol;
+                this.ConcretePluginNamedTypeSymbol =
+                    this.TheCore.FindOrCreateConcretizationTypeConf(this.PluginNamedTypeSymbol).TheSelfTypeSymbol;
             }
 
-            string beforeSetterStr = BuildWrapperInit(EventWrappedMemberNameMaps, PropWrappedMemberNameMaps, false);
+            string beforeSetterStr = BuildWrapperInit(EventPluginMemberNameMaps, PropPluginMemberNameMaps, false);
 
-            string afterSetterStr = BuildWrapperInit(EventWrappedMemberNameMaps.Reverse(), PropWrappedMemberNameMaps.Reverse(), true);
+            string afterSetterStr = BuildWrapperInit(EventPluginMemberNameMaps.Reverse(), PropPluginMemberNameMaps.Reverse(), true);
 
             Accessibility setterAccessibility = Accessibility.Private;
 
-            if (this.WrappedObjPropSymbol.SetMethod != null)
+            if (this.PluginPropSymbol.SetMethod != null)
             {
-                setterAccessibility = this.WrappedObjPropSymbol.GetMethod.DeclaredAccessibility;
+                setterAccessibility = this.PluginPropSymbol.GetMethod.DeclaredAccessibility;
             }
 
             roslynCodeBuilder.AddPropWithBackingStore
             (
-                this.WrappedObjPropName,
-                this.WrappedObjBackingFieldName,
-                this.WrappedObjNamedTypeSymbol,
+                this.PluginPropName,
+                this.PluginPropBackingFieldName,
+                this.PluginNamedTypeSymbol,
                 Accessibility.Public,
                 beforeSetterStr,
                 afterSetterStr,
                 setterAccessibility
             );
 
-            if ( (_concretizedOrImplemented) && (ConcreteWrappedObjClassName != WrappedObjClassName))
+            if ((ConcretePluginClassName != PluginClassName))
             {
                 roslynCodeBuilder.AddEmptyLine();
-                roslynCodeBuilder.AddPropOpening(WrapperObjConcretizedPropName, ConcreteWrappedObjNamedTypeSymbol);
+                roslynCodeBuilder.AddPropOpening(WrapperObjConcretizedPropName, ConcretePluginNamedTypeSymbol);
 
-                roslynCodeBuilder.AddLine($"{RoslynCodeBuilder.GETTER} => ({ConcreteWrappedObjClassName}){WrappedObjPropName}", true);
+                roslynCodeBuilder.AddLine($"{RoslynCodeBuilder.GETTER} => ({ConcretePluginClassName}){PluginPropName}", true);
 
                 roslynCodeBuilder.Pop();
             }
         }
 
-        public void AddWrappedObjDefaultConstructorInitialization(RoslynCodeBuilder roslynCodeBuilder)
+        public void AddPluginDefaultConstructorInitialization(RoslynCodeBuilder roslynCodeBuilder)
         {
             //if (!WrappedObjNamedTypeSymbol.HasPublicDefaultConstructor())
             //    return;
             if (InitializedThroughConstructor)
                 return;
 
-            if (WrappedObjNamedTypeSymbol.TypeKind == TypeKind.Enum)
+            if (PluginNamedTypeSymbol.TypeKind == TypeKind.Enum)
                 return;
 
-            if (IsSharedProperty)
-            {
-                roslynCodeBuilder.AddAssignCoreObj
-                (
-                    this.WrappedObjPropName,
-                    SharedInitializationType,
-                    ConcreteWrappedObjClassName,
-                    !_concretizedOrImplemented
-                );
-            }
-            else
-            {
-                roslynCodeBuilder.AddAssignCoreObj
-                (
-                    this.WrappedObjPropName,
-                    WrappedObjNamedTypeSymbol,
-                    ConcreteWrappedObjClassName,
-                    !_concretizedOrImplemented
-                );
-            }
+            roslynCodeBuilder.AddAssignCoreObj
+            (
+                this.PluginPropName,
+                PluginNamedTypeSymbol,
+                ConcretePluginClassName
+            );
         }
     }
 }

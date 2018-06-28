@@ -66,20 +66,20 @@ namespace NP.XUnitRoxyTests.Demos
         [Fact]
         public static void RunTest()
         {
-            Core.SetSaveOnErrorPath("GeneratedCode");
+            //Core.SetSaveOnErrorPath("GeneratedCode");
 
-            // we create an adaptor adapting ProductKind enumeration
-            // to IProduct interface using extension methods from the static 
-            // ProductKindExtensions class
-            Core.CreateEnumerationAdapter<IProduct, ProductKind>(typeof(ProductKindExtensions));
+            //// we create an adaptor adapting ProductKind enumeration
+            //// to IProduct interface using extension methods from the static 
+            //// ProductKindExtensions class
+            //Core.CreateEnumerationAdapter<IProduct, ProductKind>(typeof(ProductKindExtensions));
 
-            // enumeration value ProductKind.FinancialInstrument is converted into
-            // IProduct interface
-            IProduct product =
-                Core.CreateEnumWrapper<IProduct, ProductKind>(ProductKind.FinancialInstrument);
+            //// enumeration value ProductKind.FinancialInstrument is converted into
+            //// IProduct interface
+            //IProduct product =
+            //    Core.CreateEnumWrapper<IProduct, ProductKind>(ProductKind.FinancialInstrument);
 
-            Assert.Equal(ProductKind.FinancialInstrument.GetDisplayName(), product.GetDisplayName());
-            Assert.Equal("Products you can buy on a stock exchange", product.GetDescription());
+            //Assert.Equal(ProductKind.FinancialInstrument.GetDisplayName(), product.GetDisplayName());
+            //Assert.Equal("Products you can buy on a stock exchange", product.GetDescription());
         }
     }
 
@@ -148,7 +148,7 @@ namespace NP.XUnitRoxyTests.Demos
         [Fact]
         public static void RunTest()
         {
-            ITypeConfig typeConfig = Core.FindOrCreateTypeConfigByTypeToImpl<IPerson>("Person");
+            ITypeConfig typeConfig = Core.FindOrCreateTypeConfig<IPerson, NoType>("Person");
 
             typeConfig.SetEventBuilder(PropertyChangedEventBuilder.ThePropertyChangedEventBuilder, "PropertyChanged");
 
@@ -161,7 +161,7 @@ namespace NP.XUnitRoxyTests.Demos
 
             typeConfig.ConfigurationCompleted();
 
-            IPerson person = Core.GetInstanceOfGeneratedType<IPerson>("Person");
+            IPerson person = typeConfig.CreateInstanceOfType<IPerson>();
 
             person.FirstName = "Joe";
 
@@ -247,7 +247,7 @@ namespace NP.XUnitRoxyTests.Demos
 
             // get the instance of the generated type "MyPersonImplementation"
             IPerson person =
-                Core.GetInstanceOfGeneratedType<IPerson>("MyPersonImplementation");
+                typeConfig.CreateInstanceOfType<IPerson>();
 
             //IPerson person = Core.CreateWrapperWithNonPublicMembers<IPerson, PersonImplementationWrapperInterface>("MyPersonImplementation");
 

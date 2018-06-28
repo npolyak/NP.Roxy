@@ -193,8 +193,6 @@ namespace NP.Roxy.TypeConfigImpl
 
         public bool AddBackingField { get; private set; } = false;
 
-        public bool IsImplementedBySharedProperty { get; set; } = false;
-
         public void AddInit(RoslynCodeBuilder roslynCodeBuilder)
         {
             if (!HasInit)
@@ -305,7 +303,7 @@ namespace NP.Roxy.TypeConfigImpl
                         firstMemberMap = this.WrappedMembers.First();
                     }
 
-                    firstMemberMap.AddWrappedPropGetterLine(propertyWrapperSymbol, roslynCodeBuilder);
+                    firstMemberMap.AddPluginPropGetterLine(propertyWrapperSymbol, roslynCodeBuilder);
                 }
                 roslynCodeBuilder.Pop();
             }
@@ -339,7 +337,7 @@ namespace NP.Roxy.TypeConfigImpl
 
                 foreach (MemberMapInfo memberMap in this.WrappedMembers)
                 {
-                    memberMap.AddAssignWrappedProp("value", roslynCodeBuilder);
+                    memberMap.AddAssignPluginProp("value", roslynCodeBuilder);
                 }
 
                 roslynCodeBuilder.Pop();
@@ -387,7 +385,7 @@ namespace NP.Roxy.TypeConfigImpl
                     isFirst = false;
                 }
 
-                memberMap.AddWrappedMethodLine(this.WrapperSymbol, roslynCodeBuilder);
+                memberMap.AddPluginMethodLine(this.WrapperSymbol, roslynCodeBuilder);
             }
 
             if (!methodWrapperSymbol.ReturnsVoid)

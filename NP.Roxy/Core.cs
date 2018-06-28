@@ -29,30 +29,6 @@ namespace NP.Roxy
 
     public partial class Core
     {
-        private Dictionary<string, int> EventMap = new Dictionary<string, int>(); 
-
-        internal void AddEvent(string fullEventName, int idx)
-        {
-            if (EventMap.TryGetValue(fullEventName, out int currentIdx))
-            {
-                if (currentIdx == idx)
-                    return;
-
-                throw new Exception($"Roxy Usage Error: different index {idx} vs old index {currentIdx} for the event {fullEventName}.");
-            }
-
-            EventMap.Add(fullEventName, idx);
-        }
-
-        internal int GetEventIdx(string fullEventName)
-        {
-            if (EventMap.TryGetValue(fullEventName, out int idx))
-            {
-                return idx;
-            }
-
-            return -1;
-        }
 
         internal static Core TheCore { get; } =
             new Core();
@@ -70,161 +46,6 @@ namespace NP.Roxy
         internal List<ITypeConfig> AllCreatedTypes { get; } = new List<ITypeConfig>();
 
         internal List<ITypeConfig> AllTypesAddedToCompilation { get; } = new List<ITypeConfig>();
-
-        #region DEFAULT WRAPPERS REGION
-        Dictionary<INamedTypeSymbol, INamedTypeSymbol> _wrapperDictionary =
-            new Dictionary<INamedTypeSymbol, INamedTypeSymbol>(TypeSymbolComparer.TheTypeSymbolComparer);
-
-        Dictionary<IEventSymbol, int> _eventDictionary =
-            new Dictionary<IEventSymbol, int>(SymbolComparer.TheSymbolComparer);
-
-        private static IEventSymbol GetEventSymbol(INamedTypeSymbol typeSymbol, string eventName)
-        {
-            IEventSymbol eventSymbol = typeSymbol.GetMemberByName<IEventSymbol>(eventName);
-
-            if (eventSymbol == null)
-            {
-                throw new Exception($"Roxy Usage Error: event {eventName} is not found within type {typeSymbol.GetUniqueTypeStr()}");
-            }
-
-            return eventSymbol;
-        }
-
-        public void AddEventInfo(INamedTypeSymbol typeSymbol, string eventName, int idx = 0)
-        {
-            IEventSymbol eventSymbol = GetEventSymbol(typeSymbol, eventName);
-
-            _eventDictionary[eventSymbol] = idx;
-        }
-
-        public void AddEventInfo(Type eventContainerType, string eventName, int idx = 0)
-        {
-            INamedTypeSymbol typeSymbol = this.GetTypeSymbol(eventContainerType);
-
-            AddEventInfo(typeSymbol, eventName, idx);
-        }
-
-        public void AddEventInfo<TEventContainer>(string eventName, int idx = 0)
-        {
-            AddEventInfo(typeof(TEventContainer), eventName, idx);
-        }
-
-        public static void AddEventIdxInfo<TEventContainer>(string eventName, int idx = 0)
-        {
-            TheCore.AddEventInfo<TEventContainer>(eventName, idx);
-        }
-
-        public int GetEventThisIdx(IEventSymbol eventSymbol)
-        {
-            if (_eventDictionary.TryGetValue(eventSymbol, out int idx))
-            {
-                return idx;
-            }
-            return -1;
-        }
-
-        public int GetEventThisIdx(Type eventContainerType, string eventName)
-        {
-            INamedTypeSymbol typeSymbol = this.GetTypeSymbol(eventContainerType);
-
-            IEventSymbol eventSymbol = GetEventSymbol(typeSymbol, eventName);
-
-            return GetEventThisIdx(eventSymbol);
-        }
-
-        public void SetTWrapper
-        (
-            INamedTypeSymbol typeToImplementSymbol,
-            INamedTypeSymbol wrapperTypeSymbol,
-            bool forceOverride = false)
-        {
-            if (!forceOverride)
-            {
-                if (_wrapperDictionary.TryGetValue(typeToImplementSymbol, out INamedTypeSymbol existingWrapperType))
-                {
-                    throw new Exception($"Roxy Usage Error: Type {typeToImplementSymbol.Name} already has an implementation wrapper type {existingWrapperType.Name}");
-                }
-            }
-
-            AddTypeSymbolsToReference(new[] { typeToImplementSymbol, wrapperTypeSymbol });
-
-            _wrapperDictionary[typeToImplementSymbol] = wrapperTypeSymbol;
-        }
-
-        public void SetTWrapper(Type typeToImplement, Type wrapperType, bool forceOverride = false)
-        {
-            this.AddTypesToReference(new[] { typeToImplement, wrapperType });
-
-            INamedTypeSymbol typeToImplementSymbol = this.GetUnboundGenericTypeSymbol(typeToImplement);
-            INamedTypeSymbol wrapperTypeSymbol = this.GetUnboundGenericTypeSymbol(wrapperType);
-
-            SetTWrapper(typeToImplementSymbol, wrapperTypeSymbol, forceOverride);
-        }
-
-        public void SetTWrapper<TToImplement, TWrapper>(bool forceOverride = false)
-        {
-            Type typeToImplement = typeof(TToImplement);
-            Type wrapperType = typeof(TWrapper);
-
-            SetTWrapper(typeToImplement, wrapperType, forceOverride);
-        }
-
-        public INamedTypeSymbol GetTWrapper(INamedTypeSymbol typeToImplementSymbol)
-        {
-            if (_wrapperDictionary.TryGetValue(typeToImplementSymbol, out INamedTypeSymbol existingWrapperType))
-            {
-                return existingWrapperType;
-            }
-
-            return null;
-        }
-
-        public INamedTypeSymbol GetTWrapper(Type typeToImplement)
-        {
-            return GetTWrapper(this.GetTypeSymbol(typeToImplement));
-        }
-
-        public INamedTypeSymbol GetTWrapper<TToImplement>() =>
-            GetTWrapper(typeof(TToImplement));
-
-        #endregion DEFAULT WRAPPERS REGION
-
-        IEnumerable<Assembly> _addedAssemblies = new List<Assembly>();
-        public void AddAssembly(Assembly assembly)
-        {
-            if (_addedAssemblies.Contains(assembly))
-                return;
-
-            Type[] assemblyTypes = assembly.GetTypes();
-
-            foreach (Type assemblyType in assemblyTypes)
-            {
-                IEnumerable<WrapperInterfaceAttribute> wrapperAttrs =
-                    assemblyType.GetCustomAttributes<WrapperInterfaceAttribute>();
-
-                foreach (WrapperInterfaceAttribute wrapperAttr in wrapperAttrs)
-                {
-                    Type typeToImplement = wrapperAttr.TypeToImplement;
-
-                    this.SetTWrapper(typeToImplement, assemblyType);
-                }
-            }
-        }
-
-        public void AddTypeAssembly<T>()
-        {
-            AddAssembly(typeof(T).Assembly);
-        }
-
-        public static void AddAssemblyStatic(Assembly assembly)
-        {
-            TheCore.AddAssembly(assembly);
-        }
-
-        public static void AddTypeAssemblyStatic<T>()
-        {
-            TheCore.AddTypeAssembly<T>();
-        }
 
         internal bool HasCreatedType(string className)
         {
@@ -273,156 +94,34 @@ namespace NP.Roxy
             }
         }
 
-        internal static T GetInstanceOfType<T>(ITypeConfig typeConfig, params object[] args)
+
+        public ITypeConfig FindTypeConfig(string className)
         {
-            return (T)Activator.CreateInstance(typeConfig.TheGeneratedType, args);
+            if (className == null)
+                return null;
+
+            return this.AllTypesAddedToCompilation.FirstOrDefault(tConfig => tConfig.ClassName == className);
         }
 
-
-        public ITypeConfig FindTypeConfig
-        (
-            string className,
-            INamedTypeSymbol typeToImplementSymbol,
-            INamedTypeSymbol implementationSuperClassTypeSymbol,
-            INamedTypeSymbol wrapperTypeSymbol
-        )
-        {
-            ITypeConfig typeConfig = null;
-
-            typeToImplementSymbol = typeToImplementSymbol.NoTypeToNull();
-            implementationSuperClassTypeSymbol = implementationSuperClassTypeSymbol.NoTypeToNull();
-            wrapperTypeSymbol = wrapperTypeSymbol.NoTypeToNull();
-
-            if (!className.IsNullOrEmpty())
-            {
-                typeConfig =
-                    this.AllTypesAddedToCompilation.FirstOrDefault(tConfig => tConfig.ClassName == className);
-
-                return typeConfig;
-            }
-
-            if (className.IsNullOrEmpty())
-            {
-                typeConfig = this.AllTypesAddedToCompilation
-                    .FirstOrDefault
-                    (
-                        tConfig =>
-                            (typeToImplementSymbol?.TypesStrictlyMatch(tConfig.TypeToImplementSymbol) != false) &&
-                            (implementationSuperClassTypeSymbol?.TypesStrictlyMatch(tConfig.ImplSuperClassTypeSymbol) != false) &&
-                            (wrapperTypeSymbol?.TypesStrictlyMatch(tConfig.ImplementorTypeSymbol) != false)
-                    );
-            }
-
-            return typeConfig;
-        }
-
-
-        public ITypeConfig<TToImplement, TImplementationClass, TWrapper> FindTypeConfig<TToImplement, TImplementationClass, TWrapper>(string className = null)
-        {
-            this.AddTypesToReference
-            (
-                new[] { typeof(TToImplement), typeof(TImplementationClass), typeof(TWrapper) }
-            );
-
-            ITypeConfig<TToImplement, TImplementationClass, TWrapper> typeConfig =
-                FindTypeConfig
-                (
-                    className,
-                    this.GetRealTypeSymbol<TToImplement>(),
-                    this.GetRealTypeSymbol<TImplementationClass>(),
-                    this.GetRealTypeSymbol<TWrapper>()
-                ) as ITypeConfig<TToImplement, TImplementationClass, TWrapper>;
-
-            return typeConfig;
-        }
-        public ITypeConfig FindTypeConfig<T, TWrapper>(string className = null)
-        {
-            return FindTypeConfig
-            (
-                className,
-                this.GetRealTypeSymbol<T>(),
-                null,
-                this.GetRealTypeSymbol<TWrapper>());
-        }
-
-        public ITypeConfig FindTypeConfig<T>(string className = null)
-            => FindTypeConfig<T, NoType>(className);
-
-        public T GetInstOfGeneratedType<T, TWrapper>(string className = null, params object[] args)
-        {
-            ITypeConfig typeConfig = FindTypeConfig<T, TWrapper>(className);
-
-            if (typeConfig.TheGeneratedType == null)
-            {
-                this.RegenerateAssembly();
-            }
-
-            return GetInstanceOfType<T>(typeConfig, args);
-        }
-
-        public T GetInstOfGeneratedType<T>(string className = null, params object[] args) =>
-            GetInstOfGeneratedType<T, NoType>(className, args);
-
-        public T CreateInstOfGeneratedType<T>(string className = null, params object[] args)
-        {
-            ITypeConfig typeConfig = FindOrCreateTypeConfByTypeToImpl<T>(className);
-
-            if (!typeConfig.ConfigurationHasBeenCompleted)
-            {
-                typeConfig.ConfigurationCompleted();
-            }
-
-            if (typeConfig.TheGeneratedType == null)
-            {
-                this.RegenerateAssembly();
-            }
-
-            return GetInstanceOfType<T>(typeConfig, args);
-        }
-
-        void CheckAlreadyHasType(string className)
-        {
-            if (HasCreatedType(className))
-            {
-                throw new Exception($"Error: TypeConfig for class of the name name '{className}' has already created before.");
-            }
-        }
-
-        internal ITypeConfig FindOrCreateWrapperMergerTypeConfig<TToImplement>(string className, IEnumerable<INamedTypeSymbol> interfacesToMerge)
-        {
-            InterfaceMergingTypeConfig<TToImplement> interfaceMergingTypeConfig =
-                this.FindTypeConfig<NoType>(className) as InterfaceMergingTypeConfig<TToImplement>;
-
-            if (interfaceMergingTypeConfig == null)
-            {
-                interfaceMergingTypeConfig =
-                    new InterfaceMergingTypeConfig<TToImplement>(this, className, interfacesToMerge);
-
-                CheckAlreadyHasType(interfaceMergingTypeConfig.ClassName);
-
-                this.AllCreatedTypes.Add(interfaceMergingTypeConfig);
-
-                interfaceMergingTypeConfig.ConfigurationCompleted();
-            }
-
-            return interfaceMergingTypeConfig;
-        }
 
         internal ITypeConfig CreateTypeConf
         (
             string className,
-            INamedTypeSymbol implInterfaceTypeSymbol,
-            INamedTypeSymbol implementationSuperClassSymbol = null,
-            INamedTypeSymbol implementorSymbol = null
+            INamedTypeSymbol typeToImplementSymbol,
+            INamedTypeSymbol implementorSymbol
         )
         {
-            TypeConfigBySymbols result =
-                new TypeConfigBySymbols
+            if (className == null)
+            {
+                className = typeToImplementSymbol.CreateClassName(implementorSymbol);
+            }
+
+            TypeConfig result =
+                new TypeConfig
                 (
                     this,
                     className,
-                    implInterfaceTypeSymbol,
-                    implementationSuperClassSymbol,
+                    typeToImplementSymbol,
                     implementorSymbol
                 );
 
@@ -433,115 +132,56 @@ namespace NP.Roxy
             return result;
         }
 
-
-        internal ITypeConfig<TToImplement, TImplementor> CreateTypeConf<TToImplement, TImplementor>
+        public ITypeConfig FindOrCreateTypeConf
         (
             string className,
-            INamedTypeSymbol implInterfaceTypeSymbol,
-            INamedTypeSymbol superClassTypeSymbol
+            INamedTypeSymbol typeToImplementSymbol,
+            INamedTypeSymbol implementorSymbol
         )
         {
-            TypeConfigBySymbols<TToImplement, TImplementor> result =
-                new TypeConfigBySymbols<TToImplement, TImplementor>
-                (
-                    this,
-                    className,
-                    implInterfaceTypeSymbol,
-                    superClassTypeSymbol
-                );
+            implementorSymbol = implementorSymbol.GetNoTypeForNull(TheCompilation);
 
-            CheckAlreadyHasType(result.ClassName);
-
-            this.AllCreatedTypes.Add(result);
-
-            return result;
-        }
-
-        internal ITypeConfig<TImplementedInterface, TSuperClass, TImplementor>
-            CreateTypeConf<TImplementedInterface, TSuperClass, TImplementor>(string className = null)
-        {
-            ITypeConfig<TImplementedInterface, TSuperClass, TImplementor> result =
-                new TypeConfig<TImplementedInterface, TSuperClass, TImplementor>(this, className);
-
-            CheckAlreadyHasType(result.ClassName);
-
-            this.AllCreatedTypes.Add(result);
-
-            return result;
-        }
-
-        public ITypeConfig
-            CreateTypeConf<TypeToImplement, TImplementor>(string className = null)
-        {
-            return CreateTypeConf<TypeToImplement, NoType, TImplementor>(className);
-        }
-
-
-        internal ITypeConfig FindOrCreateTypeConf
-        (
-            string className,
-            INamedTypeSymbol typeToImplementSymbol
-        )
-        {
-            ITypeConfig typeConfig = FindTypeConfig(className, typeToImplementSymbol, null, null);
-
-            if (typeConfig == null)
+            if (className == null)
             {
-                typeConfig = CreateTypeConf(className, typeToImplementSymbol);
+                className = typeToImplementSymbol.CreateClassName(implementorSymbol);
             }
 
-            return typeConfig;
-        }
+            ITypeConfig typeConfig = FindTypeConfig(className);
 
-        internal ITypeConfig<TToImplement, TImplementor> FindOrCreateTypeConf<TToImplement, TImplementor>
-        (
-            string className,
-            INamedTypeSymbol implInterfaceTypeSymbol,
-            INamedTypeSymbol superClassTypeSymbol
-        )
-        {
-            className = implInterfaceTypeSymbol.GetClassName(className);
-
-            ITypeConfig<TToImplement, TImplementor> result =
-                 AllCreatedTypes.FirstOrDefault(typeConfig => (typeConfig.ClassName == className) &&
-                                                              (typeConfig.ImplementorTypeSymbol.Matches(typeof(TImplementor), this.TheCompilation)))
-                                                              as ITypeConfig<TToImplement, TImplementor>;
-
-            if (result == null)
-                result = CreateTypeConf<TToImplement, TImplementor>(className, implInterfaceTypeSymbol, superClassTypeSymbol);
-
-            return result;
-        }
-
-
-        public ITypeConfig<TToImplement, TImplementor> FindOrCreateTypeConfByTypeToImpl<TToImplement, TImplementor>
-        (
-            string className,
-            INamedTypeSymbol typeToImplSymbol // can be either an interface or a class
-        )
-        {
-            ITypeConfig<TToImplement, TImplementor> typeConfig =
-                this.FindOrCreateTypeConf<TToImplement, TImplementor>(className, typeToImplSymbol, NoTypeSymbol);
-
-            return typeConfig;
-        }
-
-        public ITypeConfig<TToImplement, TImplementor>
-             FindOrCreateTypeConf<TToImplement, TImplementationSuperClass, TImplementor>(string className = null)
-        {
-            ITypeConfig<TToImplement, TImplementor> result =
-                FindTypeConfig<TToImplement, TImplementationSuperClass, TImplementor>(className);
-
-            if (result == null)
+            if (typeConfig != null)
             {
-                className = className.GetClassName<TToImplement, TImplementationSuperClass, TImplementor>();
-                result = CreateTypeConf<TToImplement, TImplementationSuperClass, TImplementor>(className);
+                typeConfig.CheckMatches(typeToImplementSymbol, implementorSymbol);
+
+                return typeConfig;
             }
 
-            return result;
+            return CreateTypeConf(className, typeToImplementSymbol, implementorSymbol);
         }
 
-        public TToImplement CreateImplInstance<TToImplement, TImplementationSuperClass, TImplementor>
+        public ITypeConfig FindOrCreateTypeConf<TToImplement, TImplementor>(string className = null)
+        {
+            Type typeToImplement = typeof(TToImplement);
+            Type implementorType = typeof(TImplementor);
+
+            AddTypesToReference(new[] { typeToImplement, implementorType });
+
+            return FindOrCreateTypeConf
+            (
+                className,
+                typeToImplement.GetGenericTypeSymbol(TheCompilation),
+                implementorType.GetGenericTypeSymbol(TheCompilation));
+        }
+
+        void CheckAlreadyHasType(string className)
+        {
+            if (HasCreatedType(className))
+            {
+                throw new Exception($"Error: TypeConfig for class of the name name '{className}' has already created before.");
+            }
+        }
+
+
+        public TToImplement CreateImplInstance<TToImplement, TImplementor>
         (
             params object[] args)
         {
@@ -550,7 +190,7 @@ namespace NP.Roxy
             string className = implementorType.GetCustomAttribute<ImplementationClassNameAttribute>()?.ClassName;
 
             ITypeConfig typeConfig =
-                FindOrCreateTypeConf<TToImplement, TImplementationSuperClass, TImplementor>(className);
+                FindOrCreateTypeConf<TToImplement, TImplementor>(className);
 
             if (implementorType == typeof(NoType))
                 throw new Exception("Roxy Usage Error: CreateWrapper should have a non-trivial Wrapper argument passed to it.");
@@ -593,25 +233,9 @@ namespace NP.Roxy
                 typeConfig.ConfigurationCompleted();
             }
 
-            return this.GetInstOfGeneratedType<TToImplement>(typeConfig.ClassName, args);
+            return typeConfig.CreateInstanceOfType<TToImplement>(args);
         }
 
-
-        public TToImplement CreateImplInstance<TToImplement, TImplementor>(params object[] args)
-        {
-            return CreateImplInstance<TToImplement, NoType, TImplementor>(args);
-        }
-
-        public ITypeConfig<TypeToImpl, TImplementor>
-            FindOrCreateTypeConfByTypeToImpl<TypeToImpl, TImplementor>(string className = null)
-        {
-            return this.FindOrCreateTypeConf<TypeToImpl, NoType, TImplementor>(className);
-        }
-
-        public ITypeConfig FindOrCreateTypeConfByTypeToImpl<TypeToImpl>(string className = null)
-        {
-            return this.FindOrCreateTypeConfByTypeToImpl<TypeToImpl, NoType>(className);
-        }
 
         private List<INamedTypeSymbol> GetAllWrapperSymbols(INamedTypeSymbol typeToImpl)
         {
@@ -656,68 +280,6 @@ namespace NP.Roxy
             return implementationTypes;
         }
 
-        public ITypeConfig GetDefaultWrapperTypeConf(INamedTypeSymbol typeToImpl)
-        {
-            IEnumerable<INamedTypeSymbol> implementationTypes =
-                GetAllWrapperSymbols(typeToImpl).Union(new[] { typeof(NoType).GetTypeSymbol(this.TheCompilation) }).Distinct(TypeSymbolComparer.TheTypeSymbolComparer).ToList();
-
-            string defaultWrapperName =
-                typeToImpl.GetDefaultWrapperName();
-
-            ITypeConfig typeConfig =
-                this.FindOrCreateWrapperMergerTypeConfig<NoType>(defaultWrapperName, implementationTypes);
-
-            return typeConfig;
-        }
-
-        // assembles the wrapper interface 
-        public INamedTypeSymbol GetDefaultWrapper(INamedTypeSymbol typeToImpl)
-        {
-            ITypeConfig defaultWrapperTypeConfig =
-                GetDefaultWrapperTypeConf(typeToImpl);
-
-            return defaultWrapperTypeConfig.TheSelfTypeSymbol;
-        }
-
-        public static ITypeConfig FindOrCreateTypeConfigByTypeToImpl<TypeToImpl>(string className = null)
-        {
-            return TheCore.FindOrCreateTypeConfByTypeToImpl<TypeToImpl>(className);
-        }
-
-        public static ITypeConfig<TToImplement, TImplementor>
-            FindOrCreateTypeConfig<TToImplement, TSuperClass, TImplementor>
-            (
-                string className = null,
-                Core core = null
-            )
-        {
-            core = core.GetCore();
-
-            return core.FindOrCreateTypeConf<TToImplement, TSuperClass, TImplementor>(className);
-        }
-
-
-        public static ITypeConfig<TToImplement, TImplementor>
-            FindOrCreateTypeConfig<TToImplement, TImplementor>
-            (
-                string className = null,
-                Core core = null
-            )
-        {
-            core = core.GetCore();
-
-            return core.FindOrCreateTypeConf<TToImplement, NoType, TImplementor>(className);
-        }
-
-        public static ITypeConfig<TToImplement, SingleWrapperInterface<TWrapped>>
-            FindOrCreateSingleWrapperTypeConfig<TToImplement, TWrapped>(string className = null, Core core = null)
-            => FindOrCreateTypeConfig<TToImplement, SingleWrapperInterface<TWrapped>>(className, core);
-
-        public static T GetInstanceOfGeneratedType<T>(string className = null, params object[] args)
-        {
-            return TheCore.GetInstOfGeneratedType<T>(className, args);
-        }
-
         public ITypeConfig FindOrCreateConcretizationTypeConf
         (
             INamedTypeSymbol typeToConcretizeSymbol,
@@ -726,7 +288,7 @@ namespace NP.Roxy
             concreteClassName = concreteClassName ?? typeToConcretizeSymbol.Name.GetConcretizationName();
 
             ITypeConfig typeConfig =
-                TheCore.FindOrCreateTypeConf(concreteClassName, typeToConcretizeSymbol);
+                this.FindOrCreateTypeConf(concreteClassName, typeToConcretizeSymbol, null);
 
             if (typeConfig.TheGeneratedCode == null)
             {
@@ -774,103 +336,12 @@ namespace NP.Roxy
                 this.RegenerateAssembly();
             }
 
-            return GetInstanceOfType<T>(typeConfig);
+            return typeConfig.CreateInstanceOfType<T>();
         }
 
-        public TypeToImplement WrapWithNonPublicMembers<TypeToImplement, TWrapper>(string className)
+        public static ITypeConfig FindOrCreateTypeConfig<TToImplement, TImplementor>(string className = null)
         {
-            ITypeConfig typeConfig = FindTypeConfig<TypeToImplement, TWrapper>(className);
-
-            if (typeConfig == null)
-            {
-                typeConfig = this.CreateTypeConf<TypeToImplement, TWrapper>(className);
-            }
-
-            typeConfig.SetAllowNonPublicForAllMembers();
-
-            typeConfig.ConfigurationCompleted();
-
-            if (typeConfig.TheGeneratedType == null)
-            {
-                RegenerateAssembly();
-            }
-
-            return GetInstanceOfType<TypeToImplement>(typeConfig);
-        }
-
-        public static TypeToImplement CreateWrapperWithNonPublicMembers<TypeToImplement, TWrapper>(string className)
-        {
-            return TheCore.WrapWithNonPublicMembers<TypeToImplement, TWrapper>(className);
-        }
-
-        public TClass CreateClassObj<TClass>(string className = null, params object[] args)
-        {
-            ITypeConfig typeConfig = FindTypeConfig<TClass>(className);
-
-            if (typeConfig == null)
-                return (TClass)Activator.CreateInstance(typeof(TClass), args);
-
-            if (typeConfig.TheGeneratedType == null)
-            {
-                RegenerateAssembly();
-            }
-
-            return GetInstanceOfType<TClass>(typeConfig, args);
-        }
-
-        public ITypeConfig<T, SingleWrapperInterface<EnumType>> FindOrCreateEnumWrapperTypeConfig<T, EnumType>(Type staticEnumExtensionsType, bool allowNonPublic)
-        {
-            string className = typeof(EnumType).GetTypeAdapterClassName(typeof(T));
-
-            ITypeConfig<T, SingleWrapperInterface<EnumType>> enumWrapperTypeConfig =
-                this.FindOrCreateTypeConfByTypeToImpl<T, SingleWrapperInterface<EnumType>>(className);
-
-            if (!enumWrapperTypeConfig.ConfigurationHasBeenCompleted)
-            {
-                enumWrapperTypeConfig.AddStaticUtilsClass
-                (
-                    nameof(SingleWrapperInterface<EnumType>.TheWrappedType),
-                    staticEnumExtensionsType
-                );
-
-                if (allowNonPublic)
-                {
-                    enumWrapperTypeConfig.SetAllowNonPublicForAllMembers();
-                }
-            }
-
-            return enumWrapperTypeConfig;
-        }
-
-        public void CreateEnumAdaptor<T, EnumType>(Type staticEnumExtensionsType, bool allowNonPublic = true)
-        {
-            ITypeConfig adapterTypeConfig =
-                FindOrCreateEnumWrapperTypeConfig<T, EnumType>(staticEnumExtensionsType, allowNonPublic);
-
-            adapterTypeConfig.ConfigurationCompleted();
-        }
-
-        public static void CreateEnumerationAdapter<T, EnumType>(Type staticEnumExtensionsType, bool allowNonPublic = true)
-        {
-            TheCore.CreateEnumAdaptor<T, EnumType>(staticEnumExtensionsType, allowNonPublic);
-        }
-
-        public T BuildEnumWrapper<T, EnumType>(EnumType enumVal)
-            where EnumType : struct
-        {
-            string className = typeof(EnumType).GetTypeAdapterClassName(typeof(T));
-            ITypeConfig enumWrapperTypeConfig = FindTypeConfig<T, SingleWrapperInterface<EnumType>>(className);
-
-            if (enumWrapperTypeConfig == null)
-                throw new Exception($"Roxy Usage Error: Adapter {className} has not been created. You should call CreateEnumAdaptor method first.");
-
-            return GetInstOfGeneratedType<T>(className, enumVal);
-        }
-
-        public static T CreateEnumWrapper<T, EnumType>(EnumType enumVal, bool allowNonPublic = true)
-            where EnumType : struct
-        {
-            return TheCore.BuildEnumWrapper<T, EnumType>(enumVal);
+            return TheCore.FindOrCreateTypeConf<TToImplement, TImplementor>(className);
         }
 
         public static T Concretize<T>()
@@ -888,56 +359,26 @@ namespace NP.Roxy
             TheCore.SaveToPathOnCompilationError(savePath);
         }
 
-        public static void SetWrapperType
-        (
-            Type typeToImplement, 
-            Type wrapperType, 
-            bool forceOverride = false
-        )
-        {
-            TheCore.SetTWrapper(typeToImplement, wrapperType, forceOverride);
-        }
-
-        public static void SetWrapperType<TToImplement, TWrapper>(bool forceOverride = false)
-        {
-            TheCore.SetTWrapper<TToImplement, TWrapper>(forceOverride);
-        }
-
-
-        public static INamedTypeSymbol GetWrapperType(INamedTypeSymbol typeToImplementSymbol) =>
-            TheCore.GetTWrapper(typeToImplementSymbol);
-
-        public static INamedTypeSymbol GetWrapperType(Type typeToImplement) =>
-            TheCore.GetTWrapper(typeToImplement);
-
-        public static INamedTypeSymbol GetWrapperType<TToImplement>()
-            => TheCore.GetTWrapper<TToImplement>();
-
-        public static ITypeConfig GetDefaultWrapperTypeConfig<TToImplement>()
-        {
-            Type typeToImpl = typeof(TToImplement);
-
-            TheCore.AddTypesToReference(new[]{ typeToImpl});
-
-            INamedTypeSymbol typeToImplSymbol = 
-                TheCore.GetTypeSymbol(typeToImpl);
-
-            return TheCore.GetDefaultWrapperTypeConf(typeToImplSymbol);
-        }
-
-        public static T CreateInstanceOfGeneratedType<T>(string className = null, params object[] args)
-        {
-            return TheCore.CreateInstOfGeneratedType<T>(className, args);
-        }
-
-        public static TToImplement CreateImplementedInstance<TToImplement, TImplementationSuperClass, TImplementor>(params object[] args)
-        {
-            return TheCore.CreateImplInstance<TToImplement, TImplementationSuperClass, TImplementor>(args);
-        }
 
         public static TToImplement CreateImplementedInstance<TToImplement, TWrapper>(params object[] args)
         {
             return TheCore.CreateImplInstance<TToImplement, TWrapper>(args);
+        }
+
+
+        public TClass CreateClassObj<TClass>(string className = null, params object[] args)
+        {
+            ITypeConfig typeConfig = FindTypeConfig(className);
+
+            if (typeConfig == null)
+                return (TClass)Activator.CreateInstance(typeof(TClass), args);
+
+            if (typeConfig.TheGeneratedType == null)
+            {
+                RegenerateAssembly();
+            }
+
+            return typeConfig.CreateInstanceOfType<TClass>(args);
         }
     }
 

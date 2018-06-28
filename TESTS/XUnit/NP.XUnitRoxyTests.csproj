@@ -188,7 +188,6 @@
     <Compile Include="BasicRoxyTests.cs" />
     <Compile Include="DemoTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StrongTypes.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

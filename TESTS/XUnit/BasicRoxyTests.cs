@@ -2,16 +2,18 @@
 using NP.Roxy;
 using NP.Roxy.Attributes;
 using NP.Roxy.TypeConfigImpl;
+using System;
 using TestProj;
 using Xunit;
 
 namespace NP.XUnitRoxyTests.Basic
 {
     [Collection("Sequential")]
-    public static class InterfaceWrapperImplementation
+    public static class A_InterfaceWrapperImplementation
     {
         public interface WrapperInterface
         {
+            [Plugin]
             MyClass TheClass { get; }
         }
 
@@ -26,7 +28,7 @@ namespace NP.XUnitRoxyTests.Basic
 
             typeConfig.ConfigurationCompleted();
 
-            IMyInterface myInterfaceObj = Core.GetInstanceOfGeneratedType<IMyInterface>(typeConfig.ClassName);
+            IMyInterface myInterfaceObj = typeConfig.CreateInstanceOfType<IMyInterface>();
 
             myInterfaceObj.TheInt = 1234;
             myInterfaceObj.TheStr = "Hello";
@@ -37,7 +39,7 @@ namespace NP.XUnitRoxyTests.Basic
     }
 
     [Collection("Sequential")]
-    public static class SelectableDataTest
+    public static class B_SelectableDataTest
     {
         public interface IMyData
         {
@@ -58,9 +60,10 @@ namespace NP.XUnitRoxyTests.Basic
 
         }
 
-        public interface SelectableWrapperInterface
+        public class SelectableWrapperInterface : MyData
         {
-            SelectableItem<ISelectableData> TheSelectableItem { get; }
+            [Plugin]
+            protected SelectableItem<ISelectableData> TheSelectableItem { get; }
         }
 
         [Fact]
@@ -69,14 +72,14 @@ namespace NP.XUnitRoxyTests.Basic
             Core.SetSaveOnErrorPath("GeneratedCode");
 
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<ISelectableData, MyData, SelectableWrapperInterface>();
+                Core.FindOrCreateTypeConfig<ISelectableData, SelectableWrapperInterface>();
 
             typeConfig.SetEventArgThisIdx(nameof(ISelectableData.IsSelectedChanged), 0);
 
             typeConfig.ConfigurationCompleted();
 
             ISelectableData myInterfaceObj =
-                Core.GetInstanceOfGeneratedType<ISelectableData>(typeConfig.ClassName) as ISelectableData;
+                typeConfig.CreateInstanceOfType<ISelectableData>();
 
             myInterfaceObj.FirstName = "Nick";
             myInterfaceObj.LastName = "Polyak";
@@ -97,7 +100,7 @@ namespace NP.XUnitRoxyTests.Basic
     }
 
     [Collection("Sequential")]
-    public static class ComplexTypeImplTest
+    public static class C_ComplexTypeImplTest
     {
         public abstract class MyDataImplementorClass
         {
@@ -112,6 +115,7 @@ namespace NP.XUnitRoxyTests.Basic
 
         public interface WrapperInterface
         {
+            [Plugin]
             MyDataImplementorClass TheClass { get; }
         }
 
@@ -119,7 +123,7 @@ namespace NP.XUnitRoxyTests.Basic
         public static void RunTest()
         {
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<MyDataImplementorClass, NoType, NoType>("MyGeneratedClass2");
+                Core.FindOrCreateTypeConfig<MyDataImplementorClass, NoType>("MyGeneratedClass2");
 
             typeConfig.SetPropBuilder
             (
@@ -133,13 +137,13 @@ namespace NP.XUnitRoxyTests.Basic
 
             typeConfig.ConfigurationCompleted();
 
-            MyDataImplementorClass dataImplementor = Core.GetInstanceOfGeneratedType<MyDataImplementorClass>();
+            MyDataImplementorClass dataImplementor = typeConfig.CreateInstanceOfType<MyDataImplementorClass>();
             Core.Save("GeneratedCode");
         }
     }
 
     [Collection("Sequential")]
-    public static class EmbeddingConcretizationTest
+    public static class D_EmbeddingConcretizationTest
     {
         public interface IMyData
         {
@@ -174,14 +178,18 @@ namespace NP.XUnitRoxyTests.Basic
             }
         }
 
-        public interface WrapperInterface
+        public abstract class ImplementorClass : MyData
         {
-            MyDataImplementorClass TheClass { get; }
+            [Plugin]
+            protected MyDataImplementorClass TheClass { get; }
         }
 
         public interface WrapperInterface1
         {
+            [Plugin]
             MyData MyData { get; }
+
+            [Plugin]
             MyDataImplementorClass TheClass { get; }
         }
 
@@ -206,12 +214,12 @@ namespace NP.XUnitRoxyTests.Basic
             #endregion CONCRETIZATION SAMPLE
 
             #region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
-            ITypeConfig<IMyData, WrapperInterface> typeConfig =
-                Core.FindOrCreateTypeConfig<IMyData, MyData, WrapperInterface>("MyType7");
+            ITypeConfig typeConfig =
+                Core.FindOrCreateTypeConfig<IMyData, ImplementorClass>("MyType7");
 
             typeConfig.ConfigurationCompleted();
 
-            MyData myData = Core.GetInstanceOfGeneratedType<MyData>("MyType7");
+            MyData myData = typeConfig.CreateInstanceOfType<MyData>();
             myData.FirstName = "Joe";
             myData.LastName = "Doe";
 
@@ -224,7 +232,7 @@ namespace NP.XUnitRoxyTests.Basic
 
             typeConfig1.ConfigurationCompleted();
 
-            IMyData myData1 = Core.GetInstanceOfGeneratedType<IMyData>("MyType9");
+            IMyData myData1 = typeConfig1.CreateInstanceOfType<IMyData>();
 
             myData1.FirstName = "Joe";
             myData1.LastName = "Doe";
@@ -234,11 +242,11 @@ namespace NP.XUnitRoxyTests.Basic
             Assert.Equal("Doe, Joe", myData1.GetFullName());
 
             ITypeConfig typeConfig2 =
-                Core.FindOrCreateTypeConfig<IMyData, MyData, WrapperInterface>("MyType2");
+                Core.FindOrCreateTypeConfig<IMyData, ImplementorClass>();
 
             typeConfig2.ConfigurationCompleted();
 
-            IMyData myData2 = Core.GetInstanceOfGeneratedType<IMyData>("MyType2");
+            IMyData myData2 = typeConfig2.CreateInstanceOfType<IMyData>();
 
             myData2.FirstName = "Joe";
             myData2.LastName = "Doe";
@@ -248,7 +256,7 @@ namespace NP.XUnitRoxyTests.Basic
     }
 
     [Collection("Sequential")]
-    public static class NonPublicMembersTest
+    public static class E_NonPublicMembersTest
     {
         public interface IMyData
         {
@@ -273,9 +281,10 @@ namespace NP.XUnitRoxyTests.Basic
                 return $"{FirstName} {TheLastName}";
             }
         }
-        public interface WrapperInterface
+        public class Implementor
         {
-            MyData TheClass { get; }
+            [Plugin]
+            public MyData TheClass { get; }
         }
 
         // default and other implementations test
@@ -291,32 +300,34 @@ namespace NP.XUnitRoxyTests.Basic
         public static void RunTest()
         {
             #region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
+            Core.SetSaveOnErrorPath("GeneratedCode");
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<IMyData, NoType, WrapperInterface>("MyType10");
+                Core.FindOrCreateTypeConfig<IMyData, Implementor>("MyType10");
 
             typeConfig.SetMemberMap
             (
-                nameof(WrapperInterface.TheClass),
+                nameof(Implementor.TheClass),
                 "TheLastName",
                 nameof(IMyData.LastName),
                 true
             );
 
-            typeConfig.SetMemberMapAllowNonPublic(nameof(WrapperInterface.TheClass), nameof(IMyData.GetFullName));
+            typeConfig.SetMemberMapAllowNonPublic(nameof(Implementor.TheClass), nameof(IMyData.GetFullName));
 
             typeConfig.ConfigurationCompleted();
 
-            IMyData myData = Core.GetInstanceOfGeneratedType<IMyData>("MyType10");
+            IMyData myData = typeConfig.CreateInstanceOfType<IMyData>();
             myData.FirstName = "Joe";
             myData.LastName = "Doe";
 
             Assert.Equal("Joe Doe", myData.GetFullName());
+            Core.Save("GeneratedCode");
             #endregion WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
         }
     }
 
     [Collection("Sequential")]
-    public static class OverridingVirtualsTest
+    public static class F_OverridingVirtualsTest
     {
         public interface IMyData
         {
@@ -354,9 +365,10 @@ namespace NP.XUnitRoxyTests.Basic
             }
         }
 
-        public interface WrapperInterface
+        public class WrapperInterface : MyData
         {
-            OverridingVirtuals_MyDataImplementorClass TheClass { get; }
+            [Plugin]
+            public OverridingVirtuals_MyDataImplementorClass TheClass { get; }
         }
 
         // default and other implementations test
@@ -373,14 +385,14 @@ namespace NP.XUnitRoxyTests.Basic
         {
             #region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<OverridingVirtualsTest.IMyData, OverridingVirtualsTest.MyData, OverridingVirtualsTest.WrapperInterface>("MyType3");
+                Core.FindOrCreateTypeConfig<F_OverridingVirtualsTest.IMyData, F_OverridingVirtualsTest.WrapperInterface>("MyType3");
 
             typeConfig.SetOverrideVirtual(nameof(MyData.GetFullName), false);
 
             typeConfig.ConfigurationCompleted();
 
-            OverridingVirtualsTest.MyData myData = 
-                Core.GetInstanceOfGeneratedType<OverridingVirtualsTest.MyData>("MyType3");
+            F_OverridingVirtualsTest.MyData myData =
+                typeConfig.CreateInstanceOfType<F_OverridingVirtualsTest.MyData>();
             myData.FirstName = "Joe";
             myData.LastName = "Doe";
 
@@ -394,14 +406,14 @@ namespace NP.XUnitRoxyTests.Basic
 
     public static class MyDataUtils
     {
-        private static string GetFullName(this StaticMethodsTests.MyData myData)
+        private static string GetFullName(this G_StaticMethodsTests.MyData myData)
         {
             return myData.FirstName + " " + myData.LastName;
         }
     }
 
     [Collection("Sequential")]
-    public static class StaticMethodsTests
+    public static class G_StaticMethodsTests
     {
         public interface IMyData
         {
@@ -423,6 +435,7 @@ namespace NP.XUnitRoxyTests.Basic
         }
         public interface WrapperInterface
         {
+            [Plugin]
             MyData TheClass { get; }
         }
 
@@ -444,7 +457,7 @@ namespace NP.XUnitRoxyTests.Basic
 
             typeConfig.AddStaticUtilsClass
             (
-                nameof(StaticMethodsTests.WrapperInterface.TheClass),
+                nameof(G_StaticMethodsTests.WrapperInterface.TheClass),
                 typeof(MyDataUtils)
             );
 
@@ -459,7 +472,7 @@ namespace NP.XUnitRoxyTests.Basic
 
             typeConfig.ConfigurationCompleted();
 
-            IMyData myData = Core.GetInstanceOfGeneratedType<IMyData>("MyType5");
+            IMyData myData = typeConfig.CreateInstanceOfType<IMyData>();
             myData.FirstName = "Joe";
             myData.LastName = "Doe";
 
@@ -470,16 +483,18 @@ namespace NP.XUnitRoxyTests.Basic
 
 
     [Collection("Sequential")]
-    public static class TypeImplTest
+    public static class H_TypeImplTest
     {
         public interface WrapperInterface
         {
+            [Plugin]
             MyClass TheClass { get; set; }
         }
 
         [Fact]
         public static void RunTest()
         {
+            Core.SetSaveOnErrorPath("GeneratedCode");
             ITypeConfig typeConfig =
                 Core.FindOrCreateTypeConfig<IMyInterface, WrapperInterface>("MyGeneratedClass3");
             typeConfig.SetMemberMap(nameof(WrapperInterface.TheClass), nameof(MyClass.MyInt), nameof(IMyInterface.TheInt));
@@ -488,12 +503,70 @@ namespace NP.XUnitRoxyTests.Basic
 
             typeConfig.ConfigurationCompleted();
 
-            IMyInterface myObj = Core.GetInstanceOfGeneratedType<IMyInterface>("MyGeneratedClass3");
+            IMyInterface myObj = typeConfig.CreateInstanceOfType<IMyInterface>();
 
             myObj.TheInt = 123;
+
+            Core.Save("GeneratedCode");
 
             Assert.Equal("The resulting string is: blabla_123", myObj.GetResultingStr("blabla", 123));
         }
     }
 
+    [Collection("Sequential")]
+    public static class I_BasicClassTest
+    {
+        public interface IMyData
+        {
+            string LastName { get; set; }
+
+            string FirstName { get; set; }
+
+            int Age { get; set; }
+
+            string TheFullName { get; }
+        }
+
+        public class MyData
+        {
+            protected string TheLastName { get; set; }
+            public string FirstName { get; set; }
+
+            public int Age { get; set; }
+
+            internal string GetFullName()
+            {
+                return $"{FirstName} {TheLastName}";
+            }
+        }
+
+        public class Implementor : MyData
+        {
+            public string LastName
+            {
+                get => TheLastName;
+                set => TheLastName = value;
+            }
+
+            public string TheFullName =>
+                base.GetFullName();
+        }
+
+
+        [Fact]
+        public static void RunTest()
+        {
+            ITypeConfig typeConfig = Core.FindOrCreateTypeConfig<IMyData, Implementor>("MyType11");
+
+            typeConfig.ConfigurationCompleted();
+
+            IMyData myData = typeConfig.CreateInstanceOfType<IMyData>();
+
+            myData.FirstName = "Nick";
+            myData.LastName = "Polyak";
+            myData.Age = 120;
+
+            Assert.Equal($"{myData.FirstName} {myData.LastName}", myData.TheFullName);
+        }
+    }
 }

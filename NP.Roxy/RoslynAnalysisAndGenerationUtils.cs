@@ -48,6 +48,16 @@ namespace NP.Roxy
         public static INamedTypeSymbol GetNullForNoType(this INamedTypeSymbol typeSymbol, Compilation compilation) =>
             (typeSymbol?.Matches(NoTypeType, compilation) != false) ? null : typeSymbol;
 
+        public static INamedTypeSymbol GetNoTypeForNull(this INamedTypeSymbol typeSymbol, Compilation compilation)
+        {
+            return typeSymbol ?? NoTypeType.GetTypeSymbol(compilation);
+        }
+
+        public static bool IsClass(this INamedTypeSymbol typeSymbol)
+        {
+            return typeSymbol.TypeKind == TypeKind.Class;
+        }
+
         public static INamedTypeSymbol GetRealRoxyTypeSymbol
         (
             this Type type,
@@ -58,14 +68,22 @@ namespace NP.Roxy
         public static INamedTypeSymbol GetRealRoxyTypeSymbol<T>(Compilation compilation) =>
             GetRealRoxyType<T>()?.GetTypeSymbol(compilation);
 
-        public static INamedTypeSymbol NoTypeToNull(this INamedTypeSymbol namedTypeSymbol)
+        public static bool IsNoTypeOrNull(this INamedTypeSymbol namedTypeSymbol)
         {
             if (namedTypeSymbol == null)
-                return null;
+                return true;
 
             string typeStr = namedTypeSymbol.GetUniqueTypeStr();
 
             if (typeStr == NoTypeType.GetFullTypeStr())
+                return true;
+
+            return false;
+        }
+
+        public static INamedTypeSymbol NoTypeToNull(this INamedTypeSymbol namedTypeSymbol)
+        {
+            if (namedTypeSymbol.IsNoTypeOrNull())
                 return null;
 
             return namedTypeSymbol;
@@ -170,6 +188,19 @@ namespace NP.Roxy
         public static void InitTypeNamespace<Type>()
         {
             TheNamespaces.Add(typeof(Type).Namespace);
+        }
+
+        public static string UnwrapNestedType(this INamedTypeSymbol typeSymbol)
+        {
+            string result = "";
+            if (typeSymbol.ContainingType != null)
+            {
+                result = typeSymbol.ContainingType.UnwrapNestedType();
+            }
+
+            result += "_" + typeSymbol.GetTypeName();
+
+            return result;
         }
 
         public static string GetFullTypeString(this INamedTypeSymbol type, string typeName = null)
@@ -960,6 +991,41 @@ namespace NP.Roxy
             return result.Where(member => (member as IMethodSymbol)?.AssociatedSymbol == null);
         }
 
+        public static IEnumerable<ISymbol> GetAllSuperMembers
+        (
+            this ITypeSymbol typeSymbol,
+            string name = null
+        )
+        {
+            List<ISymbol> result = new List<ISymbol>();
+
+            typeSymbol.Interfaces.DoForEach(intrfc => result.AddRange(intrfc.GetAllMembers(name)));
+
+            if (typeSymbol.BaseType != null)
+            {
+                result.AddRange(typeSymbol.BaseType.GetAllMembers(name));
+            }
+
+            return result;
+        }
+
+        public static IEnumerable<ISymbol> EliminateDups(this IEnumerable<ISymbol> symbols)
+        {
+            var preliminaryResult =
+                symbols 
+                    .GroupBy(symb => symb, TheSymbolByNameAndSignatureComparer);
+
+            //var findNameResults = preliminaryResult.ToList()[3];
+
+            //var findNameOrdered = findNameResults.OrderBy(symb => symb, TheAbstractionComparer).ToList();
+
+            var result = 
+                preliminaryResult
+                    .Select(g => g.OrderBy(symb => symb, TheAbstractionComparer).ToList().Last());
+
+            return result;
+        }
+
         public static IEnumerable<ISymbol> GetAllMembers
         (
             this ITypeSymbol typeSymbol,
@@ -970,12 +1036,7 @@ namespace NP.Roxy
 
             result.AddRange(typeSymbol.GetSelfSymbols(name));
 
-            typeSymbol.Interfaces.DoForEach(intrfc => result.AddRange(intrfc.GetAllMembers(name)));
-
-            if (typeSymbol.BaseType != null)
-            {
-                result.AddRange(typeSymbol.BaseType.GetAllMembers(name));
-            }
+            result.AddRange(typeSymbol.GetAllSuperMembers(name));
 
             return result;
         }
@@ -1021,6 +1082,9 @@ namespace NP.Roxy
 
         public static IEqualityComparer<ISymbol> TheSymbolByNameAndSignatureComparer { get; } =
             new SymbolByNameAndSignatureComparer();
+
+        public static IComparer<ISymbol> TheAbstractionComparer { get; } =
+            new AbstractionComparer();
 
         public static string InterfaceToClassName(this string typeName)
         {
@@ -1089,7 +1153,26 @@ namespace NP.Roxy
             return GetClassName(typeSymbol.Name, className);
         }
 
-        internal static string CreateClassName(Type typeToImpl, Type baseType, Type wrapperType)
+        public static string GetTypeName(this INamedTypeSymbol namedTypeSymbol)
+        {
+            return TypeUtils.GetTypeName(namedTypeSymbol.Name);
+        }
+
+        internal static string CreateClassName(this INamedTypeSymbol typeToImpl, INamedTypeSymbol implementorType)
+        {
+            string result = typeToImpl.UnwrapNestedType();
+
+            if (implementorType.IsNoTypeOrNull())
+            {
+                return result;
+            }
+
+            result += "_" + TypeUtils.GetTypeName(implementorType.Name);
+
+            return result;
+        }
+
+        internal static string CreateClassName(this Type typeToImpl, Type wrapperType)
         {
             if (typeToImpl == typeof(NoType))
             {
@@ -1099,11 +1182,6 @@ namespace NP.Roxy
             string result = "";
 
             result += typeToImpl.NestedTypeToName() + "_";
-
-            if (baseType != typeof(NoType))
-            {
-                result += baseType.GetTypeName() + "_";
-            }
 
             if ((wrapperType != typeof(NoType)) && (wrapperType != null))
             {
@@ -1115,18 +1193,16 @@ namespace NP.Roxy
             return result;
         }
 
-        internal static string GetClassName<TToImplement, TImplBaseClass, TWrapper>(this string className)
+        internal static string GetClassName<TToImplement, TWrapper>(this string className)
         {
             if (!className.IsNullOrEmpty())
                 return className;
 
             Type typeToImpl = typeof(TToImplement);
 
-            Type implBaseClassType = typeof(TImplBaseClass);
-
             Type wrapperType = typeof(TWrapper);
 
-            return CreateClassName(typeToImpl, implBaseClassType, wrapperType);
+            return CreateClassName(typeToImpl, wrapperType);
         }
 
         internal static bool Matches(this INamedTypeSymbol typeSymbol, Type type, Compilation compilation)
@@ -1439,172 +1515,6 @@ namespace NP.Roxy
                 returnType.GetTypeSymbol(compilation),
                 inputTypes.Select(inputType => inputType.GetTypeSymbol(compilation)));
         }
-
-        public static IMethodSymbol FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, TOut>
-        (
-            this Compilation compilation,
-            string methodName
-        )
-        {
-            Type[] allInputTypes =
-            (new[] {
-                typeof(TIn1),
-                typeof(TIn2),
-                typeof(TIn3),
-                typeof(TIn4),
-                typeof(TIn5),
-                typeof(TIn6),
-                typeof(TIn7),
-                typeof(TIn8),
-                typeof(TIn9)
-            }).Where(t => t != typeof(NoType)).ToArray();
-
-            Type outputType = typeof(TOut);
-
-            if (outputType == typeof(NoType))
-                outputType = null;
-
-            return compilation.FindMatchingMethodSymbol<ContainerType>(methodName, outputType, allInputTypes);
-        }
-
-        public static IMethodSymbol FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-        FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TOut>(compilation, methodName);
-
-        public static IMethodSymbol FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TOut>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, NoType, NoType, TOut>(compilation, methodName);
-
-        public static IMethodSymbol FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, NoType, NoType, NoType, TOut>(compilation, methodName);
-
-
-        public static IMethodSymbol FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TOut>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, NoType, NoType, NoType, NoType, TOut>(compilation, methodName);
-
-
-        public static IMethodSymbol FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TOut>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, NoType, NoType, NoType, NoType, NoType, TOut>(compilation, methodName);
-
-
-        public static IMethodSymbol FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TOut>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TIn3, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(compilation, methodName);
-
-        public static IMethodSymbol FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TOut>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, NoType, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(compilation, methodName);
-
-        public static IMethodSymbol FindMatchingMethodSymbol<ContainerType, TIn1, TOut>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingMethodSymbol<ContainerType, TIn1, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(compilation, methodName);
-
-        public static IMethodSymbol FindMatchingMethodSymbol<ContainerType, TOut>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingMethodSymbol<ContainerType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, TOut>(compilation, methodName);
-
-        public static IMethodSymbol FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, TIn9, NoType>(compilation, methodName);
-
-        public static IMethodSymbol FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, TIn8, NoType>(compilation, methodName);
-
-        public static IMethodSymbol FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TIn7, NoType, NoType>(compilation, methodName);
-
-        public static IMethodSymbol FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, NoType, NoType, NoType>(compilation, methodName);
-
-
-        public static IMethodSymbol FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, TIn5, NoType, NoType, NoType, NoType>(compilation, methodName);
-
-
-        public static IMethodSymbol FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2, TIn3, TIn4, NoType, NoType, NoType, NoType, NoType>(compilation, methodName);
-
-
-        public static IMethodSymbol FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2, TIn3>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2, TIn3, NoType, NoType, NoType, NoType, NoType, NoType>(compilation, methodName);
-
-        public static IMethodSymbol FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingVoidMethodSymbol<ContainerType, TIn1, TIn2, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(compilation, methodName);
-
-        public static IMethodSymbol FindMatchingVoidMethodSymbol<ContainerType, TIn1>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingVoidMethodSymbol<ContainerType, TIn1, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(compilation, methodName);
-
-        public static IMethodSymbol FindMatchingVoidMethodSymbol<ContainerType>
-        (
-            this Compilation compilation,
-            string methodName
-        ) =>
-            FindMatchingVoidMethodSymbol<ContainerType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType, NoType>(compilation, methodName);
     }
 
     public class SymbolComparer : IEqualityComparer<ISymbol>
@@ -1671,6 +1581,28 @@ namespace NP.Roxy
         public int GetHashCode(ISymbol obj)
         {
             return obj.Name.GetHashCodeExtension();
+        }
+    }
+
+    public class AbstractionComparer : IComparer<ISymbol>
+    {
+        int ToInt(ISymbol symbol)
+        {
+            if (symbol.ContainingType?.TypeKind == TypeKind.Interface)
+                return 0;
+
+            if (symbol.IsAbstract)
+                return 1;
+
+            if (symbol.IsOverridable())
+                return 2;
+
+            return 3;
+        }
+
+        public int Compare(ISymbol x, ISymbol y)
+        {
+            return (ToInt(x)).CompareTo(ToInt(y));
         }
     }
 }

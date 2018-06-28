@@ -27,7 +27,7 @@ namespace NP.Roxy.TypeConfigImpl
         public ISymbol WrapperMemberSymbol { get; }
 
         // gets this value only from the parent object
-        public string WrappedObjPropName { get; private set; }
+        public string PluginPropName { get; private set; }
 
         public string WrapperMemberName => WrapperMemberSymbol.Name;
 
@@ -39,10 +39,10 @@ namespace NP.Roxy.TypeConfigImpl
         public MemberMapInfoBase
         (
             ISymbol wrapperMemberSymbol, 
-            string wrappedObjPropName)
+            string pluginPropName)
         {
             this.WrapperMemberSymbol = wrapperMemberSymbol;
-            this.WrappedObjPropName = wrappedObjPropName;
+            this.PluginPropName = pluginPropName;
         }
 
         internal abstract bool IsAbstract { get; }
@@ -53,13 +53,13 @@ namespace NP.Roxy.TypeConfigImpl
 
         internal abstract string GetEventHandlerAssignmentStr(bool addOrRemoveHandler);
 
-        internal abstract void AddAssignWrappedProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder);
+        internal abstract void AddAssignPluginProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder);
 
         internal abstract void AddPropAssignmentStr(bool setOrUnset, RoslynCodeBuilder roslynCodeBuilder);
 
-        internal abstract void AddWrappedPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder);
+        internal abstract void AddPluginPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder);
 
-        internal abstract void AddWrappedMethodLine(IMethodSymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder);
+        internal abstract void AddPluginMethodLine(IMethodSymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder);
     }
 
 
@@ -72,15 +72,15 @@ namespace NP.Roxy.TypeConfigImpl
         public ExpressionMemberMapInfo
         (
             ISymbol wrapperMemberSymbol, 
-            string wrappedObjPropName, 
+            string pluginPropName, 
             Expression expression) 
             : 
-            base(wrapperMemberSymbol, wrappedObjPropName)
+            base(wrapperMemberSymbol, pluginPropName)
         {
             this.TheExpression = expression;
         }
 
-        internal override void AddAssignWrappedProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder)
+        internal override void AddAssignPluginProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder)
         {
             
         }
@@ -90,20 +90,20 @@ namespace NP.Roxy.TypeConfigImpl
             
         }
 
-        internal override void AddWrappedMethodLine(IMethodSymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
+        internal override void AddPluginMethodLine(IMethodSymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
             ReplaceArgsExprStringBuilder exprStrBuilder =
-                new ReplaceArgsExprStringBuilder(this.WrappedObjPropName.ToCollection().Union(wrapperSymbol.Parameters.Select(param => param.Name)).ToArray());
+                new ReplaceArgsExprStringBuilder(this.PluginPropName.ToCollection().Union(wrapperSymbol.Parameters.Select(param => param.Name)).ToArray());
 
             exprStrBuilder.Visit(this.TheExpression);
 
             roslynCodeBuilder.AddText(exprStrBuilder.ToStr() + ";");
         }
 
-        internal override void AddWrappedPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
+        internal override void AddPluginPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
             ReplaceArgsExprStringBuilder exprStrBuilder = 
-                new ReplaceArgsExprStringBuilder(this.WrappedObjPropName);
+                new ReplaceArgsExprStringBuilder(this.PluginPropName);
 
             exprStrBuilder.Visit(this.TheExpression);
 
@@ -124,12 +124,12 @@ namespace NP.Roxy.TypeConfigImpl
     internal class MemberMapInfo : MemberMapInfoBase
     {
         internal override bool IsAbstract =>
-            WrappedMemberSymbol?.IsAbstract == true;
+            PluginMemberSymbol?.IsAbstract == true;
 
-        public ISymbol WrappedMemberSymbol { get; protected set; }
+        public ISymbol PluginMemberSymbol { get; protected set; }
 
         [XmlAttribute]
-        public string WrappedMemberName { get; set; }
+        public string PluginMemberName { get; set; }
 
         [XmlAttribute]
         public bool AllowNonPublic { get; private set; } = false;
@@ -141,13 +141,13 @@ namespace NP.Roxy.TypeConfigImpl
 
         public MemberMapInfo
         (
-            string wrappedMemberName, 
+            string pluginMemberName, 
             ISymbol wrapperMemberSymbol, 
-            string wrappedObjPropName
+            string pluginPropName
         ) :
-            base(wrapperMemberSymbol, wrappedObjPropName)
+            base(wrapperMemberSymbol, pluginPropName)
         {
-            this.WrappedMemberName = wrappedMemberName;
+            this.PluginMemberName = pluginMemberName;
         }
 
         internal void SetFromContainingType
@@ -156,73 +156,73 @@ namespace NP.Roxy.TypeConfigImpl
             INamedTypeSymbol containingType, 
             IEnumerable<INamedTypeSymbol> staticMethodContainers)
         {
-            if (this.WrappedMemberName == null)
+            if (this.PluginMemberName == null)
                 return;
 
-            this.WrappedMemberSymbol =
-                compilation.FindMatchingSymbol(this.WrapperMemberSymbol, containingType, this.WrappedMemberName, this.AllowNonPublic);
+            this.PluginMemberSymbol =
+                compilation.FindMatchingSymbol(this.WrapperMemberSymbol, containingType, this.PluginMemberName, this.AllowNonPublic);
 
-            if (this.WrappedMemberSymbol != null)
+            if (this.PluginMemberSymbol != null)
                 return;
 
             foreach(INamedTypeSymbol typeSymbol in staticMethodContainers)
             {
-                this.WrappedMemberSymbol =
+                this.PluginMemberSymbol =
                     compilation.GetStaticMethodWithFirstArgThatCanAcceptType
                     (
                         typeSymbol,
                         containingType,
-                        this.WrappedMemberName,
+                        this.PluginMemberName,
                         this.AllowNonPublic);
 
-                if (this.WrappedMemberSymbol != null)
+                if (this.PluginMemberSymbol != null)
                     break;
             }
         }
 
         // if private - WrappedSymbol will be null
         internal override bool IsNonPublic =>
-            this.WrappedMemberSymbol.DeclaredAccessibility != Accessibility.Public;
+            this.PluginMemberSymbol.DeclaredAccessibility != Accessibility.Public;
 
-        protected string GetWrappedClassMemberFullName(bool hasNullCheck)
+        protected string GetPluginClassMemberFullName(bool hasNullCheck)
         {
             string divider = hasNullCheck ? "?." : ".";
 
-            if (this.WrappedMemberSymbol.IsStatic)
+            if (this.PluginMemberSymbol.IsStatic)
             {
                 IMethodSymbol methodSymbol =
-                    this.WrappedMemberSymbol as IMethodSymbol;
+                    this.PluginMemberSymbol as IMethodSymbol;
 
                 string containingTypeStr = methodSymbol.ContainingType.GetFullTypeString();
 
-                return $"{containingTypeStr}{divider}{WrappedMemberName}";
+                return $"{containingTypeStr}{divider}{PluginMemberName}";
             }
             else
             {
-                return $"{this.WrappedObjPropName}{divider}{WrappedMemberName}";
+                return $"{this.PluginPropName}{divider}{PluginMemberName}";
             }
         }
 
-        private string WrappedClassMemberFullName =>
-            GetWrappedClassMemberFullName(false);
+        private string PluginClassMemberFullName =>
+            GetPluginClassMemberFullName(false);
 
         internal override string GetEventHandlerAssignmentStr(bool addOrRemoveHandler)
         {
             string addOrRemoveStr = addOrRemoveHandler ? "+" : "-";
 
             string result =
-                $"{WrappedClassMemberFullName} {addOrRemoveStr}= {WrapperMemberName.GetEventInvocationWrapperName()}";
+                $"{PluginClassMemberFullName} {addOrRemoveStr}= {WrapperMemberName.GetEventInvocationWrapperName()}";
 
             return result;
         }
 
-        internal override void AddAssignWrappedProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder)
+        internal override void AddAssignPluginProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder)
         {
             if (this.IsNonPublic)
             {
                 if (this.AllowNonPublic)
                 {
-                    roslynCodeBuilder.AddLine($"{this.WrappedObjPropName}.SetPropValue(\"{this.WrappedMemberName}\", {assignmentStr}, true)", true);
+                    roslynCodeBuilder.AddLine($"{this.PluginPropName}.SetPropValue(\"{this.PluginMemberName}\", {assignmentStr}, true)", true);
                 }
                 else
                 {
@@ -231,25 +231,25 @@ namespace NP.Roxy.TypeConfigImpl
             }
             else
             {
-                roslynCodeBuilder.AddAssignmentLine(WrappedClassMemberFullName, assignmentStr);
+                roslynCodeBuilder.AddAssignmentLine(PluginClassMemberFullName, assignmentStr);
             }
         }
 
-        IPropertySymbol TheWrappedPropSymbol => WrappedMemberSymbol as IPropertySymbol;
+        IPropertySymbol ThePluginPropSymbol => PluginMemberSymbol as IPropertySymbol;
 
         internal override void AddPropAssignmentStr(bool setOrUnset, RoslynCodeBuilder roslynCodeBuilder)
         {
-            if (this.TheWrappedPropSymbol?.HasSetter() != true)
+            if (this.ThePluginPropSymbol?.HasSetter() != true)
                 return;
 
             string assignmentStr =
                 setOrUnset ?
-                    WrapperAssignPropName : $"default({(WrappedMemberSymbol as IPropertySymbol).Type.AsNamed().GetFullTypeString()})";
+                    WrapperAssignPropName : $"default({(PluginMemberSymbol as IPropertySymbol).Type.AsNamed().GetFullTypeString()})";
 
-            AddAssignWrappedProp(assignmentStr, roslynCodeBuilder);
+            AddAssignPluginProp(assignmentStr, roslynCodeBuilder);
         }
 
-        internal override void AddWrappedPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
+        internal override void AddPluginPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
 
             if (this.IsNonPublic)
@@ -257,24 +257,24 @@ namespace NP.Roxy.TypeConfigImpl
                 if (this.AllowNonPublic)
                 {
                     string returnType = (wrapperSymbol.Type as INamedTypeSymbol).GetFullTypeString();
-                    roslynCodeBuilder.AddLine($"return ({returnType}) {this.WrappedObjPropName}.GetPropValue(\"{this.WrappedMemberName}\", true)", true);
+                    roslynCodeBuilder.AddLine($"return ({returnType}) {this.PluginPropName}.GetPropValue(\"{this.PluginMemberName}\", true)", true);
                 }
             }
             else
             {
-                string wrappedMemberStr = this.WrappedClassMemberFullName;
+                string pluginMemberStr = this.PluginClassMemberFullName;
 
-                roslynCodeBuilder.AddReturnVar(wrappedMemberStr);
+                roslynCodeBuilder.AddReturnVar(pluginMemberStr);
             }
         }
 
-        internal override void AddWrappedMethodLine
+        internal override void AddPluginMethodLine
         (
             IMethodSymbol wrapperSymbol, 
             RoslynCodeBuilder roslynCodeBuilder
         )
         {
-            IMethodSymbol wrappedMethodSymbol = this.WrappedMemberSymbol as IMethodSymbol;
+            IMethodSymbol pluginMethodSymbol = this.PluginMemberSymbol as IMethodSymbol;
 
             if (this.IsNonPublic)
             {
@@ -284,28 +284,28 @@ namespace NP.Roxy.TypeConfigImpl
                         .AddNonPublicMethodCall
                         (
                             wrapperSymbol,
-                            this.WrappedObjPropName,
-                            this.WrappedMemberName,
-                            wrappedMethodSymbol
+                            this.PluginPropName,
+                            this.PluginMemberName,
+                            pluginMethodSymbol
                         );
                 }
             }
             else
             {
-                if (this.WrappedMemberSymbol.IsStatic)
+                if (this.PluginMemberSymbol.IsStatic)
                 {
                     roslynCodeBuilder.AddStaticMethodCall
                     (
                         wrapperSymbol,
-                        this.WrappedObjPropName,
-                        this.WrappedClassMemberFullName);
+                        this.PluginPropName,
+                        this.PluginClassMemberFullName);
                 }
                 else
                 {
                     roslynCodeBuilder.AddMethodCall
                     (
                         wrapperSymbol,
-                        this.WrappedClassMemberFullName);
+                        this.PluginClassMemberFullName);
                 }
             }
         }
@@ -314,8 +314,8 @@ namespace NP.Roxy.TypeConfigImpl
 
     internal class ThisMemberMapInfo : MemberMapInfo
     {
-        public ThisMemberMapInfo(string wrappedObjPropName, string wrappedMemberName) : 
-            base(wrappedMemberName, null, wrappedObjPropName)
+        public ThisMemberMapInfo(string pluginPropName, string pluginMemberName) : 
+            base(pluginMemberName, null, pluginPropName)
         {
 
         }
