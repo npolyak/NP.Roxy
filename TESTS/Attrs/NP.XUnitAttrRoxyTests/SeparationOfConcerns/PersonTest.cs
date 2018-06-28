@@ -34,7 +34,8 @@ namespace NP.XUnitAttrRoxyTests.PersonTest
         [ImplementationClassName("PersonImplementation")]
         public interface IPersonWrapper
         {
-             Person ThePerson { get; }
+            [Plugin]
+            Person ThePerson { get; }
         }
 
         [Fact]

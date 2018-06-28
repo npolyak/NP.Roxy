@@ -79,9 +79,11 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorInheritFromPersonTest
         [ImplementationClassName("StudentAndProfessorImplementation")]
         public interface IStudentAndProfessorWrapper
         {
+            [Plugin]
             Student TheStudent { get; }
 
             [SuppressWrapping(nameof(IPerson.Walk))]
+            [Plugin]
             Professor TheProfessor { get; }
         }
 
