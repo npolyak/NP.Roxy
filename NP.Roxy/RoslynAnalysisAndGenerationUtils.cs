@@ -73,7 +73,7 @@ namespace NP.Roxy
             if (namedTypeSymbol == null)
                 return true;
 
-            string typeStr = namedTypeSymbol.GetUniqueTypeStr();
+            string typeStr = namedTypeSymbol.GetFullTypeStrWithNamespace();
 
             if (typeStr == NoTypeType.GetFullTypeStr())
                 return true;
@@ -190,17 +190,79 @@ namespace NP.Roxy
             TheNamespaces.Add(typeof(Type).Namespace);
         }
 
-        public static string UnwrapNestedType(this INamedTypeSymbol typeSymbol)
+        public static Type ToCSharpType(this ITypeSymbol namedTypeSymbol)
+        {
+            IAssemblySymbol containingAssembly = namedTypeSymbol.ContainingAssembly;
+
+            string fullAssemblyName = containingAssembly.ToDisplayString();
+
+            Assembly cSharpTypeContainingAssembly =
+                AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.FullName == fullAssemblyName);
+
+            string cSharpFullTypeName = namedTypeSymbol.GetFullNestedTypeName();
+
+            Type result = cSharpTypeContainingAssembly.GetType(cSharpFullTypeName);
+
+            return result;
+        }
+
+        public static object ToObj(this TypedConstant typedConstant, bool leaveTypeSymbol = true)
+        {
+            switch (typedConstant.Kind)
+            {
+                case TypedConstantKind.Primitive:
+                {
+                    return typedConstant.Value;
+                }
+                case TypedConstantKind.Enum:
+                {
+                    return Enum.ToObject(typedConstant.Type.ToCSharpType(), typedConstant.Value);
+                }
+                case TypedConstantKind.Type:
+                {
+                    if (leaveTypeSymbol)
+                    {
+                        return typedConstant.Value;
+                    }
+                    else
+                    {
+                        return (typedConstant.Value as ITypeSymbol).ToCSharpType();
+                    }
+                }
+                case TypedConstantKind.Array:
+                {
+                    return typedConstant.Values;
+                }
+            }
+
+            return null;
+        }
+
+        public static string UnwrapNestedType(this ITypeSymbol typeSymbol, string separator = "_")
         {
             string result = "";
             if (typeSymbol.ContainingType != null)
             {
-                result = typeSymbol.ContainingType.UnwrapNestedType();
+                result = typeSymbol.ContainingType.UnwrapNestedType() + separator;
             }
 
-            result += "_" + typeSymbol.GetTypeName();
+            result += typeSymbol.GetTypeName();
 
             return result;
+        }
+
+        public static string GetFullNestedTypeName(this ITypeSymbol typeSymbol)
+        {
+            string typeName = typeSymbol.UnwrapNestedType("+");
+
+            string namespaceName = typeSymbol.GetFullNamespace();
+
+            if (!namespaceName.IsNullOrEmpty())
+            {
+                typeName = namespaceName + "." + typeName;
+            }
+
+            return typeName;
         }
 
         public static string GetFullTypeString(this INamedTypeSymbol type, string typeName = null)
@@ -1153,7 +1215,7 @@ namespace NP.Roxy
             return GetClassName(typeSymbol.Name, className);
         }
 
-        public static string GetTypeName(this INamedTypeSymbol namedTypeSymbol)
+        public static string GetTypeName(this ITypeSymbol namedTypeSymbol)
         {
             return TypeUtils.GetTypeName(namedTypeSymbol.Name);
         }
@@ -1212,7 +1274,7 @@ namespace NP.Roxy
 
             INamedTypeSymbol typeSymbolToCompare = type.GetTypeSymbol(compilation);
 
-            return typeSymbolToCompare.GetUniqueTypeStr() == typeSymbol.GetUniqueTypeStr();
+            return typeSymbolToCompare.GetFullTypeStrWithNamespace() == typeSymbol.GetFullTypeStrWithNamespace();
         }
 
         public static bool CanBeConvertedImplicitly
@@ -1287,10 +1349,10 @@ namespace NP.Roxy
 
         public static string GetUniqueEventId(this IEventSymbol eventSymbol)
         {
-            return eventSymbol.Type.GetUniqueTypeStr() + "#" + eventSymbol.Name;
+            return eventSymbol.Type.GetFullTypeStrWithNamespace() + "#" + eventSymbol.Name;
         }
 
-        public static string GetUniqueTypeStr(this ITypeSymbol type)
+        public static string GetFullTypeStrWithNamespace(this ITypeSymbol type)
         {
             string fullNamespace = type.GetFullNamespace();
 
@@ -1312,7 +1374,7 @@ namespace NP.Roxy
             {
                 if (type2 is INamedTypeSymbol namedType2)
                 {
-                    return namedType1.GetUniqueTypeStr() == namedType2.GetUniqueTypeStr();
+                    return namedType1.GetFullTypeStrWithNamespace() == namedType2.GetFullTypeStrWithNamespace();
                 }
                 else
                 {
@@ -1320,7 +1382,7 @@ namespace NP.Roxy
                 }
             }
 
-            return (type1.GetUniqueTypeStr() == type2.GetUniqueTypeStr());
+            return (type1.GetFullTypeStrWithNamespace() == type2.GetFullTypeStrWithNamespace());
         }
 
         public static bool ParamTypesMatch
@@ -1515,6 +1577,40 @@ namespace NP.Roxy
                 returnType.GetTypeSymbol(compilation),
                 inputTypes.Select(inputType => inputType.GetTypeSymbol(compilation)));
         }
+
+        public static T GetAttrObject<T>(this AttributeData attributeData)
+            where T : Attribute
+        {
+            object[] args = attributeData.ConstructorArguments.Select(arg => arg.ToObj()).ToArray();
+
+            T result = 
+                (T)Activator.CreateInstance(typeof(T), args);
+
+            foreach(var kvp in attributeData.NamedArguments)
+            {
+                string propName = kvp.Key;
+
+                object propValue = kvp.Value.ToObj();
+
+                result.SetPropValue(propName, propValue);
+            }
+
+            return result;
+        }
+
+        public static T GetAttrObject<T>(this ISymbol symbol)
+            where T : Attribute
+        {
+            AttributeData attributeData = symbol.GetAttrSymbol(typeof(T));
+
+            return attributeData?.GetAttrObject<T>();
+        }
+
+        public static IEnumerable<T> GetAttrObjects<T>(this ISymbol symbol) 
+            where T : Attribute
+        {
+            return symbol.GetAttrSymbols(typeof(T)).Select(attrData => attrData.GetAttrObject<T>()).ToList();
+        }
     }
 
     public class SymbolComparer : IEqualityComparer<ISymbol>
@@ -1529,7 +1625,7 @@ namespace NP.Roxy
 
             string name = symbol?.Name;
 
-            return (containingSymbol?.GetUniqueTypeStr()).NullToEmpty() + " " + name.NullToEmpty();
+            return (containingSymbol?.GetFullTypeStrWithNamespace()).NullToEmpty() + " " + name.NullToEmpty();
         }
 
         public bool Equals(ISymbol symbol1, ISymbol symbol2)
@@ -1555,7 +1651,7 @@ namespace NP.Roxy
 
         public int GetHashCode(INamedTypeSymbol type)
         {
-            return type.GetUniqueTypeStr().GetHashCodeExtension();
+            return type.GetFullTypeStrWithNamespace().GetHashCodeExtension();
         }
     }
 

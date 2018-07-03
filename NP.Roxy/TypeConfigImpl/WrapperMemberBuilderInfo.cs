@@ -149,11 +149,11 @@ namespace NP.Roxy.TypeConfigImpl
 
             if (idx < 0)
             {
-                AttributeData attrData = WrapperSymbol.GetAttrSymbol(typeof(EventThisIdxAttribute));
+                EventThisIdxAttribute eventThisIdxAttr = WrapperSymbol.GetAttrObject<EventThisIdxAttribute>();
 
-                if (attrData != null)
+                if (eventThisIdxAttr != null)
                 {
-                    idx = (int)attrData.ConstructorArguments.First().Value;
+                    idx = eventThisIdxAttr.ThisIdx;
                 }
             }
 

@@ -41,7 +41,7 @@ namespace NP.Roxy
 
             if (eventSymbol == null)
             {
-                throw new Exception($"Roxy Usage Error: event {eventName} is not found within type {typeSymbol.GetUniqueTypeStr()}");
+                throw new Exception($"Roxy Usage Error: event {eventName} is not found within type {typeSymbol.GetFullTypeStrWithNamespace()}");
             }
 
             return eventSymbol;

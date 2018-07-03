@@ -30,7 +30,7 @@ namespace NP.Roxy
     public partial class Core
     {
 
-        internal static Core TheCore { get; } =
+        public static Core TheCore { get; } =
             new Core();
 
         internal Core()
@@ -234,50 +234,6 @@ namespace NP.Roxy
             }
 
             return typeConfig.CreateInstanceOfType<TToImplement>(args);
-        }
-
-
-        private List<INamedTypeSymbol> GetAllWrapperSymbols(INamedTypeSymbol typeToImpl)
-        {
-            List<INamedTypeSymbol> implementationTypes =
-                new List<INamedTypeSymbol>();
-
-            foreach (INamedTypeSymbol baseTypeOrInterface in typeToImpl.GetBaseTypeAndInterfaces())
-            {
-                INamedTypeSymbol unboundBaseTypeOrInterface =
-                    baseTypeOrInterface.IsGenericType ?
-                        baseTypeOrInterface.ConstructUnboundGenericType() :
-                        baseTypeOrInterface;
-
-                INamedTypeSymbol namedWrapperTypeSymbol =
-                    this.GetTWrapper(unboundBaseTypeOrInterface);
-
-                if (namedWrapperTypeSymbol == null)
-                {
-                    implementationTypes.AddRangeIfNotThere(GetAllWrapperSymbols(baseTypeOrInterface));
-                }
-                else
-                {
-                    if (namedWrapperTypeSymbol.IsUnboundGenericType)
-                    {
-                        namedWrapperTypeSymbol = namedWrapperTypeSymbol.ConstructedFrom;
-                    }
-
-                    INamedTypeSymbol resultSymbol;
-                    if (namedWrapperTypeSymbol.IsGenericType)
-                    {
-                        resultSymbol = namedWrapperTypeSymbol.Construct(baseTypeOrInterface.TypeArguments.ToArray());
-                    }
-                    else
-                    {
-                        resultSymbol = namedWrapperTypeSymbol;
-                    }
-
-                    implementationTypes.AddIfNotThere(resultSymbol);
-                }
-            }
-
-            return implementationTypes;
         }
 
         public ITypeConfig FindOrCreateConcretizationTypeConf

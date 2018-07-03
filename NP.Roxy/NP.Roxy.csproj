@@ -181,7 +181,6 @@
     <Compile Include="Core.cs" />
     <Compile Include="Core_Compilation.cs" />
     <Compile Include="Core_Event.cs" />
-    <Compile Include="Core_Wrapper.cs" />
     <Compile Include="ICompilationContainer.cs" />
     <Compile Include="TypeConfigImpl\AutoPropBuilder.cs" />
     <Compile Include="TypeConfigImpl\DefaultConcretizationMemberBuilderSetter.cs" />

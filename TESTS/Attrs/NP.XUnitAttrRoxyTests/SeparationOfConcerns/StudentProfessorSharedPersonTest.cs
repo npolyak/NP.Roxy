@@ -96,7 +96,7 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorSharedPersonTest
             [SharedProperty]
             Person ThePerson { get; }
 
-            [Implementor(typeof(IStudentImplementor))]
+            [Plugin(typeof(IStudentImplementor))]
             IStudent TheStudent { get; }
 
             [Implementor(typeof(IProfessorImplementor))]
