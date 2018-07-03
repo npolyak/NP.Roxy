@@ -291,17 +291,13 @@ namespace NP.Roxy.TypeConfigImpl
         {
             foreach (ISymbol concretePluginMember in this.ConcretePluginNamedTypeSymbol.GetAllMembers())
             {
-                AttributeData concretizationAttrData =
-                    concretePluginMember.GetAttrSymbol(typeof(ConcretizationDelegateAttribute));
+                ConcretizationDelegateAttribute concretizationDelegateAttribute =
+                    concretePluginMember.GetAttrObject<ConcretizationDelegateAttribute>();
 
-                if (concretizationAttrData == null)
+                if (concretizationDelegateAttribute == null)
                     continue;
 
-                TypedConstant constrArg =
-                    concretizationAttrData.ConstructorArguments[0];
-
-                string pluginMemberName = constrArg.Value as string;
-
+                string pluginMemberName = concretizationDelegateAttribute.ConcretizingMemberName;
                 string wrapperName = this.GetWrapperMemberSymbol(pluginMemberName);
 
                 if (wrapperName == null)
@@ -313,15 +309,15 @@ namespace NP.Roxy.TypeConfigImpl
 
                 if (setOrUnset)
                 {
-                    if (concretizationAttrData.MatchesAttrType(typeof(PropGetterConcretizationDelegateAttribute)))
+                    if (concretizationDelegateAttribute is PropGetterConcretizationDelegateAttribute)
                     {
                         wrapperInitBuilder.AddText($"{RoslynAnalysisAndGenerationUtils.GetPropGetterDelegateAssigment(wrapperName)}");
                     }
-                    else if (concretizationAttrData.MatchesAttrType(typeof(PropSetterConcretizationDelegateAttribute)))
+                    else if (concretizationDelegateAttribute is PropSetterConcretizationDelegateAttribute)
                     {
                         wrapperInitBuilder.AddText($"{RoslynAnalysisAndGenerationUtils.GetPropSetterDelegateAssigment(wrapperName)}");
                     }
-                    else //if (concretizationAttrData.MatchesAttrType(typeof(MethodConcretizationDelegateAttribute)))
+                    else //if (concretizationAttrData is MethodConcretizationDelegateAttribute)
                     {
                         wrapperInitBuilder.AddText($"{wrapperName}");
                     }

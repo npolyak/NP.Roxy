@@ -1584,7 +1584,7 @@ namespace NP.Roxy
             object[] args = attributeData.ConstructorArguments.Select(arg => arg.ToObj()).ToArray();
 
             T result = 
-                (T)Activator.CreateInstance(typeof(T), args);
+                (T)Activator.CreateInstance(attributeData.AttributeClass.ToCSharpType(), args);
 
             foreach(var kvp in attributeData.NamedArguments)
             {
