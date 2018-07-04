@@ -77,29 +77,33 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorSharedPersonTest
         [ImplementationClassName("Student1")]
         public interface IStudentImplementor
         {
+            [Plugin]
             Person ThePerson { get; }
 
+            [Plugin]
             Learner TheLearner { get; }
         }
 
         [ImplementationClassName("Professor1")]
         public interface IProfessorImplementor
         {
+            [Plugin]
             Person ThePerson { get; }
 
+            [Plugin]
             Teacher TheTeacher { get; }
         }
 
         [ImplementationClassName("StudentAndProfessorSharedImplementor")]
-        public interface IStudentAndProfessorSharedImplementor
+        public interface IStudentAndProfessorImplementor
         {
-            [SharedProperty]
-            Person ThePerson { get; }
+            //[SharedProperty]
+            //Person ThePerson { get; }
 
             [Plugin(typeof(IStudentImplementor))]
             IStudent TheStudent { get; }
 
-            [Implementor(typeof(IProfessorImplementor))]
+            [Plugin(typeof(IProfessorImplementor))]
             IProfessor TheProfessor { get; }
         }
 
@@ -109,13 +113,13 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorSharedPersonTest
 
 
         [Fact]
-        public void RunStudentAndProfessorSharedPersonTest()
+        public void RunStudentAndProfessorPersonTest()
         {
             Core.SetSaveOnErrorPath("GeneratedCode");
 
             // combinding Person, learning and teaching concerns. 
             IStudentAndProfessor studentAndProfessorImplementation =
-                Core.CreateImplementedInstance<IStudentAndProfessor, IStudentAndProfessorSharedImplementor>();
+                Core.CreateImplementedInstance<IStudentAndProfessor, IStudentAndProfessorImplementor>();
 
             studentAndProfessorImplementation.Name = "Bruce";
 

@@ -1,4 +1,5 @@
 ﻿using NP.Roxy;
+using NP.Roxy.Attributes;
 using NP.Roxy.TypeConfigImpl;
 using System;
 using System.Collections.Generic;
@@ -148,7 +149,7 @@ namespace NP.XUnitRoxyTests.Demos
         [Fact]
         public static void RunTest()
         {
-            ITypeConfig typeConfig = Core.FindOrCreateTypeConfig<IPerson, NoType>("Person");
+            ITypeConfig typeConfig = Core.FindOrCreateTypeConfig<IPerson, NoType>("Person1234");
 
             typeConfig.SetEventBuilder(PropertyChangedEventBuilder.ThePropertyChangedEventBuilder, "PropertyChanged");
 
@@ -211,6 +212,7 @@ namespace NP.XUnitRoxyTests.Demos
 
         public interface PersonImplementationWrapperInterface
         {
+            [Plugin]
             PersonImpl ThePersonImplementation { get; }
         }
 
@@ -221,7 +223,7 @@ namespace NP.XUnitRoxyTests.Demos
             // get the type configuration object. The class that it is going to generate
             // will be called "MyPersonImplementation"
             ITypeConfig typeConfig =
-                Core.FindOrCreateTypeConfig<IPerson, PersonImplementationWrapperInterface>("MyPersonImplementation");
+                Core.FindOrCreateTypeConfig<IPerson, PersonImplementationWrapperInterface>("MyPersonImplementation1234");
 
             // allow access to non-public members of 
             // PersonImplementationWrapperInterface.ThePersonImplementation object.

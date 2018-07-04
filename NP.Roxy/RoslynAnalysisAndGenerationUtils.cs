@@ -1581,7 +1581,7 @@ namespace NP.Roxy
         public static T GetAttrObject<T>(this AttributeData attributeData)
             where T : Attribute
         {
-            object[] args = attributeData.ConstructorArguments.Select(arg => arg.ToObj()).ToArray();
+            object[] args = attributeData.ConstructorArguments.Select(arg => arg.ToObj(false)).ToArray();
 
             T result = 
                 (T)Activator.CreateInstance(attributeData.AttributeClass.ToCSharpType(), args);

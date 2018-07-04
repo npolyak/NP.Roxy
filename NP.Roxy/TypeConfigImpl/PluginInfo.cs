@@ -440,7 +440,7 @@ namespace NP.Roxy.TypeConfigImpl
             (
                 this.PluginPropName,
                 this.PluginPropBackingFieldName,
-                this.PluginImplementationNamedTypeSymbol,
+                this.PluginNamedTypeSymbol,
                 Accessibility.Public,
                 beforeSetterStr,
                 afterSetterStr,

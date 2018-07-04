@@ -189,7 +189,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SeparationOfConcerns\PersonTest.cs" />
     <Compile Include="SeparationOfConcerns\StudentProfessorInheritFromPersonTest.cs" />
-    <Compile Include="SeparationOfConcerns\StudentProfessorSharedPersonTest.cs" />
+    <Compile Include="SeparationOfConcerns\StudentProfessorPersonTest.cs" />
     <Compile Include="XUnitTestBase.cs" />
   </ItemGroup>
   <ItemGroup>

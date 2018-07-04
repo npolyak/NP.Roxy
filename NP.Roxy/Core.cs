@@ -206,6 +206,20 @@ namespace NP.Roxy
             return typeConfig;
         }
 
+        public ITypeConfig FindOrCreateTypeConfigUsingImplementorWithAttrs
+        (
+            Type typeToImplement,
+            Type implementorType)
+        {
+            this.AddTypesToReference(new[] { typeToImplement, implementorType });
+
+            return FindOrCreateTypeConfigUsingImplementorWithAttrs
+                (
+                    typeToImplement.GetTypeSymbol(this.TheCompilation),
+                    implementorType.GetTypeSymbol(this.TheCompilation)
+                );
+        }
+
         public TToImplement CreateImplInstance<TToImplement, TImplementor>
         (
             params object[] args)
@@ -213,8 +227,8 @@ namespace NP.Roxy
             ITypeConfig typeConfig =
                 FindOrCreateTypeConfigUsingImplementorWithAttrs
                 (
-                    typeof(TToImplement).GetTypeSymbol(this.TheCompilation),
-                    typeof(TImplementor).GetTypeSymbol(this.TheCompilation)
+                    typeof(TToImplement),
+                    typeof(TImplementor)
                 );
 
             return typeConfig.CreateInstanceOfType<TToImplement>(args);

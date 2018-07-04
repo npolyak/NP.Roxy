@@ -107,7 +107,7 @@ namespace NP.Roxy.TypeConfigImpl
         public string ClassName { get; set; }
 
         [XmlIgnore]
-        public Core TheCore { get; }
+        public Core TheCore { get; private set; }
 
         public INamedTypeSymbol TypeToImplementSymbol { get; private set; }
 
@@ -262,13 +262,12 @@ namespace NP.Roxy.TypeConfigImpl
             SetMemberSymbols();
         }
 
-        public TypeConfig
-        (
+        private void Init
+         (
             Core core,
-            string className = null,
-            INamedTypeSymbol typeToImplementSymbol = null,
-            INamedTypeSymbol implementorTypeSymbol = null
-        )
+            string className,
+            INamedTypeSymbol typeToImplementSymbol,
+            INamedTypeSymbol implementorTypeSymbol = null)
         {
             TheCore = core;
             this.ClassName = className;
@@ -283,6 +282,17 @@ namespace NP.Roxy.TypeConfigImpl
                 typeToImplementSymbol,
                 implementorTypeSymbol
             );
+        }
+
+        public TypeConfig
+        (
+            Core core,
+            string className,
+            INamedTypeSymbol typeToImplementSymbol,
+            INamedTypeSymbol implementorTypeSymbol = null
+        )
+        {
+            Init(core, className, typeToImplementSymbol, implementorTypeSymbol);
         }
 
         internal PluginInfo GetWrappedObjInfo(string wrappedObjPropName)

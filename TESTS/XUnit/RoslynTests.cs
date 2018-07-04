@@ -34,10 +34,10 @@ namespace NP.XUnitRoxyTests.RoslynTests
         public static void RunTest()
         {
             Core.SetSaveOnErrorPath("GeneratedCode");
-            ITypeConfig typeConfig = Core.FindOrCreateTypeConfig<IPerson, MyImplementor>();
-            typeConfig.ConfigurationCompleted();
-            IPerson person = 
-                typeConfig.CreateInstanceOfType<IPerson>();
+            //ITypeConfig typeConfig = Core.FindOrCreateTypeConfig<IPerson, MyImplementor>();
+            //typeConfig.ConfigurationCompleted();
+            //IPerson person = 
+            //    typeConfig.CreateInstanceOfType<IPerson>();
 
             Core.Save("GeneratedCode");
         }
