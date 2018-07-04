@@ -53,14 +53,12 @@ namespace NP.Roxy.Attributes
             string wrapperMemberName, 
             string wrappedMemberName = null, 
             bool allowNonPublic = false, 
-            bool overrideVirtual = false,
             Accessibility wrapperAccessibility = Accessibility.Public, 
             bool methodToProp = false)
         {
             WrapperMemberName = wrapperMemberName;
             WrappedMemberName = wrappedMemberName;
             AllowNonPublic = allowNonPublic;
-            OverrideVirtual = overrideVirtual;
             WrapperAccessibility = wrapperAccessibility;
             MethodToProp = methodToProp;
         }

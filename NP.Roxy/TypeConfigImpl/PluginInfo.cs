@@ -69,13 +69,6 @@ namespace NP.Roxy.TypeConfigImpl
         public IEnumerable<INamedTypeSymbol> StaticMethodContainers { get; } =
             new List<INamedTypeSymbol>();
 
-        public PluginInfo(Core core, IPropertySymbol pluginPropSymbol, INamedTypeSymbol pluginImplementationType)
-        {
-            this.PluginPropSymbol = pluginPropSymbol;
-
-            this.TheCore = core;
-        }
-
         public bool InitializedThroughConstructor
         {
             get
@@ -105,9 +98,20 @@ namespace NP.Roxy.TypeConfigImpl
         public INamedTypeSymbol PluginNamedTypeSymbol =>
             PluginPropSymbol?.Type as INamedTypeSymbol;
 
+        INamedTypeSymbol _pluginImplementationNamedTypeSymbol;
         [XmlIgnore]
-        public INamedTypeSymbol PluginImplementationNamedTypeSymbol =>
-            PluginPropSymbol?.Type as INamedTypeSymbol;
+        public INamedTypeSymbol PluginImplementationNamedTypeSymbol
+        {
+            get => _pluginImplementationNamedTypeSymbol ?? PluginNamedTypeSymbol;
+
+            set
+            {
+                if (_pluginImplementationNamedTypeSymbol.ObjEquals(value))
+                    return;
+
+                _pluginImplementationNamedTypeSymbol = value;
+            }
+        }
 
         [XmlIgnore]
         public string PluginImplementationClassName =>
@@ -167,10 +171,46 @@ namespace NP.Roxy.TypeConfigImpl
         public IEnumerable<MemberMapInfoBase> PropPluginMemberNameMaps =>
             PluginMemberNameMaps.Where(memberMap => memberMap.TheMemberType == ClassMemberType.Property);
 
-        public void SetFromParentSymbol(INamedTypeSymbol parentTypeSymbol)
+
+        public PluginInfo
+        (
+            Core core,
+            IPropertySymbol pluginPropSymbol,
+            IEnumerable<ISymbol> implementableSymbols,
+            INamedTypeSymbol pluginImplementorType)
         {
-            this.PluginPropSymbol = 
-                parentTypeSymbol.GetMemberByName<IPropertySymbol>(PluginPropName);
+            this.TheCore = core;
+
+            this.PluginPropSymbol = pluginPropSymbol;
+
+            foreach (StaticClassAttribute staticClassAttr in pluginPropSymbol.GetAttrObjects<StaticClassAttribute>())
+            {
+                this.AddStaticMethodsContainerType(staticClassAttr.StaticClassType);
+            }
+
+            foreach (PullMemberAttribute pullAttr in pluginPropSymbol.GetAttrObjects<PullMemberAttribute>())
+            {
+                ISymbol wrapperMemberSymbol = null;
+
+                if (pullAttr.WrapperMemberName != null)
+                {
+                    if (pullAttr.WrapperMemberName != RoslynAnalysisAndGenerationUtils.THIS)
+                    {
+                        wrapperMemberSymbol = implementableSymbols.GetImplementableSymbolByName(pullAttr.WrapperMemberName);
+                    }
+                }
+
+                this.SetMap(pullAttr.WrappedMemberName, wrapperMemberSymbol, pullAttr.AllowNonPublic);
+            }
+
+            if (pluginImplementorType != null)
+            {
+                ITypeConfig implementorTypeConfig =
+                    TheCore.FindOrCreateTypeConfigUsingImplementorWithAttrs(this.PluginNamedTypeSymbol, pluginImplementorType);
+
+                this.PluginImplementationNamedTypeSymbol =
+                    implementorTypeConfig.TheSelfTypeSymbol;
+            }
         }
 
         MemberMapInfoBase FindMapImpl<T>(T symbol, Func<MemberMapInfoBase, T> findMethod)

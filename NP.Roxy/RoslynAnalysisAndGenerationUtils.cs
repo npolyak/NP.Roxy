@@ -1611,6 +1611,24 @@ namespace NP.Roxy
         {
             return symbol.GetAttrSymbols(typeof(T)).Select(attrData => attrData.GetAttrObject<T>()).ToList();
         }
+
+        public static ISymbol GetImplementableSymbolByName(this IEnumerable<ISymbol> implementableSymbols, string memberName)
+        {
+            IEnumerable<ISymbol> wrapperMemberSymbols = implementableSymbols.Where(symbol => symbol.Name == memberName).ToList();
+
+            if (wrapperMemberSymbols.IsNullOrEmpty())
+            {
+                throw new Exception($"Roxy Usage Error: no implementable symbol for member name {memberName}");
+            }
+            else if (wrapperMemberSymbols.Count() > 1)
+            {
+                throw new Exception($"Roxy Usage Error: there is more than one implementable member corresponding to member name {memberName}. Cannot resolve the member by name.");
+            }
+
+            ISymbol wrapperMemberSymbol = wrapperMemberSymbols.Single();
+
+            return wrapperMemberSymbol;
+        }
     }
 
     public class SymbolComparer : IEqualityComparer<ISymbol>

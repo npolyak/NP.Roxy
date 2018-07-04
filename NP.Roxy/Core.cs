@@ -180,58 +180,42 @@ namespace NP.Roxy
             }
         }
 
+        public ITypeConfig FindOrCreateTypeConfigUsingImplementorWithAttrs
+        (
+            INamedTypeSymbol typeToImplementSymbol, 
+            INamedTypeSymbol implementorTypeSymbol)
+        {
+            ImplementationClassNameAttribute implementationClassNameAttribute =
+                implementorTypeSymbol.GetAttrObject<ImplementationClassNameAttribute>();
+
+            string className = implementationClassNameAttribute.ClassName;
+
+            ITypeConfig typeConfig =
+                FindOrCreateTypeConf(className, typeToImplementSymbol, implementorTypeSymbol);
+
+            if (implementorTypeSymbol.IsNoTypeOrNull())
+            {
+                throw new Exception("Roxy Usage Error: CreateWrapper should have a non-trivial Wrapper argument passed to it.");
+            }
+
+            if (!typeConfig.ConfigurationHasBeenCompleted)
+            {
+                typeConfig.ConfigurationCompleted();
+            }
+
+            return typeConfig;
+        }
 
         public TToImplement CreateImplInstance<TToImplement, TImplementor>
         (
             params object[] args)
         {
-            Type implementorType = typeof(TImplementor);
-
-            string className = implementorType.GetCustomAttribute<ImplementationClassNameAttribute>()?.ClassName;
-
             ITypeConfig typeConfig =
-                FindOrCreateTypeConf<TToImplement, TImplementor>(className);
-
-            if (implementorType == typeof(NoType))
-                throw new Exception("Roxy Usage Error: CreateWrapper should have a non-trivial Wrapper argument passed to it.");
-
-            if (!typeConfig.ConfigurationHasBeenCompleted)
-            {
-                var members = implementorType.GetMembers();
-
-                foreach (MemberInfo memberInfo in members)
-                {
-                    IEnumerable<StaticClassAttribute> staticClassAttributes =
-                        memberInfo.GetCustomAttributes<StaticClassAttribute>();
-
-                    foreach (StaticClassAttribute staticClassAttr in staticClassAttributes)
-                    {
-                        typeConfig.AddStaticUtilsClass(memberInfo.Name, staticClassAttr.StaticClassType);
-                    }
-
-                    IEnumerable<PullMemberAttribute> pullAttrs =
-                        memberInfo.GetCustomAttributes<PullMemberAttribute>();
-
-                    foreach (PullMemberAttribute pullAttr in pullAttrs)
-                    {
-                        if (pullAttr.WrapperMemberName != null)
-                        {
-                            typeConfig.SetMemberMap(memberInfo.Name, pullAttr.WrappedMemberName, pullAttr.WrapperMemberName, pullAttr.AllowNonPublic);
-                        }
-                        else
-                        {
-                            typeConfig.SetThisMemberMap(memberInfo.Name, pullAttr.WrappedMemberName, pullAttr.AllowNonPublic);
-                        }
-
-                        if (pullAttr.OverrideVirtual)
-                        {
-                            typeConfig.SetOverrideVirtual(pullAttr.WrapperMemberName);
-                        }
-                    }
-                }
-
-                typeConfig.ConfigurationCompleted();
-            }
+                FindOrCreateTypeConfigUsingImplementorWithAttrs
+                (
+                    typeof(TToImplement).GetTypeSymbol(this.TheCompilation),
+                    typeof(TImplementor).GetTypeSymbol(this.TheCompilation)
+                );
 
             return typeConfig.CreateInstanceOfType<TToImplement>(args);
         }

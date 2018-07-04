@@ -228,6 +228,14 @@ namespace NP.Roxy.TypeConfigImpl
 
             this.ClassName = TypeToImplementSymbol.GetClassName(this.ClassName);
 
+            IEnumerable<OverrideVirtualAttribute> overrideVirtualAttrs =
+                ImplementorTypeSymbol.GetAttrObjects<OverrideVirtualAttribute>();
+
+            foreach(OverrideVirtualAttribute overrideVirtualAttr in overrideVirtualAttrs)
+            {
+                SetOverrideVirtualMembers(overrideVirtualAttr.IncludeBase, overrideVirtualAttr.MemberNames);
+            }
+
             IEnumerable<IPropertySymbol> pluginProps =
                 ImplementorTypeSymbol
                     .GetMembers()
@@ -241,12 +249,17 @@ namespace NP.Roxy.TypeConfigImpl
                     continue;
 
                 PluginInfo wrappedObjInfo =
-                    new PluginInfo(this.TheCore, prop, pluginAttr.ImplementorType.GetGenericTypeSymbol(this.TheCompilation));
+                    new PluginInfo
+                    (
+                        this.TheCore, 
+                        prop, 
+                        ImplementableSymbols, 
+                        pluginAttr.ImplementorType.GetGenericTypeSymbol(this.TheCompilation));
 
                 _pluginInfos.Add(wrappedObjInfo);
             }
 
-            SetMembersFromCompilation();
+            SetMemberSymbols();
         }
 
         public TypeConfig
@@ -309,20 +322,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         public ISymbol GetWrapperMemberSymbolByName(string wrapperMemberName)
         {
-            IEnumerable<ISymbol> wrapperMemberSymbols = ImplementableSymbols.Where(symbol => symbol.Name == wrapperMemberName).ToList();
-
-            if (wrapperMemberSymbols.IsNullOrEmpty())
-            {
-                throw new Exception($"Roxy Usage Error: no implementable symbol for member name {wrapperMemberName}");
-            }
-            else if (wrapperMemberSymbols.Count() > 1)
-            {
-                throw new Exception($"Roxy Usage Error: there is more than one implementable member corresponding to member name {wrapperMemberName}. Cannot resolve the member by name.");
-            }
-
-            ISymbol wrapperMemberSymbol = wrapperMemberSymbols.Single();
-
-            return wrapperMemberSymbol;
+            return ImplementableSymbols.GetImplementableSymbolByName(wrapperMemberName);
         }
 
         public void SetMemberMap
@@ -381,15 +381,6 @@ namespace NP.Roxy.TypeConfigImpl
             wrappedObjInfo.AddStaticMethodsContainerType(staticMethodsContainerClass);
         }
 
-        private void SetMembersFromCompilation()
-        {
-            //foreach (PluginInfo wrappedObjInfo in this._pluginInfos)
-            //{
-            //    wrappedObjInfo.SetFromParentSymbol(ImplementorTypeSymbol);
-            //}
-
-            SetMemberSymbols();
-        }
 
         public void SetEventArgThisIdx(string eventName, int idx)
         {
