@@ -97,17 +97,12 @@ namespace NP.Roxy.TypeConfigImpl
         void RecompileAssembly();
     }
 
-    public class TypeConfigBase
-    {
-        internal const string INIT_METHOD_NAME = "__Init";
-    }
-
-
     public class TypeConfig : 
-        TypeConfigBase,
         ITypeConfig,
         ICompilationContainer
     {
+        internal const string INIT_METHOD_NAME = "__Init";
+
         [XmlAttribute]
         public string ClassName { get; set; }
 
