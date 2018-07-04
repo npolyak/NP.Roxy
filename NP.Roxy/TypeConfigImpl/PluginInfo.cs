@@ -59,14 +59,6 @@ namespace NP.Roxy.TypeConfigImpl
 
                 _pluginPropSymbol?.GetAttrObjects<SuppressWrappingAttribute>()
                                  ?.DoForEach(suppressAttr => _membersNotToWrap.Add(suppressAttr.MemberName));
-
-                AttributeData implAttrData = PluginPropSymbol.GetAttrSymbol(typeof(ImplementorAttribute));
-
-                if (implAttrData != null)
-                {
-                    this.ConcretePluginNamedTypeSymbol =
-                        (INamedTypeSymbol)implAttrData.ConstructorArguments[0].Value;
-                }
             }
         }
 
@@ -114,22 +106,26 @@ namespace NP.Roxy.TypeConfigImpl
             PluginPropSymbol?.Type as INamedTypeSymbol;
 
         [XmlIgnore]
-        public string PluginClassName =>
-            PluginNamedTypeSymbol.Name;
+        public INamedTypeSymbol PluginImplementationNamedTypeSymbol =>
+            PluginPropSymbol?.Type as INamedTypeSymbol;
+
+        [XmlIgnore]
+        public string PluginImplementationClassName =>
+            PluginImplementationNamedTypeSymbol.Name;
 
 
         INamedTypeSymbol _concretePluginNamedTypeSymbol = null;
         [XmlIgnore]
         public INamedTypeSymbol ConcretePluginNamedTypeSymbol
         {
-            get => _concretePluginNamedTypeSymbol ?? PluginNamedTypeSymbol;
+            get => _concretePluginNamedTypeSymbol ?? PluginImplementationNamedTypeSymbol;
 
             protected set
             {
                 if (ReferenceEquals(_concretePluginNamedTypeSymbol, value))
                     return;
 
-                if (ReferenceEquals(PluginNamedTypeSymbol, value))
+                if (ReferenceEquals(PluginImplementationNamedTypeSymbol, value))
                 {
                     _concretePluginNamedTypeSymbol = null;
 
@@ -142,7 +138,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         [XmlIgnore]
         public string ConcretePluginClassName =>
-            this.ConcretePluginNamedTypeSymbol.Name;
+            this.ConcretePluginNamedTypeSymbol?.Name;
 
         [XmlAttribute]
         public string PluginPropName => PluginPropSymbol.Name;
@@ -237,7 +233,7 @@ namespace NP.Roxy.TypeConfigImpl
             map.SetFromContainingType
             (
                 this.TheCompilation,
-                this.PluginNamedTypeSymbol,
+                this.PluginImplementationNamedTypeSymbol,
                 this.StaticMethodContainers);
 
             if (map.PluginMemberSymbol == null)
@@ -382,11 +378,11 @@ namespace NP.Roxy.TypeConfigImpl
 
         public void AddPluginClass(RoslynCodeBuilder roslynCodeBuilder)
         {
-            if (this.PluginNamedTypeSymbol.IsAbstract)
+            if (this.PluginImplementationNamedTypeSymbol.IsAbstract)
             {
                 // here, the concretization is created
                 this.ConcretePluginNamedTypeSymbol =
-                    this.TheCore.FindOrCreateConcretizationTypeConf(this.PluginNamedTypeSymbol).TheSelfTypeSymbol;
+                    this.TheCore.FindOrCreateConcretizationTypeConf(this.PluginImplementationNamedTypeSymbol).TheSelfTypeSymbol;
             }
 
             string beforeSetterStr = BuildWrapperInit(EventPluginMemberNameMaps, PropPluginMemberNameMaps, false);
@@ -404,14 +400,14 @@ namespace NP.Roxy.TypeConfigImpl
             (
                 this.PluginPropName,
                 this.PluginPropBackingFieldName,
-                this.PluginNamedTypeSymbol,
+                this.PluginImplementationNamedTypeSymbol,
                 Accessibility.Public,
                 beforeSetterStr,
                 afterSetterStr,
                 setterAccessibility
             );
 
-            if ((ConcretePluginClassName != PluginClassName))
+            if ((ConcretePluginClassName != PluginImplementationClassName))
             {
                 roslynCodeBuilder.AddEmptyLine();
                 roslynCodeBuilder.AddPropOpening(WrapperObjConcretizedPropName, ConcretePluginNamedTypeSymbol);
@@ -429,13 +425,13 @@ namespace NP.Roxy.TypeConfigImpl
             if (InitializedThroughConstructor)
                 return;
 
-            if (PluginNamedTypeSymbol.TypeKind == TypeKind.Enum)
+            if (PluginImplementationNamedTypeSymbol.TypeKind == TypeKind.Enum)
                 return;
 
             roslynCodeBuilder.AddAssignCoreObj
             (
                 this.PluginPropName,
-                PluginNamedTypeSymbol,
+                PluginImplementationNamedTypeSymbol,
                 ConcretePluginClassName
             );
         }

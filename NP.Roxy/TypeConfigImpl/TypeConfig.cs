@@ -621,7 +621,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         private string GetWrappedObjConstructorParamStr()
         {
-            return _pluginInfos.StrConcat((wrappedObjInfo) => $"{wrappedObjInfo.ConcretePluginNamedTypeSymbol.GetFullTypeString()} {wrappedObjInfo.PluginClassName.FirstCharToLowerCase(true)}");
+            return _pluginInfos.StrConcat((wrappedObjInfo) => $"{wrappedObjInfo.ConcretePluginNamedTypeSymbol.GetFullTypeString()} {wrappedObjInfo.PluginImplementationClassName.FirstCharToLowerCase(true)}");
         }
 
         void AddWrappedObjsConstructor(RoslynCodeBuilder roslynCodeBuilder)
@@ -639,7 +639,7 @@ namespace NP.Roxy.TypeConfigImpl
             foreach (PluginInfo wrapObjInfo in _pluginInfos)
             {
                 string assignmentLine =
-                    $"{wrapObjInfo.PluginPropName} = {wrapObjInfo.PluginClassName.FirstCharToLowerCase(true)}";
+                    $"{wrapObjInfo.PluginPropName} = {wrapObjInfo.PluginImplementationClassName.FirstCharToLowerCase(true)}";
 
                 roslynCodeBuilder.AddLine(assignmentLine, true);
             }
