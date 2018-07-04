@@ -233,7 +233,7 @@ namespace NP.Roxy.TypeConfigImpl
                     .GetMembers()
                     .GetItemsOfType<ISymbol, IPropertySymbol>();
 
-            foreach (ISymbol prop in pluginProps)
+            foreach (IPropertySymbol prop in pluginProps)
             {
                 PluginAttribute pluginAttr = prop.GetAttrObject<PluginAttribute>();
 
@@ -241,7 +241,7 @@ namespace NP.Roxy.TypeConfigImpl
                     continue;
 
                 PluginInfo wrappedObjInfo =
-                    new PluginInfo(this.TheCore, prop.Name);
+                    new PluginInfo(this.TheCore, prop, pluginAttr.ImplementorType.GetGenericTypeSymbol(this.TheCompilation));
 
                 _pluginInfos.Add(wrappedObjInfo);
             }
@@ -383,10 +383,10 @@ namespace NP.Roxy.TypeConfigImpl
 
         private void SetMembersFromCompilation()
         {
-            foreach (PluginInfo wrappedObjInfo in this._pluginInfos)
-            {
-                wrappedObjInfo.SetFromParentSymbol(ImplementorTypeSymbol);
-            }
+            //foreach (PluginInfo wrappedObjInfo in this._pluginInfos)
+            //{
+            //    wrappedObjInfo.SetFromParentSymbol(ImplementorTypeSymbol);
+            //}
 
             SetMemberSymbols();
         }

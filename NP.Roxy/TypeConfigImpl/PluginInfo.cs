@@ -77,9 +77,10 @@ namespace NP.Roxy.TypeConfigImpl
         public IEnumerable<INamedTypeSymbol> StaticMethodContainers { get; } =
             new List<INamedTypeSymbol>();
 
-        public PluginInfo(Core core, string wrappedObjPropName)
+        public PluginInfo(Core core, IPropertySymbol pluginPropSymbol, INamedTypeSymbol pluginImplementationType)
         {
-            this.PluginPropName = wrappedObjPropName;
+            this.PluginPropSymbol = pluginPropSymbol;
+
             this.TheCore = core;
         }
 
@@ -144,7 +145,7 @@ namespace NP.Roxy.TypeConfigImpl
             this.ConcretePluginNamedTypeSymbol.Name;
 
         [XmlAttribute]
-        public string PluginPropName { get; private set; }
+        public string PluginPropName => PluginPropSymbol.Name;
 
         [XmlIgnore]
         public string WrapperObjConcretizedPropName =>
