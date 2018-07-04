@@ -26,30 +26,20 @@ namespace NP.XUnitRoxyTests.RoslynTests
 
         public class MyImplementor
         {
-            [Plugin(typeof(Person), 23, ClassMemberType.Method)]
-            public IPerson Person1 { get; set; }
-
             [Plugin(ImplementorType = typeof(Person))]
-            public IPerson Person2 { get; set; }
+            public IPerson ThePerson { get; set; }
         }
 
         [Fact]
         public static void RunTest()
         {
+            Core.SetSaveOnErrorPath("GeneratedCode");
             ITypeConfig typeConfig = Core.FindOrCreateTypeConfig<IPerson, MyImplementor>();
+            typeConfig.ConfigurationCompleted();
+            IPerson person = 
+                typeConfig.CreateInstanceOfType<IPerson>();
 
-            Compilation compilation =
-                Core.TheCore.TheCompilation;
-
-            INamedTypeSymbol namedTypeSymbol = 
-                typeConfig.ImplementorTypeSymbol;
-
-            IPropertySymbol person1Symb = 
-                namedTypeSymbol.GetMemberByName<IPropertySymbol>(nameof(MyImplementor.Person1));
-
-            AttributeData attrData = person1Symb.GetAttrSymbol(typeof(PluginAttribute));
-
-            PluginAttribute attrObj = attrData.GetAttrObject<PluginAttribute>();
+            Core.Save("GeneratedCode");
         }
     }
 }

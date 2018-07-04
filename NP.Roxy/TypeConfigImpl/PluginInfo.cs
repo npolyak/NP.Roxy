@@ -57,7 +57,8 @@ namespace NP.Roxy.TypeConfigImpl
 
                 _pluginPropSymbol = value;
 
-                _pluginPropSymbol.GetAttrSymbols(typeof(SuppressWrappingAttribute)).DoForEach(attrData => _membersNotToWrap.Add(attrData.ConstructorArguments[0].Value as string));
+                _pluginPropSymbol?.GetAttrObjects<SuppressWrappingAttribute>()
+                                 ?.DoForEach(suppressAttr => _membersNotToWrap.Add(suppressAttr.MemberName));
 
                 AttributeData implAttrData = PluginPropSymbol.GetAttrSymbol(typeof(ImplementorAttribute));
 

@@ -6,20 +6,14 @@ namespace NP.Roxy.Attributes
     public class PluginAttribute : Attribute
     {
         public Type ImplementorType { get; set; }
-        public int I { get; set; }
-        public ClassMemberType TheClassMemberType { get; set; }
 
         public PluginAttribute()
         {
         }
 
-        public PluginAttribute(Type implementorType, int i, ClassMemberType classMemberType)
+        public PluginAttribute(Type implementorType)
         {
             ImplementorType = implementorType;
-
-            I = i;
-
-            TheClassMemberType = classMemberType;
         }
     }
 }

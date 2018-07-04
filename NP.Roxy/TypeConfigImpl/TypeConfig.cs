@@ -233,15 +233,18 @@ namespace NP.Roxy.TypeConfigImpl
 
             this.ClassName = TypeToImplementSymbol.GetClassName(this.ClassName);
 
-            List<IPropertySymbol> props =
+            IEnumerable<IPropertySymbol> pluginProps =
                 ImplementorTypeSymbol
                     .GetMembers()
-                    .GetItemsOfType<ISymbol, IPropertySymbol>()
-                    .Where(item => item.GetAttrSymbol(typeof(PluginAttribute)) != null)
-                    .ToList();
+                    .GetItemsOfType<ISymbol, IPropertySymbol>();
 
-            foreach (ISymbol prop in props)
+            foreach (ISymbol prop in pluginProps)
             {
+                PluginAttribute pluginAttr = prop.GetAttrObject<PluginAttribute>();
+
+                if (pluginAttr == null)
+                    continue;
+
                 PluginInfo wrappedObjInfo =
                     new PluginInfo(this.TheCore, prop.Name);
 
