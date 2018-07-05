@@ -7,13 +7,12 @@ namespace NP.Roxy.Attributes
     {
         public Type ImplementorType { get; set; }
 
-        public PluginAttribute()
-        {
-        }
+        public bool IsShared { get; set; }
 
-        public PluginAttribute(Type implementorType)
+        public PluginAttribute(Type implementorType = null, bool isShared = false)
         {
             ImplementorType = implementorType;
+            IsShared = isShared;
         }
     }
 }

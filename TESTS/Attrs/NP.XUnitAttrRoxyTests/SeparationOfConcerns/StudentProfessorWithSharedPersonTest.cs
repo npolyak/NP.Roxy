@@ -5,7 +5,7 @@ using System;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NP.XUnitAttrRoxyTests.StudentProfessorPersonTest
+namespace NP.XUnitAttrRoxyTests.StudentProfessorWithSharedPersonTest
 {
     public interface IPerson
     {
@@ -14,7 +14,7 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorPersonTest
         void Walk();
     }
 
-    public class Person
+    public class Person : IPerson
     {
         public string Name { get; set; }
 
@@ -45,9 +45,9 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorPersonTest
     }
 
     // learning concern implementation
-    public class Learner : ILearner
+    public abstract class Learner : ILearner
     {
-        public string Name { get; set; }
+        public abstract string Name { get; }
 
         public void Learn()
         {
@@ -56,9 +56,9 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorPersonTest
     }
 
     // teaching concern implementation
-    public class Teacher : ITeacher
+    public abstract class Teacher : ITeacher
     {
-        public string Name { get; set; }
+        public abstract string Name { get; }
 
         public void Teach()
         {
@@ -97,11 +97,13 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorPersonTest
         [ImplementationClassName("StudentAndProfessorSharedImplementor")]
         public interface IStudentAndProfessorImplementor
         {
+            //[SharedProperty]
+            //Person ThePerson { get; }
+
             [Plugin(typeof(IStudentImplementor))]
             IStudent TheStudent { get; }
 
             [Plugin(typeof(IProfessorImplementor))]
-            [SuppressWrapping(nameof(IProfessor.Walk))]
             IProfessor TheProfessor { get; }
         }
 
@@ -111,7 +113,7 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorPersonTest
 
 
         [Fact]
-        public void RunStudentAndProfessorPersonTest()
+        public void RunStudentAndProfessorSharedPersonTest()
         {
             Core.SetSaveOnErrorPath("GeneratedCode");
 

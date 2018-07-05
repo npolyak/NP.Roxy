@@ -208,6 +208,9 @@ namespace NP.Roxy
 
         public static object ToObj(this TypedConstant typedConstant, bool leaveTypeSymbol = true)
         {
+            if (typedConstant.IsNull)
+                return null;
+
             switch (typedConstant.Kind)
             {
                 case TypedConstantKind.Primitive:

@@ -63,64 +63,6 @@ namespace NP.Roxy.TypeConfigImpl
     }
 
 
-    internal class ExpressionMemberMapInfo : MemberMapInfoBase
-    {
-        internal override bool IsAbstract => false;
-
-        public Expression TheExpression { get; private set; }
-
-        public ExpressionMemberMapInfo
-        (
-            ISymbol wrapperMemberSymbol, 
-            string pluginPropName, 
-            Expression expression) 
-            : 
-            base(wrapperMemberSymbol, pluginPropName)
-        {
-            this.TheExpression = expression;
-        }
-
-        internal override void AddAssignPluginProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder)
-        {
-            
-        }
-
-        internal override void AddPropAssignmentStr(bool setOrUnset, RoslynCodeBuilder roslynCodeBuilder)
-        {
-            
-        }
-
-        internal override void AddPluginMethodLine(IMethodSymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
-        {
-            ReplaceArgsExprStringBuilder exprStrBuilder =
-                new ReplaceArgsExprStringBuilder(this.PluginPropName.ToCollection().Union(wrapperSymbol.Parameters.Select(param => param.Name)).ToArray());
-
-            exprStrBuilder.Visit(this.TheExpression);
-
-            roslynCodeBuilder.AddText(exprStrBuilder.ToStr() + ";");
-        }
-
-        internal override void AddPluginPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
-        {
-            ReplaceArgsExprStringBuilder exprStrBuilder = 
-                new ReplaceArgsExprStringBuilder(this.PluginPropName);
-
-            exprStrBuilder.Visit(this.TheExpression);
-
-            roslynCodeBuilder.AddReturnVar(exprStrBuilder.ToStr());
-        }
-
-        internal override string GetEventHandlerAssignmentStr(bool addOrRemoveHandler)
-        {
-            throw new Exception("Roxy Usage Error: there can be no ExpressionMemberMaps for events");
-        }
-
-        internal override void SetAllowNonPublic(bool allowNonPublic)
-        {
-            throw new Exception("Roxy Usage Error: Non Public Flag cannot be modified for ExpressionMemberMapInfo");
-        }
-    }
-
     internal class MemberMapInfo : MemberMapInfoBase
     {
         internal override bool IsAbstract =>
@@ -138,6 +80,14 @@ namespace NP.Roxy.TypeConfigImpl
         {
             this.AllowNonPublic = allowNonPublic;
         }
+
+        public bool HasGetter =>
+            (PluginMemberSymbol is IPropertySymbol propSymbol) &&
+            propSymbol.HasGetter();
+
+        public bool HasSetter =>
+            (PluginMemberSymbol is IPropertySymbol propSymbol) &&
+            propSymbol.HasSetter();
 
         public MemberMapInfo
         (
@@ -218,6 +168,9 @@ namespace NP.Roxy.TypeConfigImpl
 
         internal override void AddAssignPluginProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder)
         {
+            if (!HasSetter)
+                return;
+
             if (this.IsNonPublic)
             {
                 if (this.AllowNonPublic)
@@ -239,7 +192,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         internal override void AddPropAssignmentStr(bool setOrUnset, RoslynCodeBuilder roslynCodeBuilder)
         {
-            if (this.ThePluginPropSymbol?.HasSetter() != true)
+            if (!this.HasSetter)
                 return;
 
             string assignmentStr =
@@ -251,6 +204,8 @@ namespace NP.Roxy.TypeConfigImpl
 
         internal override void AddPluginPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
+            if (!HasGetter)
+                return;
 
             if (this.IsNonPublic)
             {

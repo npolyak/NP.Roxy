@@ -190,6 +190,7 @@
     <Compile Include="SeparationOfConcerns\PersonTest.cs" />
     <Compile Include="SeparationOfConcerns\StudentProfessorInheritFromPersonTest.cs" />
     <Compile Include="SeparationOfConcerns\StudentProfessorPersonTest.cs" />
+    <Compile Include="SeparationOfConcerns\StudentProfessorWithSharedPersonTest.cs" />
     <Compile Include="XUnitTestBase.cs" />
   </ItemGroup>
   <ItemGroup>

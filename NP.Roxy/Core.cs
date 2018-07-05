@@ -188,7 +188,14 @@ namespace NP.Roxy
             ImplementationClassNameAttribute implementationClassNameAttribute =
                 implementorTypeSymbol.GetAttrObject<ImplementationClassNameAttribute>();
 
-            string className = implementationClassNameAttribute.ClassName;
+            string className;
+
+            if (implementationClassNameAttribute != null)
+                className = implementationClassNameAttribute.ClassName;
+            else
+            {
+                className = typeToImplementSymbol.CreateClassName(implementorTypeSymbol);
+            }
 
             ITypeConfig typeConfig =
                 FindOrCreateTypeConf(className, typeToImplementSymbol, implementorTypeSymbol);

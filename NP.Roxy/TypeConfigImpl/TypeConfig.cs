@@ -625,7 +625,7 @@ namespace NP.Roxy.TypeConfigImpl
             return _pluginInfos.StrConcat((wrappedObjInfo) => $"{wrappedObjInfo.ConcretePluginNamedTypeSymbol.GetFullTypeString()} {wrappedObjInfo.PluginImplementationClassName.FirstCharToLowerCase(true)}");
         }
 
-        void AddWrappedObjsConstructor(RoslynCodeBuilder roslynCodeBuilder)
+        void AddPluginObjsConstructor(RoslynCodeBuilder roslynCodeBuilder)
         {
             string paramsLine = GetWrappedObjConstructorParamStr();
 
@@ -639,10 +639,19 @@ namespace NP.Roxy.TypeConfigImpl
 
             foreach (PluginInfo wrapObjInfo in _pluginInfos)
             {
+                string assignedProp = $"this.{wrapObjInfo.PluginPropName}";
+
                 string assignmentLine =
-                    $"{wrapObjInfo.PluginPropName} = {wrapObjInfo.PluginImplementationClassName.FirstCharToLowerCase(true)}";
+                    $"{assignedProp} = {wrapObjInfo.PluginImplementationClassName.FirstCharToLowerCase(true)}";
 
                 roslynCodeBuilder.AddLine(assignmentLine, true);
+
+                roslynCodeBuilder.AddLine($"if ({assignedProp} == null)");
+                roslynCodeBuilder.Push();
+
+                wrapObjInfo.AddPluginDefaultConstructorInitialization(roslynCodeBuilder);
+
+                roslynCodeBuilder.Pop();
             }
 
             roslynCodeBuilder.AddLine($"{INIT_METHOD_NAME}()", true);
@@ -693,7 +702,7 @@ namespace NP.Roxy.TypeConfigImpl
 
             AddConstructor(roslynCodeBuilder);
 
-            //AddWrappedObjsConstructor(roslynCodeBuilder);
+            AddPluginObjsConstructor(roslynCodeBuilder);
 
             AddPropWraps(roslynCodeBuilder);
 
