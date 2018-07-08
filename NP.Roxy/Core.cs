@@ -23,7 +23,6 @@ namespace NP.Roxy
 {
     public interface SingleWrapperInterface<WrappedType>
     {
-        [ConstructorInit]
         WrappedType TheWrappedType { get; }
     }
 

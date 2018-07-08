@@ -56,6 +56,8 @@ namespace NP.Roxy.TypeConfigImpl
 
         void SetAllowNonPublicForAllMembers(string wrappedObjPropName);
 
+        IPropertySymbol GetPlugin(string pluginPropName);
+
         void SetThisMemberMap
         (
             string wrappedObjPropName,
@@ -184,10 +186,8 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
-        internal List<PluginInfo> _pluginInfos = new List<PluginInfo>();
-
-        internal IEnumerable<PluginInfo> PluginInfos =>
-            _pluginInfos;
+        private List<PluginInfo> _pluginInfos = new List<PluginInfo>();
+        private List<PluginInfo> _sharedPluginInfos = new List<PluginInfo>();
 
         //internal IEnumerable<WrappedObjInfo> SharedProps =>
         //    _wrappedObjInfos?.Where(objInfo => objInfo.IsSharedProperty);
@@ -207,6 +207,14 @@ namespace NP.Roxy.TypeConfigImpl
             ImplementableSymbols = 
                 stageImplemetableSymbols.
                         Union(ImplementorTypeSymbol.GetAllSuperMembers().EliminateDups().Where(member => member.IsOverridable()));
+        }
+
+        public IPropertySymbol GetPlugin(string pluginPropName)
+        {
+            return _pluginInfos
+                    .FirstOrDefault
+                    (
+                        pluginInfo => pluginInfo.PluginPropName == pluginPropName)?.PluginPropSymbol;
         }
 
         protected void SetFromSymbols
@@ -248,7 +256,7 @@ namespace NP.Roxy.TypeConfigImpl
                 if (pluginAttr == null)
                     continue;
 
-                PluginInfo wrappedObjInfo =
+                PluginInfo pluginInfo =
                     new PluginInfo
                     (
                         this.TheCore, 
@@ -256,7 +264,12 @@ namespace NP.Roxy.TypeConfigImpl
                         ImplementableSymbols, 
                         pluginAttr.ImplementorType.GetGenericTypeSymbol(this.TheCompilation));
 
-                _pluginInfos.Add(wrappedObjInfo);
+                _pluginInfos.Add(pluginInfo);
+
+                if (pluginAttr.IsShared)
+                {
+                    _sharedPluginInfos.Add(pluginInfo);
+                }
             }
 
             SetMemberSymbols();
@@ -494,7 +507,7 @@ namespace NP.Roxy.TypeConfigImpl
         {
             return
                 _pluginInfos
-                    .SelectMany(wrappedObj => wrappedObj.GetPluginMemberInfo(wrapperSymbol).ToCollection().ToList()).ToList();
+                    .SelectMany(plugin => plugin.GetPluginMemberInfo(wrapperSymbol).ToCollection().ToList()).ToList();
         }
 
         private void ImplementEvents(RoslynCodeBuilder roslynCodeBuilder)
@@ -526,21 +539,6 @@ namespace NP.Roxy.TypeConfigImpl
 
             roslynCodeBuilder.PopRegion();
         }
-
-        //private void AddSharedProps(RoslynCodeBuilder roslynCodeBuilder)
-        //{
-        //    if (this.SharedProps.IsNullOrEmpty())
-        //        return;
-
-        //    roslynCodeBuilder.PushRegion("Shared Props");
-
-        //    foreach (WrappedObjInfo wrappedClassInfo in this.SharedProps)
-        //    {
-        //        wrappedClassInfo.AddWrappedClass(roslynCodeBuilder);
-        //    }
-
-        //    roslynCodeBuilder.PopRegion();
-        //}
 
         private void AddPropWraps(RoslynCodeBuilder roslynCodeBuilder)
         {
@@ -586,27 +584,16 @@ namespace NP.Roxy.TypeConfigImpl
             roslynCodeBuilder.PopRegion();
         }
 
-        private void AddConstructor(RoslynCodeBuilder roslynCodeBuilder)
+        private void AddDefaultConstructor(RoslynCodeBuilder roslynCodeBuilder)
         {
             roslynCodeBuilder.PushRegion("Constructor");
-
-           var wrappedObjInfosInitializedThroughConstructor = 
-                _pluginInfos.Where(wrappedObj => wrappedObj.InitializedThroughConstructor).ToList();
 
             roslynCodeBuilder
                 .AddConstructorOpening
                 (
                     this.ClassName,
-                    Accessibility.Public,
-                    wrappedObjInfosInitializedThroughConstructor.Select(wrappedObj => wrappedObj.PluginPropSymbol).ToArray()
+                    Accessibility.Public
                 );
-
-            foreach(PluginInfo wrappedObjInitializedThroughConstructor in wrappedObjInfosInitializedThroughConstructor)
-            {
-                string propName = wrappedObjInitializedThroughConstructor.PluginPropName;
-                string assignName = propName.FirstCharToLowerCase();
-                roslynCodeBuilder.AddAssignmentLine(propName, assignName);
-            }
 
             foreach (PluginInfo wrappedObj in _pluginInfos)
             {
@@ -637,21 +624,9 @@ namespace NP.Roxy.TypeConfigImpl
             roslynCodeBuilder.AddLine($"public {this.ClassName}({paramsLine})");
             roslynCodeBuilder.Push();
 
-            foreach (PluginInfo wrapObjInfo in _pluginInfos)
+            foreach (PluginInfo pluginInfo in _pluginInfos)
             {
-                string assignedProp = $"this.{wrapObjInfo.PluginPropName}";
-
-                string assignmentLine =
-                    $"{assignedProp} = {wrapObjInfo.PluginImplementationClassName.FirstCharToLowerCase(true)}";
-
-                roslynCodeBuilder.AddLine(assignmentLine, true);
-
-                roslynCodeBuilder.AddLine($"if ({assignedProp} == null)");
-                roslynCodeBuilder.Push();
-
-                wrapObjInfo.AddPluginDefaultConstructorInitialization(roslynCodeBuilder);
-
-                roslynCodeBuilder.Pop();
+                pluginInfo.AddPluginInitInConstructorCode(roslynCodeBuilder);
             }
 
             roslynCodeBuilder.AddLine($"{INIT_METHOD_NAME}()", true);
@@ -700,7 +675,7 @@ namespace NP.Roxy.TypeConfigImpl
 
             AddInit(roslynCodeBuilder);
 
-            AddConstructor(roslynCodeBuilder);
+            AddDefaultConstructor(roslynCodeBuilder);
 
             AddPluginObjsConstructor(roslynCodeBuilder);
 

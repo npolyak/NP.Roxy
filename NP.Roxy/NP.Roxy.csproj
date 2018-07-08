@@ -172,11 +172,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\ConcretizationDelegateAttribute.cs" />
-    <Compile Include="Attributes\ConstructorInitAttribute.cs" />
     <Compile Include="Attributes\ImplementationClassNameAttribute.cs" />
     <Compile Include="Attributes\OverrideVirtualAttribute.cs" />
     <Compile Include="Attributes\PluginAttribute.cs" />
     <Compile Include="Attributes\PullMemberAttribute.cs" />
+    <Compile Include="Attributes\ShareAttribute.cs" />
     <Compile Include="Attributes\StaticClassAttribute.cs" />
     <Compile Include="ClassMemberType.cs" />
     <Compile Include="Core.cs" />

@@ -97,12 +97,14 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorWithSharedPersonTest
         [ImplementationClassName("StudentAndProfessorSharedImplementor")]
         public interface IStudentAndProfessorImplementor
         {
-            //[SharedProperty]
-            //Person ThePerson { get; }
+            [Plugin(IsShared = true)]
+            Person ThePerson { get; }
 
+            [Share(nameof(IStudentImplementor.ThePerson))]
             [Plugin(typeof(IStudentImplementor))]
             IStudent TheStudent { get; }
 
+            [Share(nameof(IProfessorImplementor.ThePerson))]
             [Plugin(typeof(IProfessorImplementor))]
             IProfessor TheProfessor { get; }
         }

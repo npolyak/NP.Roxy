@@ -62,6 +62,9 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
+        private string IsSharedPluginPropName =>
+            PluginPropName.GetIsSharedFieldName();
+
         // INamedTypeSymbol do not seem to carry information about
         // non-public members, so I comment it out for now
         // and will use the Reflection types. (the static method containers are not generated anyways).
@@ -69,13 +72,7 @@ namespace NP.Roxy.TypeConfigImpl
         public IEnumerable<INamedTypeSymbol> StaticMethodContainers { get; } =
             new List<INamedTypeSymbol>();
 
-        public bool InitializedThroughConstructor
-        {
-            get
-            {
-                return (this.PluginPropSymbol?.GetAttrSymbol(typeof(ConstructorInitAttribute)) != null);
-            }
-        }
+        public List<IPropertySymbol> SharedPlugins { get; } = new List<IPropertySymbol>();
 
         public void AddStaticMethodsContainerType(INamedTypeSymbol staticMethodsContainerTypeSymbol)
         {
@@ -171,7 +168,7 @@ namespace NP.Roxy.TypeConfigImpl
         public IEnumerable<MemberMapInfoBase> PropPluginMemberNameMaps =>
             PluginMemberNameMaps.Where(memberMap => memberMap.TheMemberType == ClassMemberType.Property);
 
-
+        public Dictionary<string, IPropertySymbol> _sharedPlugins = new Dictionary<string, IPropertySymbol>();
         public PluginInfo
         (
             Core core,
@@ -203,13 +200,24 @@ namespace NP.Roxy.TypeConfigImpl
                 this.SetMap(pullAttr.WrappedMemberName, wrapperMemberSymbol, pullAttr.AllowNonPublic);
             }
 
+            ITypeConfig implementorTypeConfig = null;
             if (pluginImplementorType != null)
             {
-                ITypeConfig implementorTypeConfig =
+                implementorTypeConfig =
                     TheCore.FindOrCreateTypeConfigUsingImplementorWithAttrs(this.PluginNamedTypeSymbol, pluginImplementorType);
 
                 this.PluginImplementationNamedTypeSymbol =
                     implementorTypeConfig.TheSelfTypeSymbol;
+            }
+
+            foreach(ShareAttribute shareAttr in pluginPropSymbol.GetAttrObjects<ShareAttribute>())
+            {
+                IPropertySymbol pluginProp = implementorTypeConfig?.GetPlugin(shareAttr.SharedPluginName);
+
+                if (pluginProp == null)
+                    throw new Exception($"Roxy Usage Error: cannot share property '{PluginImplementationClassName}.{shareAttr.SharedPluginName}' since it is not a plugin.");
+
+                _sharedPlugins.Add(shareAttr.MapsToName, pluginProp);
             }
         }
 
@@ -418,6 +426,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         public void AddPluginClass(RoslynCodeBuilder roslynCodeBuilder)
         {
+            roslynCodeBuilder.AddField(IsSharedPluginPropName, typeof(bool).GetTypeSymbol(TheCompilation));
             if (this.PluginImplementationNamedTypeSymbol.IsAbstract)
             {
                 // here, the concretization is created
@@ -458,13 +467,29 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
+        internal void AddPluginInitInConstructorCode(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            string assignedProp = $"this.{this.PluginPropName}";
+
+            string assignmentLine =
+                $"{assignedProp} = {this.PluginImplementationClassName.FirstCharToLowerCase(true)}";
+
+            roslynCodeBuilder.AddLine(assignmentLine, true);
+
+            roslynCodeBuilder.AddLine($"if ({assignedProp} == null)");
+            roslynCodeBuilder.Push();
+            this.AddPluginDefaultConstructorInitialization(roslynCodeBuilder);
+            roslynCodeBuilder.Pop();
+
+            roslynCodeBuilder.AddLine("else");
+            roslynCodeBuilder.Push();
+
+            roslynCodeBuilder.AddAssignmentLine(IsSharedPluginPropName, "true");
+            roslynCodeBuilder.Pop();
+        }
+
         public void AddPluginDefaultConstructorInitialization(RoslynCodeBuilder roslynCodeBuilder)
         {
-            //if (!WrappedObjNamedTypeSymbol.HasPublicDefaultConstructor())
-            //    return;
-            if (InitializedThroughConstructor)
-                return;
-
             if (PluginImplementationNamedTypeSymbol.TypeKind == TypeKind.Enum)
                 return;
 

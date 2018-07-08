@@ -93,6 +93,11 @@ namespace NP.Roxy
 
         public static ICollection<IAssemblySymbol> TheAssemblies { get; set; }
 
+        internal static string GetIsSharedFieldName(this string pluginPropName)
+        {
+            return "_isShared" + pluginPropName;
+        }
+
         public static string GetFullNamespace(this ISymbol symbol)
         {
             if ((symbol.ContainingNamespace == null) ||
