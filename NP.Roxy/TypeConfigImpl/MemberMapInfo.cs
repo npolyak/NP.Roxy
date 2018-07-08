@@ -45,6 +45,11 @@ namespace NP.Roxy.TypeConfigImpl
             this.PluginPropName = pluginPropName;
         }
 
+        public void AddCheckForSharedLine(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            roslynCodeBuilder.AddLine($"if (!{this.PluginPropName.GetIsSharedFromExternalSourceFieldName()})");
+        }
+
         internal abstract bool IsAbstract { get; }
 
         internal virtual bool IsNonPublic => false;
@@ -207,12 +212,15 @@ namespace NP.Roxy.TypeConfigImpl
             if (!HasGetter)
                 return;
 
+            string returnType = (wrapperSymbol.Type as INamedTypeSymbol).GetFullTypeString();
+            this.AddCheckForSharedLine(roslynCodeBuilder);
+            roslynCodeBuilder.Push();
             if (this.IsNonPublic)
             {
                 if (this.AllowNonPublic)
                 {
-                    string returnType = (wrapperSymbol.Type as INamedTypeSymbol).GetFullTypeString();
-                    roslynCodeBuilder.AddLine($"return ({returnType}) {this.PluginPropName}.GetPropValue(\"{this.PluginMemberName}\", true)", true);
+                    roslynCodeBuilder
+                        .AddLine($"return ({returnType}) {this.PluginPropName}.GetPropValue(\"{this.PluginMemberName}\", true)", true);
                 }
             }
             else
@@ -221,6 +229,11 @@ namespace NP.Roxy.TypeConfigImpl
 
                 roslynCodeBuilder.AddReturnVar(pluginMemberStr);
             }
+            roslynCodeBuilder.Pop();
+            roslynCodeBuilder.AddLine("else");
+            roslynCodeBuilder.Push();
+            roslynCodeBuilder.AddReturnVar($"default({returnType})");
+            roslynCodeBuilder.Pop();
         }
 
         internal override void AddPluginMethodLine

@@ -225,25 +225,6 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
-        public void SetPropGetter<TImpl, TProp>(Expression<Func<TImpl, TProp>> propGetterExpression)
-        {
-            this.NoWrappers = true;
-
-            Type propType = typeof(TProp);
-
-            if (!this.WrapperTypeSymbol.Matches(propType, this.TheCompilation))
-                throw new Exception($"Roxy Usage Error: prop type {propType.Name} does not match the required type {this.WrapperTypeSymbol.Name}.");
-
-            if (this.WrapperSymbol.HasSetter())
-                throw new Exception($"Roxy Usage Error: Cannot set expression for property {this.WrapperSymbol.Name} since it has a setter");
-
-            _expressionBuilder = new ReplaceArgsExprStringBuilder(RoslynAnalysisAndGenerationUtils.THIS);
-
-            _expressionBuilder.Visit(propGetterExpression);
-
-            ExpressionStr = _expressionBuilder.ToStr();
-        }
-
         public void SetInit
         (
             INamedTypeSymbol initTypeSymbol
@@ -263,13 +244,16 @@ namespace NP.Roxy.TypeConfigImpl
 
         protected override void BuildImpl(IPropertySymbol propertyWrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
-            string backingFieldName = propertyWrapperSymbol.Name.PropToFieldName();
+            string backingFieldName = 
+                propertyWrapperSymbol.Name.PropToFieldName();
+
             if (this.AddBackingField)
             {
                 roslynCodeBuilder.AddPropBackingField(propertyWrapperSymbol);
             }
 
-            Accessibility propAccessibility = propertyWrapperSymbol.DeclaredAccessibility;
+            Accessibility propAccessibility = 
+                propertyWrapperSymbol.DeclaredAccessibility;
 
             roslynCodeBuilder.AddPropOpening
             (
@@ -281,7 +265,8 @@ namespace NP.Roxy.TypeConfigImpl
 
             if (propertyWrapperSymbol.GetMethod != null)
             {
-                Accessibility getterAccessibility = propertyWrapperSymbol.GetMethod.DeclaredAccessibility;
+                Accessibility getterAccessibility = 
+                    propertyWrapperSymbol.GetMethod.DeclaredAccessibility;
 
                 if (getterAccessibility == propAccessibility)
                     getterAccessibility = Accessibility.NotApplicable;
@@ -303,7 +288,8 @@ namespace NP.Roxy.TypeConfigImpl
                         firstMemberMap = this.WrappedMembers.First();
                     }
 
-                    firstMemberMap.AddPluginPropGetterLine(propertyWrapperSymbol, roslynCodeBuilder);
+                    firstMemberMap
+                        .AddPluginPropGetterLine(propertyWrapperSymbol, roslynCodeBuilder);
                 }
                 roslynCodeBuilder.Pop();
             }
@@ -337,7 +323,10 @@ namespace NP.Roxy.TypeConfigImpl
 
                 foreach (MemberMapInfo memberMap in this.WrappedMembers)
                 {
+                    memberMap.AddCheckForSharedLine(roslynCodeBuilder);
+                    roslynCodeBuilder.Push();
                     memberMap.AddAssignPluginProp("value", roslynCodeBuilder);
+                    roslynCodeBuilder.Pop();
                 }
 
                 roslynCodeBuilder.Pop();
@@ -365,8 +354,11 @@ namespace NP.Roxy.TypeConfigImpl
             string firstLineInsert = "";
             if (!methodWrapperSymbol.ReturnsVoid)
             {
-                firstLineInsert =
-                    (methodWrapperSymbol.ReturnType as INamedTypeSymbol).GetFullTypeString() + $" {returnVarName} = ";
+                string returnTypeStr = (methodWrapperSymbol.ReturnType as INamedTypeSymbol).GetFullTypeString();
+
+                roslynCodeBuilder.AddLine($"{returnTypeStr} {returnVarName} = default({returnTypeStr})", true);
+
+                firstLineInsert = $"{returnVarName} = ";
             }
 
             if (this.IncludeBaseVirtualInOverride)
@@ -378,7 +370,9 @@ namespace NP.Roxy.TypeConfigImpl
             bool isFirst = true;
             foreach (MemberMapInfoBase memberMap in this.WrappedMembers)
             {
-                roslynCodeBuilder.AddEmptyLine();
+                memberMap.AddCheckForSharedLine(roslynCodeBuilder);
+                roslynCodeBuilder.Push();
+                roslynCodeBuilder.AddLine();
                 if (isFirst)
                 {
                     roslynCodeBuilder.AddText(firstLineInsert);
@@ -386,6 +380,8 @@ namespace NP.Roxy.TypeConfigImpl
                 }
 
                 memberMap.AddPluginMethodLine(this.WrapperSymbol, roslynCodeBuilder);
+
+                roslynCodeBuilder.Pop();
             }
 
             if (!methodWrapperSymbol.ReturnsVoid)

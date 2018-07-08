@@ -62,8 +62,10 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
-        private string IsSharedPluginPropName =>
-            PluginPropName.GetIsSharedFieldName();
+        public ITypeConfig ThePluginCreationTypeConfig { get; private set; }
+
+        private string IsSharedFromExternalSourcePluginPropName =>
+            PluginPropName.GetIsSharedFromExternalSourceFieldName();
 
         // INamedTypeSymbol do not seem to carry information about
         // non-public members, so I comment it out for now
@@ -168,13 +170,14 @@ namespace NP.Roxy.TypeConfigImpl
         public IEnumerable<MemberMapInfoBase> PropPluginMemberNameMaps =>
             PluginMemberNameMaps.Where(memberMap => memberMap.TheMemberType == ClassMemberType.Property);
 
-        public Dictionary<string, IPropertySymbol> _sharedPlugins = new Dictionary<string, IPropertySymbol>();
+        public Dictionary<string, string> _sharedPluginNameMap = new Dictionary<string, string>();
         public PluginInfo
         (
             Core core,
             IPropertySymbol pluginPropSymbol,
             IEnumerable<ISymbol> implementableSymbols,
-            INamedTypeSymbol pluginImplementorType)
+            INamedTypeSymbol pluginImplementorType,
+            IEnumerable<PluginInfo> sharedPlugins)
         {
             this.TheCore = core;
 
@@ -206,18 +209,42 @@ namespace NP.Roxy.TypeConfigImpl
                 implementorTypeConfig =
                     TheCore.FindOrCreateTypeConfigUsingImplementorWithAttrs(this.PluginNamedTypeSymbol, pluginImplementorType);
 
+                ThePluginCreationTypeConfig = implementorTypeConfig;
+
                 this.PluginImplementationNamedTypeSymbol =
                     implementorTypeConfig.TheSelfTypeSymbol;
             }
 
-            foreach(ShareAttribute shareAttr in pluginPropSymbol.GetAttrObjects<ShareAttribute>())
+            if (this.PluginImplementationNamedTypeSymbol.IsAbstract)
+            {
+                ThePluginCreationTypeConfig = this.TheCore.FindOrCreateConcretizationTypeConf(this.PluginImplementationNamedTypeSymbol);
+
+                // here, the concretization is created
+                this.ConcretePluginNamedTypeSymbol =
+                    ThePluginCreationTypeConfig.TheSelfTypeSymbol;
+            }
+
+            foreach (ShareSubPluginAttribute shareAttr in pluginPropSymbol.GetAttrObjects<ShareSubPluginAttribute>())
             {
                 IPropertySymbol pluginProp = implementorTypeConfig?.GetPlugin(shareAttr.SharedPluginName);
 
                 if (pluginProp == null)
                     throw new Exception($"Roxy Usage Error: cannot share property '{PluginImplementationClassName}.{shareAttr.SharedPluginName}' since it is not a plugin.");
 
-                _sharedPlugins.Add(shareAttr.MapsToName, pluginProp);
+                _sharedPluginNameMap.Add(pluginProp.Name, shareAttr.MapsToExternalName);
+            }
+
+            foreach(PluginInfo sharedPlugin in sharedPlugins)
+            {
+                IPropertySymbol pluginProp = implementorTypeConfig.GetPlugin(sharedPlugin.PluginPropName);
+
+                if (pluginProp != null)
+                {
+                    if (!_sharedPluginNameMap.ContainsKey(pluginProp.Name))
+                    {
+                        _sharedPluginNameMap.Add(pluginProp.Name, pluginProp.Name);
+                    }
+                }
             }
         }
 
@@ -389,7 +416,7 @@ namespace NP.Roxy.TypeConfigImpl
             wrapperInitBuilder.AddEmptyLine();
             wrapperInitBuilder.AddLine
             (
-                $"if ({PluginPropName} != null)"
+                $"if (({PluginPropName} != null) && (!{IsSharedFromExternalSourcePluginPropName})) "
             );
 
             wrapperInitBuilder.Push();
@@ -426,13 +453,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         public void AddPluginClass(RoslynCodeBuilder roslynCodeBuilder)
         {
-            roslynCodeBuilder.AddField(IsSharedPluginPropName, typeof(bool).GetTypeSymbol(TheCompilation));
-            if (this.PluginImplementationNamedTypeSymbol.IsAbstract)
-            {
-                // here, the concretization is created
-                this.ConcretePluginNamedTypeSymbol =
-                    this.TheCore.FindOrCreateConcretizationTypeConf(this.PluginImplementationNamedTypeSymbol).TheSelfTypeSymbol;
-            }
+            roslynCodeBuilder.AddField(IsSharedFromExternalSourcePluginPropName, typeof(bool).GetTypeSymbol(TheCompilation));
 
             string beforeSetterStr = BuildWrapperInit(EventPluginMemberNameMaps, PropPluginMemberNameMaps, false);
 
@@ -471,20 +492,20 @@ namespace NP.Roxy.TypeConfigImpl
         {
             string assignedProp = $"this.{this.PluginPropName}";
 
+            string constructorVarName =
+                this.PluginImplementationClassName.FirstCharToLowerCase(true);
+
             string assignmentLine =
-                $"{assignedProp} = {this.PluginImplementationClassName.FirstCharToLowerCase(true)}";
+                $"{assignedProp} = {constructorVarName}";
 
-            roslynCodeBuilder.AddLine(assignmentLine, true);
-
-            roslynCodeBuilder.AddLine($"if ({assignedProp} == null)");
+            roslynCodeBuilder.AddLine($"if ({constructorVarName} == null)");
             roslynCodeBuilder.Push();
             this.AddPluginDefaultConstructorInitialization(roslynCodeBuilder);
             roslynCodeBuilder.Pop();
-
             roslynCodeBuilder.AddLine("else");
             roslynCodeBuilder.Push();
-
-            roslynCodeBuilder.AddAssignmentLine(IsSharedPluginPropName, "true");
+            roslynCodeBuilder.AddAssignmentLine(IsSharedFromExternalSourcePluginPropName, "true");
+            roslynCodeBuilder.AddLine(assignmentLine, true);
             roslynCodeBuilder.Pop();
         }
 
@@ -493,12 +514,21 @@ namespace NP.Roxy.TypeConfigImpl
             if (PluginImplementationNamedTypeSymbol.TypeKind == TypeKind.Enum)
                 return;
 
-            roslynCodeBuilder.AddAssignCoreObj
-            (
-                this.PluginPropName,
-                PluginImplementationNamedTypeSymbol,
-                ConcretePluginClassName
-            );
+            roslynCodeBuilder.AddLine($"{this.PluginPropName} = ");
+
+            if (ThePluginCreationTypeConfig == null)
+            {
+                string fullClassName =
+                    PluginImplementationNamedTypeSymbol.GetFullTypeString();
+
+                roslynCodeBuilder.AddText($" new {fullClassName}();");
+                roslynCodeBuilder.AddLine();
+            }
+            else
+            {
+                ThePluginCreationTypeConfig
+                    .AddCallToPluginObjConstructor(roslynCodeBuilder, _sharedPluginNameMap);
+            }
         }
     }
 }

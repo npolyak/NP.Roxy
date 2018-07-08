@@ -806,5 +806,16 @@ namespace NP.Roxy
                 $"TheCore.CreateClassObj<{typeSymbol.GetFullTypeString()}>({typeNameInsert})"
             );
         }
+
+        public void AddActivatorAssignmentLine(string propName, INamedTypeSymbol typeSymbol)
+        {
+            string typeName = typeSymbol.GetFullTypeString();
+
+            AddAssignmentLine
+            (
+                propName,
+                $"({typeName})Activator.CreateInstance(typeof({typeName}))"
+            );
+        }
     }
 }

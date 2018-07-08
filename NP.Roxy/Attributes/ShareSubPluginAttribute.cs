@@ -7,27 +7,27 @@ using System.Threading.Tasks;
 namespace NP.Roxy.Attributes
 {
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = true, Inherited = false)]
-    public class ShareAttribute : Attribute
+    public class ShareSubPluginAttribute : Attribute
     {
         public string SharedPluginName { get; }
 
-        string _mapsToName;
-        public string MapsToName
+        string _mapsToExternalName;
+        public string MapsToExternalName
         {
-            get => _mapsToName ?? SharedPluginName;
+            get => _mapsToExternalName ?? SharedPluginName;
             private set
             {
-                if (_mapsToName == value)
+                if (_mapsToExternalName == value)
                     return;
 
-                _mapsToName = value;
+                _mapsToExternalName = value;
             }
         }
 
-        public ShareAttribute(string sharedPluginName, string mapsToName = null)
+        public ShareSubPluginAttribute(string sharedPluginName, string mapsToName = null)
         {
             SharedPluginName = sharedPluginName;
-            MapsToName = mapsToName;
+            MapsToExternalName = mapsToName;
         }
     }
 }

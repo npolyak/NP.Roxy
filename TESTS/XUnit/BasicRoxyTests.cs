@@ -20,6 +20,7 @@ namespace NP.XUnitRoxyTests.Basic
         [Fact]
         public static void RunTest()
         {
+            Core.SetSaveOnErrorPath("GeneratedCode");
 
             ITypeConfig typeConfig =
                 Core.FindOrCreateTypeConfig<IMyInterface, WrapperInterface>("MyGeneratedClass1");
@@ -27,6 +28,8 @@ namespace NP.XUnitRoxyTests.Basic
             typeConfig.SetMemberMap(nameof(WrapperInterface.TheClass), nameof(MyClass.MyStr), nameof(IMyInterface.TheStr));
 
             typeConfig.ConfigurationCompleted();
+
+            Core.Save("GeneratedCode");
 
             IMyInterface myInterfaceObj = typeConfig.CreateInstanceOfType<IMyInterface>();
 
@@ -213,19 +216,19 @@ namespace NP.XUnitRoxyTests.Basic
             //    Core.Concretize<MyDataImplementorClass>();
             #endregion CONCRETIZATION SAMPLE
 
-            //#region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
-            //ITypeConfig typeConfig =
-            //    Core.FindOrCreateTypeConfig<IMyData, ImplementorClass>("MyType7");
+            #region WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
+            ITypeConfig typeConfig =
+                Core.FindOrCreateTypeConfig<IMyData, ImplementorClass>("MyType7");
 
-            //typeConfig.ConfigurationCompleted();
+            typeConfig.ConfigurationCompleted();
 
-            //MyData myData = typeConfig.CreateInstanceOfType<MyData>();
-            //myData.FirstName = "Joe";
-            //myData.LastName = "Doe";
+            MyData myData = typeConfig.CreateInstanceOfType<MyData>();
+            myData.FirstName = "Joe";
+            myData.LastName = "Doe";
 
-            //Assert.Equal("Doe, Joe", myData.GetFullName());
+            Assert.Equal("Doe, Joe", myData.GetFullName());
 
-            //#endregion WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
+            #endregion WRAPPED CLASS CONCRETIZATION WITH INHERITANCE FROM ABSTRACT CLASS
 
             ITypeConfig typeConfig1 =
                 Core.FindOrCreateTypeConfig<IMyData, WrapperInterface1>("MyType9");
@@ -241,17 +244,17 @@ namespace NP.XUnitRoxyTests.Basic
 
             Assert.Equal("Doe, Joe", myData1.GetFullName());
 
-            //ITypeConfig typeConfig2 =
-            //    Core.FindOrCreateTypeConfig<IMyData, ImplementorClass>();
+            ITypeConfig typeConfig2 =
+                Core.FindOrCreateTypeConfig<IMyData, ImplementorClass>();
 
-            //typeConfig2.ConfigurationCompleted();
+            typeConfig2.ConfigurationCompleted();
 
-            //IMyData myData2 = typeConfig2.CreateInstanceOfType<IMyData>();
+            IMyData myData2 = typeConfig2.CreateInstanceOfType<IMyData>();
 
-            //myData2.FirstName = "Joe";
-            //myData2.LastName = "Doe";
+            myData2.FirstName = "Joe";
+            myData2.LastName = "Doe";
 
-            //Assert.Equal("Doe, Joe", myData2.GetFullName());
+            Assert.Equal("Doe, Joe", myData2.GetFullName());
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿using NP.Concepts.Attributes;
 using NP.Roxy;
 using NP.Roxy.Attributes;
+using NP.Utilities;
 using System;
 using Xunit;
 using Xunit.Abstractions;
@@ -9,18 +10,40 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorWithSharedPersonTest
 {
     public interface IPerson
     {
+        event Action<IPerson> PersonNameChangedEvent;
+
         string Name { get; set; }
+
+        string GetWalkMessage();
 
         void Walk();
     }
 
     public class Person : IPerson
     {
-        public string Name { get; set; }
+        public event Action<IPerson> PersonNameChangedEvent;
+
+        string _name = null;
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                if (_name.ObjEquals(value))
+                    return;
+
+                _name = value;
+
+                PersonNameChangedEvent?.Invoke(this);
+            }
+        }
+
+        public string GetWalkMessage() =>
+            $"Person {Name} is walking";
 
         public void Walk()
         {
-            Console.WriteLine($"Person {Name} is walking");
+            Console.WriteLine(GetWalkMessage());
         }
     }
 
@@ -88,7 +111,7 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorWithSharedPersonTest
         public interface IProfessorImplementor
         {
             [Plugin]
-            Person ThePerson { get; }
+            Person ThePersonPart { get; }
 
             [Plugin]
             Teacher TheTeacher { get; }
@@ -100,11 +123,10 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorWithSharedPersonTest
             [Plugin(IsShared = true)]
             Person ThePerson { get; }
 
-            [Share(nameof(IStudentImplementor.ThePerson))]
             [Plugin(typeof(IStudentImplementor))]
             IStudent TheStudent { get; }
 
-            [Share(nameof(IProfessorImplementor.ThePerson))]
+            [ShareSubPlugin(nameof(IProfessorImplementor.ThePersonPart), nameof(ThePerson))]
             [Plugin(typeof(IProfessorImplementor))]
             IProfessor TheProfessor { get; }
         }
@@ -123,13 +145,19 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorWithSharedPersonTest
             IStudentAndProfessor studentAndProfessorImplementation =
                 Core.CreateImplementedInstance<IStudentAndProfessor, IStudentAndProfessorImplementor>();
 
+            Core.Save("GeneratedCode");
+
+            studentAndProfessorImplementation.PersonNameChangedEvent += StudentAndProfessorImplementation_PersonNameChangedEvent;
             studentAndProfessorImplementation.Name = "Bruce";
 
             studentAndProfessorImplementation.Walk();
             studentAndProfessorImplementation.Learn();
             studentAndProfessorImplementation.Teach();
+        }
 
-            Core.Save("GeneratedCode");
+        private void StudentAndProfessorImplementation_PersonNameChangedEvent(IPerson person)
+        {
+            Console.WriteLine($"Name changed to '{person.Name}'");
         }
     }
 }

@@ -95,6 +95,11 @@ namespace NP.Roxy.TypeConfigImpl
         void SetInit(string propName, INamedTypeSymbol typeSymbol);
 
         void SetInit<TInit>(string propName);
+        void AddCallToPluginObjConstructor
+        (
+            RoslynCodeBuilder roslynCodeBuilder,
+            Dictionary<string, string> sharedPluginsNameMap
+        );
 
         void RecompileAssembly();
     }
@@ -186,14 +191,11 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
-        private List<PluginInfo> _pluginInfos = new List<PluginInfo>();
         private List<PluginInfo> _sharedPluginInfos = new List<PluginInfo>();
+        private List<PluginInfo> _nonSharedPluginInfos = new List<PluginInfo>();
 
-        //internal IEnumerable<WrappedObjInfo> SharedProps =>
-        //    _wrappedObjInfos?.Where(objInfo => objInfo.IsSharedProperty);
-
-        //public IEnumerable<string> SharedPropNames =>
-        //    SharedProps?.Select(sharedProp => sharedProp.WrappedObjPropName);
+        private IEnumerable<PluginInfo> PluginInfos => 
+            _sharedPluginInfos.Union(_nonSharedPluginInfos);
 
         void SetImplementableSymbols()
         {
@@ -211,7 +213,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         public IPropertySymbol GetPlugin(string pluginPropName)
         {
-            return _pluginInfos
+            return PluginInfos
                     .FirstOrDefault
                     (
                         pluginInfo => pluginInfo.PluginPropName == pluginPropName)?.PluginPropSymbol;
@@ -249,6 +251,10 @@ namespace NP.Roxy.TypeConfigImpl
                     .GetMembers()
                     .GetItemsOfType<ISymbol, IPropertySymbol>();
 
+
+            // at this point there is a rule that shared plugins should
+            // precede those that share them within the implementor interface/class
+
             foreach (IPropertySymbol prop in pluginProps)
             {
                 PluginAttribute pluginAttr = prop.GetAttrObject<PluginAttribute>();
@@ -262,13 +268,16 @@ namespace NP.Roxy.TypeConfigImpl
                         this.TheCore, 
                         prop, 
                         ImplementableSymbols, 
-                        pluginAttr.ImplementorType.GetGenericTypeSymbol(this.TheCompilation));
-
-                _pluginInfos.Add(pluginInfo);
+                        pluginAttr.ImplementorType.GetGenericTypeSymbol(this.TheCompilation),
+                        _sharedPluginInfos);
 
                 if (pluginAttr.IsShared)
                 {
                     _sharedPluginInfos.Add(pluginInfo);
+                }
+                else
+                {
+                    _nonSharedPluginInfos.Add(pluginInfo);
                 }
             }
 
@@ -311,7 +320,7 @@ namespace NP.Roxy.TypeConfigImpl
         internal PluginInfo GetWrappedObjInfo(string wrappedObjPropName)
         {
             PluginInfo wrappedObjInfo =
-                this._pluginInfos.FirstOrDefault(wrObjInfo => wrObjInfo.PluginPropName == wrappedObjPropName);
+                this.PluginInfos.FirstOrDefault(wrObjInfo => wrObjInfo.PluginPropName == wrappedObjPropName);
 
             if (wrappedObjInfo == null)
             {
@@ -337,7 +346,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         public void SetAllowNonPublicForAllMembers()
         {
-            foreach (PluginInfo wrappedObjInfo in this._pluginInfos)
+            foreach (PluginInfo wrappedObjInfo in this.PluginInfos)
             {
                 wrappedObjInfo.AllowNonPublicForAllMemberMaps = true;
             }
@@ -399,7 +408,7 @@ namespace NP.Roxy.TypeConfigImpl
         public void AddStaticUtilsClass(string wrappedObjPropName, Type staticMethodsContainerClass)
         {
             PluginInfo wrappedObjInfo =
-                _pluginInfos.Single(wrappedObj => wrappedObj.PluginPropName == wrappedObjPropName);
+                PluginInfos.Single(wrappedObj => wrappedObj.PluginPropName == wrappedObjPropName);
 
             wrappedObjInfo.AddStaticMethodsContainerType(staticMethodsContainerClass);
         }
@@ -448,7 +457,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         void SetMissingMaps()
         {
-            this._pluginInfos
+            this.PluginInfos
                 .DoForEach(wrappedObjInfo => wrappedObjInfo.AddMissingMaps(ImplementableSymbols.Distinct()));
         }
 
@@ -506,7 +515,7 @@ namespace NP.Roxy.TypeConfigImpl
             GetWrappedMemberInfos(ISymbol wrapperSymbol)
         {
             return
-                _pluginInfos
+                PluginInfos
                     .SelectMany(plugin => plugin.GetPluginMemberInfo(wrapperSymbol).ToCollection().ToList()).ToList();
         }
 
@@ -527,12 +536,12 @@ namespace NP.Roxy.TypeConfigImpl
 
         private void AddPlugins(RoslynCodeBuilder roslynCodeBuilder)
         {
-            if (this._pluginInfos.IsNullOrEmpty())
+            if (this.PluginInfos.IsNullOrEmpty())
                 return;
 
             roslynCodeBuilder.PushRegion("Plugins");
 
-            foreach (PluginInfo wrappedClassInfo in this._pluginInfos)
+            foreach (PluginInfo wrappedClassInfo in this.PluginInfos)
             {
                 wrappedClassInfo.AddPluginClass(roslynCodeBuilder);
             }
@@ -595,7 +604,7 @@ namespace NP.Roxy.TypeConfigImpl
                     Accessibility.Public
                 );
 
-            foreach (PluginInfo wrappedObj in _pluginInfos)
+            foreach (PluginInfo wrappedObj in PluginInfos)
             {
                 wrappedObj.AddPluginDefaultConstructorInitialization(roslynCodeBuilder);
             }
@@ -609,7 +618,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         private string GetWrappedObjConstructorParamStr()
         {
-            return _pluginInfos.StrConcat((wrappedObjInfo) => $"{wrappedObjInfo.ConcretePluginNamedTypeSymbol.GetFullTypeString()} {wrappedObjInfo.PluginImplementationClassName.FirstCharToLowerCase(true)}");
+            return PluginInfos.StrConcat((pluginInfo) => $"{pluginInfo.ConcretePluginNamedTypeSymbol.GetFullTypeString()} {pluginInfo.PluginImplementationClassName.FirstCharToLowerCase(true)}");
         }
 
         void AddPluginObjsConstructor(RoslynCodeBuilder roslynCodeBuilder)
@@ -624,9 +633,10 @@ namespace NP.Roxy.TypeConfigImpl
             roslynCodeBuilder.AddLine($"public {this.ClassName}({paramsLine})");
             roslynCodeBuilder.Push();
 
-            foreach (PluginInfo pluginInfo in _pluginInfos)
+            foreach (PluginInfo pluginInfo in PluginInfos)
             {
                 pluginInfo.AddPluginInitInConstructorCode(roslynCodeBuilder);
+                roslynCodeBuilder.AddLine();
             }
 
             roslynCodeBuilder.AddLine($"{INIT_METHOD_NAME}()", true);
@@ -634,6 +644,41 @@ namespace NP.Roxy.TypeConfigImpl
             roslynCodeBuilder.Pop(true);
 
             roslynCodeBuilder.PopRegion();
+        }
+
+        public void AddCallToPluginObjConstructor
+        (
+            RoslynCodeBuilder roslynCodeBuilder, 
+            Dictionary<string, string> sharedPluginsNameMap
+        )
+        {
+            roslynCodeBuilder.AddText($" new {this.ClassName}(");
+
+            bool notFirst = false;
+            foreach (PluginInfo pluginInfo in PluginInfos)
+            {
+                if (notFirst)
+                {
+                    roslynCodeBuilder.AddText(", ");
+                }
+                else
+                {
+                    notFirst = true;
+                }
+
+                string pluginPropName = pluginInfo.PluginPropName;
+
+                if (!sharedPluginsNameMap.TryGetValue(pluginPropName, out string valToAdd))
+                {
+                    valToAdd = "null";
+                }
+
+                roslynCodeBuilder.AddText(valToAdd);
+            }
+
+            roslynCodeBuilder.AddText(");");
+
+            roslynCodeBuilder.AddLine();
         }
 
         public const string STATIC_CORE_MEMBER_NAME = "TheCore";
