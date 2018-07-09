@@ -199,7 +199,17 @@ namespace NP.Roxy.TypeConfigImpl
 
         void SetImplementableSymbols()
         {
-            var stageImplemetableSymbols = ((this.TypeToImplementSymbol?.GetAllMembers().Where(member => member.IsOverridable())).NullToEmpty<ISymbol>())
+            var stage1 = this.TypeToImplementSymbol
+                    ?.GetAllMembers();
+
+            //var isReadOnlyMembers = stage1.Where(symb => symb.Name == "IsReadOnly").ToList();
+
+            var stage2 = stage1
+                    ?.EliminateDups();
+
+            var stageImplemetableSymbols = 
+                (stage2?.Where(member => member.IsOverridable()))
+                        .NullToEmpty<ISymbol>()
                         .Except
                         (
                             this.ImplementorTypeSymbol.GetAllMembers(),
@@ -487,9 +497,6 @@ namespace NP.Roxy.TypeConfigImpl
 
         string SuperClassName => ImplementorTypeSymbol?.GetFullTypeString();
 
-        IEnumerable<INamedTypeSymbol> AllImplementedInterfaces =>
-            TypeToImplementSymbol.ToCollection();
-
         IEnumerable<EventWrapperMemberBuilderInfo> EventBuilderInfos { get; set; }
 
         IEnumerable<PropertyWrapperMemberBuilderInfo> PropBuilderInfos { get; set; }
@@ -501,13 +508,19 @@ namespace NP.Roxy.TypeConfigImpl
 
         void OpenClassDeclaration(RoslynCodeBuilder roslynCodeBuilder)
         {
+            INamedTypeSymbol[] allSymbols = { ImplementorTypeSymbol, TypeToImplementSymbol };
+
+            INamedTypeSymbol firstSymbol = allSymbols.FirstOrDefault(symb => symb.IsClass())?? ImplementorTypeSymbol;
+
+            INamedTypeSymbol[] otherSymbols = allSymbols.Except(firstSymbol.ToCollection()).ToArray();
+
             roslynCodeBuilder.AddClass
             (
                 ClassName,
                 null,
-                ImplementorTypeSymbol.GetNullForNoType(TheCompilation),
+                firstSymbol.GetNullForNoType(TheCompilation),
                 true,
-                AllImplementedInterfaces.ToArray()
+                otherSymbols
             );
         }
 

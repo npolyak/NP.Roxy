@@ -125,6 +125,7 @@ namespace NP.XUnitRoxyTests.Basic
         [Fact]
         public static void RunTest()
         {
+            Core.SetSaveOnErrorPath("GeneratedCode");
             ITypeConfig typeConfig =
                 Core.FindOrCreateTypeConfig<MyDataImplementorClass, NoType>("MyGeneratedClass2");
 
