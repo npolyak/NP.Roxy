@@ -30,10 +30,12 @@ namespace AttrsMultiConcernsRoxyTest.RoxyViewModels
 
     }
 
-    public class SelectableRemovablePersonImplementor : PersonDataVM
+    public interface ISelectableRemovablePersonImplementor :
+        ISelectableRemovableItem<ISelectableRemovablePerson>,
+        ISelectableRemovableImplementor<ISelectableRemovablePerson>
     {
         [Plugin]
-        public ISelectableRemovableImplementor<ISelectableRemovablePerson> SelectableRemovableBehaviorsPlugin { get; }
+        PersonDataVM ThePerson { get; }
     }
 
     public interface ISelectableRemovableBusinessGroup :
@@ -51,15 +53,20 @@ namespace AttrsMultiConcernsRoxyTest.RoxyViewModels
     }
 
     public interface ISelectableRemovableBusinessGroupImplementor :
+        ISelectableRemovableItem<ISelectableRemovableBusinessGroup>,
         ISelectableRemovableImplementor<ISelectableRemovableBusinessGroup>
     {
         [Plugin]
-        SingleSelectionObservableCollection<ISelectableRemovablePerson> People { get; }
+        ObservableCollection<ISelectableRemovablePerson> People { get; }
 
         [PullMember(WrapperMemberName = null, WrappedMemberName = nameof(ParentChildSelectionBehavior<ISelectableRemovableBusinessGroup, ISelectableRemovablePerson>.Parent))]
         [PullMember(WrapperMemberName = nameof(IBusinessGroup.People), WrappedMemberName = nameof(ParentChildSelectionBehavior <ISelectableRemovableBusinessGroup, ISelectableRemovablePerson>.Children))]
         [Plugin]
         ParentChildSelectionBehavior<ISelectableRemovableBusinessGroup, ISelectableRemovablePerson> TheParentChildSelectionBehavior { get; }
+
+        [PullMember(WrapperMemberName = nameof(IBusinessGroup.People), WrappedMemberName = nameof(RemovableCollectionBehavior.TheCollection))]
+        [Plugin]
+        SingleSelectionBehavior<ISelectableRemovablePerson> TheSingleSelectionBehavior { get; }
 
         [PullMember(WrapperMemberName = nameof(IBusinessGroup.People), WrappedMemberName = nameof(RemovableCollectionBehavior.TheCollection))]
         [Plugin]

@@ -202,8 +202,6 @@ namespace NP.Roxy.TypeConfigImpl
             var stage1 = this.TypeToImplementSymbol
                     ?.GetAllMembers();
 
-            //var isReadOnlyMembers = stage1.Where(symb => symb.Name == "IsReadOnly").ToList();
-
             var stage2 = stage1
                     ?.EliminateDups();
 
@@ -216,9 +214,12 @@ namespace NP.Roxy.TypeConfigImpl
                             RoslynAnalysisAndGenerationUtils.TheSymbolByNameAndSignatureComparer
                         );
 
-            ImplementableSymbols = 
-                stageImplemetableSymbols.
-                        Union(ImplementorTypeSymbol.GetAllSuperMembers().EliminateDups().Where(member => member.IsOverridable()));
+            ImplementableSymbols =
+                stageImplemetableSymbols
+                    .Union(ImplementorTypeSymbol.GetAllMembers().EliminateDups().Where(member => member.IsOverridable())).ToList();
+
+            //var implSymbs = stageImplemetableSymbols
+            //        .Union(ImplementorTypeSymbol.GetAllSuperMembers().EliminateDups().Where(member => member.IsOverridable())).ToList();
         }
 
         public IPropertySymbol GetPlugin(string pluginPropName)
@@ -258,7 +259,7 @@ namespace NP.Roxy.TypeConfigImpl
 
             IEnumerable<IPropertySymbol> pluginProps =
                 ImplementorTypeSymbol
-                    .GetMembers()
+                    .GetAllMembers()
                     .GetItemsOfType<ISymbol, IPropertySymbol>();
 
 
@@ -278,7 +279,7 @@ namespace NP.Roxy.TypeConfigImpl
                         this.TheCore, 
                         prop, 
                         ImplementableSymbols, 
-                        pluginAttr.ImplementorType.GetGenericTypeSymbol(this.TheCompilation),
+                        pluginAttr.ImplementorType?.GetTypeSymbol(this.TheCompilation),
                         _sharedPluginInfos);
 
                 if (pluginAttr.IsShared)
@@ -290,6 +291,13 @@ namespace NP.Roxy.TypeConfigImpl
                     _nonSharedPluginInfos.Add(pluginInfo);
                 }
             }
+
+            //remove plugins from ImplementableSymbols
+            ImplementableSymbols = ImplementableSymbols.Except
+                        (
+                            PluginInfos.Select(pI => pI.PluginPropSymbol),
+                            RoslynAnalysisAndGenerationUtils.TheSymbolByNameAndSignatureComparer
+                        );
 
             SetMemberSymbols();
         }

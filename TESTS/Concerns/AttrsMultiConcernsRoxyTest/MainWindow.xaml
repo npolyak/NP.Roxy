@@ -29,7 +29,7 @@
                                   Background="Beige">
                                 <i:Interaction.Triggers>
                                     <i:EventTrigger EventName="MouseDown">
-                                        <ei:CallMethodAction MethodName="SelectItem"
+                                        <ei:CallMethodAction MethodName="Select"
                                                      TargetObject="{Binding}"/>
                                     </i:EventTrigger>
                                 </i:Interaction.Triggers>
@@ -73,7 +73,7 @@
                                             </Border.ContextMenu>
                                             <i:Interaction.Triggers>
                                                 <i:EventTrigger EventName="MouseDown">
-                                                    <ei:CallMethodAction MethodName="SelectItem"
+                                                    <ei:CallMethodAction MethodName="Select"
                                                      TargetObject="{Binding}"/>
                                                 </i:EventTrigger>
                                             </i:Interaction.Triggers>

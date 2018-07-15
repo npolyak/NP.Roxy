@@ -195,23 +195,37 @@ namespace NP.Roxy
             TheNamespaces.Add(typeof(Type).Namespace);
         }
 
-        public static Type ToCSharpType(this ITypeSymbol namedTypeSymbol)
+        public static Type ToCSharpType(this ITypeSymbol typeSymbol)
         {
-            IAssemblySymbol containingAssembly = namedTypeSymbol.ContainingAssembly;
+            IAssemblySymbol containingAssembly = typeSymbol.ContainingAssembly;
 
             string fullAssemblyName = containingAssembly.ToDisplayString();
 
             Assembly cSharpTypeContainingAssembly =
                 AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.FullName == fullAssemblyName);
 
-            string cSharpFullTypeName = namedTypeSymbol.GetFullNestedTypeName();
+            string cSharpFullTypeName = typeSymbol.GetFullNestedTypeName();
 
             Type result = cSharpTypeContainingAssembly.GetType(cSharpFullTypeName);
+
+            INamedTypeSymbol namedTypeSymbol = typeSymbol as INamedTypeSymbol;
+
+            if (namedTypeSymbol == null)
+                return result;
+
+            if (!namedTypeSymbol.IsGenericType)
+            {
+                return result;
+            }
+
+            Type[] argTypes = namedTypeSymbol.TypeArguments.Select(typeSymb => typeSymb.ToCSharpType()).ToArray();
+
+            result = result.MakeGenericType(argTypes);
 
             return result;
         }
 
-        public static object ToObj(this TypedConstant typedConstant, bool leaveTypeSymbol = true)
+        public static object ToObj(this TypedConstant typedConstant, bool leaveTypeSymbol = false)
         {
             if (typedConstant.IsNull)
                 return null;
@@ -246,7 +260,11 @@ namespace NP.Roxy
             return null;
         }
 
-        public static string UnwrapNestedType(this ITypeSymbol typeSymbol, string separator = "_")
+        public static string UnwrapNestedType
+        (
+            this ITypeSymbol typeSymbol, 
+            string separator = "_", 
+            bool metaName = false)
         {
             string result = "";
             if (typeSymbol.ContainingType != null)
@@ -254,14 +272,25 @@ namespace NP.Roxy
                 result = typeSymbol.ContainingType.UnwrapNestedType() + separator;
             }
 
-            result += typeSymbol.GetTypeName();
+            string typeName;
+
+            if (!metaName)
+            {
+                typeName = typeSymbol.GetTypeName();
+            }
+            else
+            {
+                typeName = typeSymbol.MetadataName;
+            }
+
+            result += typeName;
 
             return result;
         }
 
         public static string GetFullNestedTypeName(this ITypeSymbol typeSymbol)
         {
-            string typeName = typeSymbol.UnwrapNestedType("+");
+            string typeName = typeSymbol.UnwrapNestedType("+", true);
 
             string namespaceName = typeSymbol.GetFullNamespace();
 
@@ -452,7 +481,7 @@ namespace NP.Roxy
             where TSymbol : class, ISymbol
         {
             IEnumerable<TSymbol> allResults =
-                typeSymbol.GetAllMembers().Where(symb => (symb.Name == name) && (symb is TSymbol)).Cast<TSymbol>();
+                typeSymbol.GetAllMembers().Where(symb => (symb.Name == name) && (symb is TSymbol)).EliminateDups().Cast<TSymbol>();
 
             if (!allowNonPublic)
             {
@@ -1637,6 +1666,11 @@ namespace NP.Roxy
 
             return wrapperMemberSymbol;
         }
+
+        public static string GetRealName(this ISymbol symbol)
+        {
+            return symbol.Name.SubstrFromTo(".", null, false);
+        }
     }
 
     public class SymbolComparer : IEqualityComparer<ISymbol>
@@ -1697,12 +1731,12 @@ namespace NP.Roxy
                 }
             }
 
-            return x.Name == y.Name;
+            return x.GetRealName() == y.GetRealName();
         }
 
         public int GetHashCode(ISymbol obj)
         {
-            return obj.Name.GetHashCodeExtension();
+            return obj.GetRealName().GetHashCodeExtension();
         }
     }
 
