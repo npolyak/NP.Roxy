@@ -21,7 +21,6 @@ namespace AttrsMultiConcernsRoxyTest
             SingleSelectionObservableCollection<ISelectableRemovableBusinessGroup> dataContext =
                 Core.CreateImplementedInstance<SingleSelectionObservableCollection<ISelectableRemovableBusinessGroup>, IRemovableCollectionBehaviorImplementor>();
 
-            Core.Save("GeneratedCode");
             this.DataContext = dataContext;
 
            ISelectableRemovableBusinessGroup businessGroup1 = 
@@ -58,6 +57,8 @@ namespace AttrsMultiConcernsRoxyTest
             person4.FirstName = "Michelle";
             person4.LastName = "Mitchell";
             businessGroup2.People.Add(person4);
+
+            Core.Save("GeneratedCode");
         }
     }
 }
