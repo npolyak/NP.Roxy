@@ -8,7 +8,6 @@ using System.Collections.ObjectModel;
 
 namespace AttrsMultiConcernsRoxyTest.RoxyViewModels
 {
-    //[ClassEventThisIdx(nameof(PropertyChanged))]
     public interface ISelectableRemovableItem<T> : ISelectableItem<T>, IRemovable, INotifyPropertyChanged
        where T : ISelectableItem<T>
     {
@@ -71,58 +70,5 @@ namespace AttrsMultiConcernsRoxyTest.RoxyViewModels
         [PullMember(WrapperMemberName = nameof(IBusinessGroup.People), WrappedMemberName = nameof(RemovableCollectionBehavior.TheCollection))]
         [Plugin]
         RemovableCollectionBehavior TheRemovableCollectionBehavior { get; }
-    }
-
-    public static class RoxyModelAssembler
-    {
-        //public static void AssembleSelectableRemovablePerson()
-        //{
-        //    ITypeConfig typeConfig =
-        //        Core.FindOrCreateTypeConfig<ISelectableRemovablePerson, PersonDataVM, ISelectableRemovablePersonWrapper>();
-
-        //    typeConfig.ConfigurationCompleted();
-        //}
-
-        //public static void AssembleSelectableRemovableBusinessGroup()
-        //{
-        //    ITypeConfig typeConfig =
-        //        Core.FindOrCreateTypeConfig<ISelectableRemovableBusinessGroup, ISelectableRemovableBusinessGroupWrapper>();
-
-        //    typeConfig.SetThisMemberMap
-        //    (
-        //        nameof(ISelectableRemovableBusinessGroupWrapper.TheParentChildSelectionBehavior),
-        //        nameof(ParentChildSelectionBehavior<ISelectableRemovableBusinessGroup, ISelectableRemovablePerson>.Parent)
-        //    );
-
-        //    typeConfig.SetMemberMap
-        //    (
-        //        nameof(ISelectableRemovableBusinessGroupWrapper.TheParentChildSelectionBehavior),
-        //        nameof(ParentChildSelectionBehavior<ISelectableRemovableBusinessGroup, ISelectableRemovablePerson>.Children),
-        //        nameof(IBusinessGroup.People)
-        //    );
-
-        //    typeConfig.SetMemberMap
-        //    (
-        //        nameof(ISelectableRemovableBusinessGroupWrapper.TheRemovableCollectionBehavior),
-        //        nameof(RemovableCollectionBehavior.TheCollection),
-        //        nameof(IBusinessGroup.People)
-        //    );
-
-        //    typeConfig.ConfigurationCompleted();
-        //}
-
-        //public static void AssembleBusinessGroupsCollection()
-        //{
-        //    ITypeConfig typeConfig =
-        //        Core.FindOrCreateTypeConfig<SingleSelectionObservableCollection<ISelectableRemovableBusinessGroup>, NoType, IRemovableCollectionBehaviorWrapper>();
-
-        //    typeConfig.SetThisMemberMap
-        //    (
-        //        nameof(IRemovableCollectionBehaviorWrapper.TheRemovableCollectionBehavior),
-        //        nameof(RemovableCollectionBehavior.TheCollection)
-        //    );
-
-        //    typeConfig.ConfigurationCompleted();
-        //}
     }
 }
