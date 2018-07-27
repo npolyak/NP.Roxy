@@ -77,7 +77,7 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorInheritFromPersonTest
         }
 
         [ImplementationClassName("StudentAndProfessorImplementation")]
-        public interface IStudentAndProfessorWrapper
+        public interface IStudentAndProfessorImplementor
         {
             [Plugin]
             Student TheStudent { get; }
@@ -95,7 +95,7 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorInheritFromPersonTest
 
             // combinding Person, learning and teaching concerns. 
             IStudentAndProfessor studentAndProfessorImplementation =
-                Core.CreateImplementedInstance<IStudentAndProfessor, IStudentAndProfessorWrapper>();
+                Core.CreateImplementedInstance<IStudentAndProfessor, IStudentAndProfessorImplementor>();
 
             studentAndProfessorImplementation.Name = "Bruce";
 

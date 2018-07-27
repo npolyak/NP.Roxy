@@ -161,13 +161,24 @@ namespace NP.Roxy.TypeConfigImpl
         public Compilation TheCompilation =>
             TheCore.TheCompilation;
 
-        List<MemberMapInfoBase> PluginMemberNameMaps { get; } =
-            new List<MemberMapInfoBase>();
+        List<MemberMapInfo> PluginMemberNameMaps { get; } =
+            new List<MemberMapInfo>();
 
-        public IEnumerable<MemberMapInfoBase> EventPluginMemberNameMaps =>
+        public IEnumerable<ISymbol> GetUnmappedAbstractMethodsAndProps()
+        {
+            return 
+                this.PluginImplementationNamedTypeSymbol.GetAbstractMethodsAndProps().Where(symb => !IsMapped(symb.Name)).ToList();
+        }
+
+        private bool IsMapped(string pluginMemberName)
+        {
+            return PluginMemberNameMaps.Any(memberMap => memberMap.PluginMemberName == pluginMemberName);
+        }
+
+        public IEnumerable<MemberMapInfo> EventPluginMemberNameMaps =>
             PluginMemberNameMaps.Where(memberMap => memberMap.TheMemberType == ClassMemberType.Event);
 
-        public IEnumerable<MemberMapInfoBase> PropPluginMemberNameMaps =>
+        public IEnumerable<MemberMapInfo> PropPluginMemberNameMaps =>
             PluginMemberNameMaps.Where(memberMap => memberMap.TheMemberType == ClassMemberType.Property);
 
         public Dictionary<string, string> _sharedPluginNameMap = new Dictionary<string, string>();
@@ -175,8 +186,8 @@ namespace NP.Roxy.TypeConfigImpl
         (
             Core core,
             IPropertySymbol pluginPropSymbol,
-            IEnumerable<ISymbol> implementableSymbols,
             INamedTypeSymbol pluginImplementorType,
+            INamedTypeSymbol pluginInitType,
             IEnumerable<PluginInfo> sharedPlugins)
         {
             this.TheCore = core;
@@ -186,21 +197,6 @@ namespace NP.Roxy.TypeConfigImpl
             foreach (StaticClassAttribute staticClassAttr in pluginPropSymbol.GetAttrObjects<StaticClassAttribute>())
             {
                 this.AddStaticMethodsContainerType(staticClassAttr.StaticClassType);
-            }
-
-            foreach (PullMemberAttribute pullAttr in pluginPropSymbol.GetAttrObjects<PullMemberAttribute>())
-            {
-                ISymbol wrapperMemberSymbol = null;
-
-                if (pullAttr.WrapperMemberName != null)
-                {
-                    if (pullAttr.WrapperMemberName != RoslynAnalysisAndGenerationUtils.THIS)
-                    {
-                        wrapperMemberSymbol = implementableSymbols.GetImplementableSymbolByName(pullAttr.WrapperMemberName);
-                    }
-                }
-
-                this.SetMap(pullAttr.WrappedMemberName, wrapperMemberSymbol, pullAttr.AllowNonPublic);
             }
 
             ITypeConfig implementorTypeConfig = null;
@@ -213,6 +209,10 @@ namespace NP.Roxy.TypeConfigImpl
 
                 this.PluginImplementationNamedTypeSymbol =
                     implementorTypeConfig.TheSelfTypeSymbol;
+            }
+            else if (pluginInitType != null)
+            {
+                this.PluginImplementationNamedTypeSymbol = pluginInitType;
             }
 
             if (this.PluginImplementationNamedTypeSymbol.IsAbstract)
@@ -248,18 +248,36 @@ namespace NP.Roxy.TypeConfigImpl
             }
         }
 
-        MemberMapInfoBase FindMapImpl<T>(T symbol, Func<MemberMapInfoBase, T> findMethod)
+        public void SetMaps(IEnumerable<ISymbol> implementableSymbols)
+        {
+            foreach (PullMemberAttribute pullAttr in this.PluginPropSymbol.GetAttrObjects<PullMemberAttribute>())
+            {
+                ISymbol wrapperMemberSymbol = null;
+
+                if (pullAttr.WrapperMemberName != null)
+                {
+                    if (pullAttr.WrapperMemberName != RoslynAnalysisAndGenerationUtils.THIS)
+                    {
+                        wrapperMemberSymbol = implementableSymbols.GetImplementableSymbolByName(pullAttr.WrapperMemberName);
+                    }
+                }
+
+                this.SetMap(pullAttr.WrappedMemberName, wrapperMemberSymbol, pullAttr.AllowNonPublic);
+            }
+        }
+
+        MemberMapInfo FindMapImpl<T>(T symbol, Func<MemberMapInfo, T> findMethod)
             where T : class
         {
             return PluginMemberNameMaps.FirstOrDefault(strMap => findMethod(strMap).ObjEquals(symbol));
         }
 
-        MemberMapInfoBase FindMapByPluginMemberSymbol(string pluginMemberName)
+        MemberMapInfo FindMapByPluginMemberSymbol(string pluginMemberName)
         {
             return FindMapImpl(pluginMemberName, strMap => (strMap as MemberMapInfo)?.PluginMemberName);
         }
 
-        MemberMapInfoBase FindMapByWrapperMemberSymbol(ISymbol wrapperMemberSymbol)
+        MemberMapInfo FindMapByWrapperMemberSymbol(ISymbol wrapperMemberSymbol)
         {
             return FindMapImpl(wrapperMemberSymbol, strMap => strMap.WrapperMemberSymbol);
         }
@@ -271,7 +289,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         void CheckMapExists(ISymbol wrapperMemberSymbol)
         {
-            MemberMapInfoBase map = FindMapByWrapperMemberSymbol(wrapperMemberSymbol);
+            MemberMapInfo map = FindMapByWrapperMemberSymbol(wrapperMemberSymbol);
 
             if (map != null)
                 throw new Exception($"Roxy Usage Error: the member map for member {wrapperMemberSymbol.Name} of {this.PluginPropName} plugin has already been set.");
@@ -324,7 +342,7 @@ namespace NP.Roxy.TypeConfigImpl
         // are equal to the passed wrapperMemberName
         public void AddWrapperMapIfMissing(ISymbol wrapperMemberSymbol)
         {
-            MemberMapInfoBase map = FindMapByWrapperMemberSymbol(wrapperMemberSymbol);
+            MemberMapInfo map = FindMapByWrapperMemberSymbol(wrapperMemberSymbol);
 
             if (map != null)
                 return;
@@ -340,9 +358,9 @@ namespace NP.Roxy.TypeConfigImpl
 
         // gets all member infos for the wrapperMemberName 
         // (including those that do not require renaming)
-        public MemberMapInfoBase GetPluginMemberInfo(ISymbol wrapperMemberSymbol)
+        public MemberMapInfo GetPluginMemberInfo(ISymbol wrapperMemberSymbol)
         {
-            MemberMapInfoBase memberMap = this.FindMapByWrapperMemberSymbol(wrapperMemberSymbol);
+            MemberMapInfo memberMap = this.FindMapByWrapperMemberSymbol(wrapperMemberSymbol);
 
             if (memberMap == null)
                 return null;
@@ -406,8 +424,8 @@ namespace NP.Roxy.TypeConfigImpl
 
         string BuildWrapperInit
         (
-            IEnumerable<MemberMapInfoBase> eventMemberMaps, 
-            IEnumerable<MemberMapInfoBase> propMemberMaps,
+            IEnumerable<MemberMapInfo> eventMemberMaps, 
+            IEnumerable<MemberMapInfo> propMemberMaps,
             bool addOrRemove
         )
         {
@@ -425,20 +443,20 @@ namespace NP.Roxy.TypeConfigImpl
             {
                 SetOrUnsetConcretizationDelegates(wrapperInitBuilder, false);
 
-                foreach(MemberMapInfoBase propMemberMap in propMemberMaps)
+                foreach(MemberMapInfo propMemberMap in propMemberMaps)
                 {
                     propMemberMap.AddPropAssignmentStr(addOrRemove, wrapperInitBuilder);
                 }
             }
 
-            foreach (MemberMapInfoBase eventMemberMap in eventMemberMaps)
+            foreach (MemberMapInfo eventMemberMap in eventMemberMaps)
             {
                 wrapperInitBuilder.AddLine(eventMemberMap.GetEventHandlerAssignmentStr(addOrRemove), true);
             }
 
             if (addOrRemove)
             {
-                foreach (MemberMapInfoBase propMemberMap in propMemberMaps)
+                foreach (MemberMapInfo propMemberMap in propMemberMaps)
                 {
                     propMemberMap.AddPropAssignmentStr(addOrRemove, wrapperInitBuilder);
                 }
@@ -471,10 +489,11 @@ namespace NP.Roxy.TypeConfigImpl
                 this.PluginPropName,
                 this.PluginPropBackingFieldName,
                 this.PluginNamedTypeSymbol,
-                Accessibility.Public,
+                this.PluginPropSymbol.DeclaredAccessibility,
                 beforeSetterStr,
                 afterSetterStr,
-                setterAccessibility
+                setterAccessibility,
+                this.PluginPropSymbol.ShouldOverride()
             );
 
             if ((ConcretePluginClassName != PluginImplementationClassName))

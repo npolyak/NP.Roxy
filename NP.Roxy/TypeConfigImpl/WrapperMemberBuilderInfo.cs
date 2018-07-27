@@ -29,9 +29,9 @@ namespace NP.Roxy.TypeConfigImpl
 
         public abstract string WrapperSymbolName { get; }
 
-        protected List<MemberMapInfoBase> WrappedMembers { get; } = new List<MemberMapInfoBase>();
+        protected List<MemberMapInfo> WrappedMembers { get; } = new List<MemberMapInfo>();
 
-        public void SetWrappedMembers(IEnumerable<MemberMapInfoBase> wrappedMembers)
+        public void SetWrappedMembers(IEnumerable<MemberMapInfo> wrappedMembers)
         {
             WrappedMembers.Clear();
 
@@ -49,6 +49,8 @@ namespace NP.Roxy.TypeConfigImpl
     internal abstract class WrapperMemberBuilderInfo<TSymbol> : WrapperMemberBuilderInfoBase
         where TSymbol : ISymbol
     {
+        public bool ForceNoOverride { get; }
+
         public Core TheCore { get; }
 
         public Compilation TheCompilation => 
@@ -84,12 +86,14 @@ namespace NP.Roxy.TypeConfigImpl
         public WrapperMemberBuilderInfo
         (
             TSymbol wrapperSymbol,
-            Core core
+            Core core,
+            bool forceNoOverride = false
         ) 
             : base(wrapperSymbol)
         {
             this.WrapperSymbol = wrapperSymbol;
             this.TheCore = core;
+            this.ForceNoOverride = forceNoOverride;
         }
 
         internal IMemberCodeBuilder<TSymbol> TheCodeBuilder { get; set; } = null;
@@ -204,25 +208,11 @@ namespace NP.Roxy.TypeConfigImpl
         public PropertyWrapperMemberBuilderInfo
         (
             IPropertySymbol wrapperSymbol,
-            Core core
-        ) : base(wrapperSymbol, core)
+            Core core,
+            bool forceNoOverride = false
+        ) : base(wrapperSymbol, core, forceNoOverride)
         {
             this.DefaultCodeBuilder = AutoPropBuilder.TheAutoPropBuilder;
-        }
-
-        ReplaceArgsExprStringBuilder _expressionBuilder;
-        public string ExpressionStr { get; private set; }
-
-        protected override void BuildIfNoWrappers(RoslynCodeBuilder roslynCodeBuilder)
-        {
-            if (ExpressionStr == null)
-            {
-                base.BuildIfNoWrappers(roslynCodeBuilder);
-            }
-            else
-            {
-                roslynCodeBuilder.AddGetterProp(this.WrapperSymbol, ExpressionStr);
-            }
         }
 
         public void SetInit
@@ -254,13 +244,14 @@ namespace NP.Roxy.TypeConfigImpl
 
             Accessibility propAccessibility = 
                 propertyWrapperSymbol.DeclaredAccessibility;
+            bool shouldOverride = (!ForceNoOverride) && propertyWrapperSymbol.ShouldOverride();
 
             roslynCodeBuilder.AddPropOpening
             (
                 propertyWrapperSymbol.Name,
                 propertyWrapperSymbol.Type as INamedTypeSymbol,
                 propertyWrapperSymbol.DeclaredAccessibility,
-                propertyWrapperSymbol.ShouldOverride()
+                shouldOverride
             );
 
             if (propertyWrapperSymbol.GetMethod != null)
@@ -279,7 +270,7 @@ namespace NP.Roxy.TypeConfigImpl
                 }
                 else
                 {
-                    MemberMapInfoBase firstMemberMap =
+                    MemberMapInfo firstMemberMap =
                         this.WrappedMembers
                             .FirstOrDefault(member => (!member.IsNonPublic));
 
@@ -341,14 +332,17 @@ namespace NP.Roxy.TypeConfigImpl
         public MethodWrapperMemberBuilderInfo
         (
             IMethodSymbol wrapperSymbol,
-            Core core
-        ) : base(wrapperSymbol, core)
+            Core core,
+            bool forceNoOverride = false
+        ) : base(wrapperSymbol, core, forceNoOverride)
         {
         }
 
         protected override void BuildImpl(IMethodSymbol methodWrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
-            roslynCodeBuilder.AddMethodOpeningFromSymbolOnly(methodWrapperSymbol);
+            bool shouldOverride = (!ForceNoOverride) && methodWrapperSymbol.ShouldOverride();
+
+            roslynCodeBuilder.AddMethodOpeningFromSymbolOnly(methodWrapperSymbol, shouldOverride);
 
             string returnVarName = "result";
             string firstLineInsert = "";
@@ -368,7 +362,7 @@ namespace NP.Roxy.TypeConfigImpl
             }
 
             bool isFirst = true;
-            foreach (MemberMapInfoBase memberMap in this.WrappedMembers)
+            foreach (MemberMapInfo memberMap in this.WrappedMembers)
             {
                 memberMap.AddCheckForSharedLine(roslynCodeBuilder);
                 roslynCodeBuilder.Push();

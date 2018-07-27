@@ -15,11 +15,11 @@ namespace NP.XUnitAttrRoxyTests.PersonTest
 
     public class Person
     {
-        public string Name { get; set; }
+        public string PersonName { get; set; }
 
         public void Walk()
         {
-            Console.WriteLine($"The Person {Name} is walking");
+            Console.WriteLine($"&&&&The Person {PersonName} is walking");
         }
     }
 
@@ -32,10 +32,16 @@ namespace NP.XUnitAttrRoxyTests.PersonTest
         }
 
         [ImplementationClassName("PersonImplementation")]
-        public interface IPersonWrapper
+        public abstract class PersonImplementor
         {
+            [PullMember(WrappedMemberName = "PersonName", WrapperMemberName = "Name")]
             [Plugin]
-            Person ThePerson { get; }
+            protected abstract Person ThePerson { get; set; }
+
+            public void Walk()
+            {
+                Console.WriteLine($"Overridden The Person {ThePerson.PersonName} is walking");
+            }
         }
 
         [Fact]
@@ -44,13 +50,13 @@ namespace NP.XUnitAttrRoxyTests.PersonTest
             Core.SetSaveOnErrorPath("GeneratedCode");
 
             IPerson personImplementation =
-                Core.CreateImplementedInstance<IPerson, IPersonWrapper>();
+                Core.CreateImplementedInstance<IPerson, PersonImplementor>();
+
+            Core.Save("GeneratedCode");
 
             personImplementation.Name = "Bruce";
 
             personImplementation.Walk();
-
-            Core.Save("GeneratedCode");
         }
     }
 }

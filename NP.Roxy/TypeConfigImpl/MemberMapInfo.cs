@@ -22,7 +22,7 @@ using System.Xml.Serialization;
 
 namespace NP.Roxy.TypeConfigImpl
 {
-    internal abstract class MemberMapInfoBase
+    internal class MemberMapInfo 
     {
         public ISymbol WrapperMemberSymbol { get; }
 
@@ -36,41 +36,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         public virtual string WrapperAssignPropName => WrapperMemberName;
 
-        public MemberMapInfoBase
-        (
-            ISymbol wrapperMemberSymbol, 
-            string pluginPropName)
-        {
-            this.WrapperMemberSymbol = wrapperMemberSymbol;
-            this.PluginPropName = pluginPropName;
-        }
-
-        public void AddCheckForSharedLine(RoslynCodeBuilder roslynCodeBuilder)
-        {
-            roslynCodeBuilder.AddLine($"if (!{this.PluginPropName.GetIsSharedFromExternalSourceFieldName()})");
-        }
-
-        internal abstract bool IsAbstract { get; }
-
-        internal virtual bool IsNonPublic => false;
-
-        internal abstract void SetAllowNonPublic(bool allowNonPublic);
-
-        internal abstract string GetEventHandlerAssignmentStr(bool addOrRemoveHandler);
-
-        internal abstract void AddAssignPluginProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder);
-
-        internal abstract void AddPropAssignmentStr(bool setOrUnset, RoslynCodeBuilder roslynCodeBuilder);
-
-        internal abstract void AddPluginPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder);
-
-        internal abstract void AddPluginMethodLine(IMethodSymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder);
-    }
-
-
-    internal class MemberMapInfo : MemberMapInfoBase
-    {
-        internal override bool IsAbstract =>
+        internal bool IsAbstract =>
             PluginMemberSymbol?.IsAbstract == true;
 
         public ISymbol PluginMemberSymbol { get; protected set; }
@@ -81,7 +47,7 @@ namespace NP.Roxy.TypeConfigImpl
         [XmlAttribute]
         public bool AllowNonPublic { get; private set; } = false;
 
-        internal override void SetAllowNonPublic(bool allowNonPublic)
+        internal void SetAllowNonPublic(bool allowNonPublic)
         {
             this.AllowNonPublic = allowNonPublic;
         }
@@ -99,11 +65,17 @@ namespace NP.Roxy.TypeConfigImpl
             string pluginMemberName, 
             ISymbol wrapperMemberSymbol, 
             string pluginPropName
-        ) :
-            base(wrapperMemberSymbol, pluginPropName)
+        )
         {
+            this.WrapperMemberSymbol = wrapperMemberSymbol;
+            this.PluginPropName = pluginPropName;
             this.PluginMemberName = pluginMemberName;
         }
+        public void AddCheckForSharedLine(RoslynCodeBuilder roslynCodeBuilder)
+        {
+            roslynCodeBuilder.AddLine($"if (!{this.PluginPropName.GetIsSharedFromExternalSourceFieldName()})");
+        }
+
 
         internal void SetFromContainingType
         (
@@ -136,7 +108,7 @@ namespace NP.Roxy.TypeConfigImpl
         }
 
         // if private - WrappedSymbol will be null
-        internal override bool IsNonPublic =>
+        internal bool IsNonPublic =>
             this.PluginMemberSymbol.DeclaredAccessibility != Accessibility.Public;
 
         protected string GetPluginClassMemberFullName(bool hasNullCheck)
@@ -161,7 +133,7 @@ namespace NP.Roxy.TypeConfigImpl
         private string PluginClassMemberFullName =>
             GetPluginClassMemberFullName(false);
 
-        internal override string GetEventHandlerAssignmentStr(bool addOrRemoveHandler)
+        internal string GetEventHandlerAssignmentStr(bool addOrRemoveHandler)
         {
             string addOrRemoveStr = addOrRemoveHandler ? "+" : "-";
 
@@ -171,7 +143,7 @@ namespace NP.Roxy.TypeConfigImpl
             return result;
         }
 
-        internal override void AddAssignPluginProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder)
+        internal void AddAssignPluginProp(string assignmentStr, RoslynCodeBuilder roslynCodeBuilder)
         {
             if (!HasSetter)
                 return;
@@ -195,7 +167,7 @@ namespace NP.Roxy.TypeConfigImpl
 
         IPropertySymbol ThePluginPropSymbol => PluginMemberSymbol as IPropertySymbol;
 
-        internal override void AddPropAssignmentStr(bool setOrUnset, RoslynCodeBuilder roslynCodeBuilder)
+        internal void AddPropAssignmentStr(bool setOrUnset, RoslynCodeBuilder roslynCodeBuilder)
         {
             if (!this.HasSetter)
                 return;
@@ -207,7 +179,7 @@ namespace NP.Roxy.TypeConfigImpl
             AddAssignPluginProp(assignmentStr, roslynCodeBuilder);
         }
 
-        internal override void AddPluginPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
+        internal void AddPluginPropGetterLine(IPropertySymbol wrapperSymbol, RoslynCodeBuilder roslynCodeBuilder)
         {
             if (!HasGetter)
                 return;
@@ -236,7 +208,7 @@ namespace NP.Roxy.TypeConfigImpl
             roslynCodeBuilder.Pop();
         }
 
-        internal override void AddPluginMethodLine
+        internal void AddPluginMethodLine
         (
             IMethodSymbol wrapperSymbol, 
             RoslynCodeBuilder roslynCodeBuilder

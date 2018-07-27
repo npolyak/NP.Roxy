@@ -45,9 +45,9 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorPersonTest
     }
 
     // learning concern implementation
-    public class Learner : ILearner
+    public abstract class Learner : ILearner
     {
-        public string Name { get; set; }
+        public abstract string Name { get; }
 
         public void Learn()
         {
@@ -56,9 +56,9 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorPersonTest
     }
 
     // teaching concern implementation
-    public class Teacher : ITeacher
+    public abstract class Teacher : ITeacher
     {
-        public string Name { get; set; }
+        public abstract string Name { get; }
 
         public void Teach()
         {

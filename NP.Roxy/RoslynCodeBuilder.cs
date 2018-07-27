@@ -116,12 +116,17 @@ namespace NP.Roxy
             this.Push();
         }
 
-        public void AddMethodOpeningFromSymbolOnly(IMethodSymbol methodSymbol)
+        public void AddMethodOpeningFromSymbolOnly(IMethodSymbol methodSymbol, bool? shouldOverride = null)
         {
+            if (shouldOverride == null)
+            {
+                shouldOverride = methodSymbol.ShouldOverride();
+            }
+
             this.AddMethodOpening
             (
                 methodSymbol,
-                methodSymbol.ShouldOverride(),
+                (bool) shouldOverride,
                 methodSymbol.Name,
                 methodSymbol.DeclaredAccessibility
             );
@@ -574,10 +579,11 @@ namespace NP.Roxy
             Accessibility accessibility = Accessibility.Public,
             string addBeforeSetter = null,
             string addAfterSetter = null,
-            Accessibility setterAccessibility = Accessibility.NotApplicable
+            Accessibility setterAccessibility = Accessibility.NotApplicable,
+            bool shouldOverride = false
         )
         {
-            AddPropOpening(propName, propType, accessibility);
+            AddPropOpening(propName, propType, accessibility, shouldOverride);
 
             AddPropGetter(fullMemberName, propType, Accessibility.NotApplicable);
 
@@ -604,7 +610,8 @@ namespace NP.Roxy
             Accessibility accessibility = Accessibility.Public,
             string addBeforeSetter = null,
             string addAfterSetter = null,
-            Accessibility setterAccessibility = Accessibility.NotApplicable
+            Accessibility setterAccessibility = Accessibility.NotApplicable,
+            bool shouldOverride = false
         )
         {
             AddField(backingStoreFieldName, propType);
@@ -617,7 +624,8 @@ namespace NP.Roxy
                 accessibility,
                 addBeforeSetter,
                 addAfterSetter,
-                setterAccessibility
+                setterAccessibility, 
+                shouldOverride
             );
         }
 
@@ -635,7 +643,8 @@ namespace NP.Roxy
             Accessibility accessibility = Accessibility.Public,
             string addBeforeSetter = null,
             string addAfterSetter = null,
-            Accessibility setterAccessibility = Accessibility.NotApplicable
+            Accessibility setterAccessibility = Accessibility.NotApplicable,
+            bool shouldOverride = false
         )
         {
             string fieldName = propName.PropToFieldName();
@@ -648,7 +657,8 @@ namespace NP.Roxy
                 accessibility, 
                 addBeforeSetter, 
                 addAfterSetter, 
-                setterAccessibility);
+                setterAccessibility,
+                shouldOverride);
         }
 
 

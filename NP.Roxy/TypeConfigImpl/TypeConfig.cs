@@ -230,6 +230,11 @@ namespace NP.Roxy.TypeConfigImpl
                         pluginInfo => pluginInfo.PluginPropName == pluginPropName)?.PluginPropSymbol;
         }
 
+        IEnumerable<ISymbol> GetAllPluginUnmappedAbstractPropsAndMethods()
+        {
+            return PluginInfos.NullToEmpty().SelectMany(plugin => plugin.GetUnmappedAbstractMethodsAndProps()).ToList();
+        }
+
         protected void SetFromSymbols
         (
             INamedTypeSymbol typeToImplSymbol,
@@ -244,8 +249,6 @@ namespace NP.Roxy.TypeConfigImpl
             {
                 throw new Exception($"Roxy Usage Error: Both TypeToImplement '{TypeToImplementSymbol.Name}' and Implementor '{implementorSymbol.Name}' cannot be classes.");
             }
-
-            SetImplementableSymbols();
 
             this.ClassName = TypeToImplementSymbol.GetClassName(this.ClassName);
 
@@ -265,7 +268,6 @@ namespace NP.Roxy.TypeConfigImpl
 
             // at this point there is a rule that shared plugins should
             // precede those that share them within the implementor interface/class
-
             foreach (IPropertySymbol prop in pluginProps)
             {
                 PluginAttribute pluginAttr = prop.GetAttrObject<PluginAttribute>();
@@ -277,9 +279,9 @@ namespace NP.Roxy.TypeConfigImpl
                     new PluginInfo
                     (
                         this.TheCore, 
-                        prop, 
-                        ImplementableSymbols, 
+                        prop,  
                         pluginAttr.ImplementorType?.GetTypeSymbol(this.TheCompilation),
+                        pluginAttr.InitType?.GetTypeSymbol(this.TheCompilation),
                         _sharedPluginInfos);
 
                 if (pluginAttr.IsShared)
@@ -291,6 +293,10 @@ namespace NP.Roxy.TypeConfigImpl
                     _nonSharedPluginInfos.Add(pluginInfo);
                 }
             }
+
+            SetImplementableSymbols();
+
+            PluginInfos?.DoForEach(pluginInfo => pluginInfo.SetMaps(ImplementableSymbols));
 
             //remove plugins from ImplementableSymbols
             ImplementableSymbols = ImplementableSymbols.Except
@@ -463,14 +469,32 @@ namespace NP.Roxy.TypeConfigImpl
                 this.ImplementableSymbols.GetSymbolsOfType<IEventSymbol>()
                     .Select(symbol => new EventWrapperMemberBuilderInfo(symbol, this.TheCore)).ToList();
 
+            // these are the props and methods without implementations
+            // defined within abstract plugins which do not have
+            // a publice API defined by the interfaces. 
+            // they should be implemented by other plugins
+            var unmappedAbstractPluginPropsAndMethods =
+                GetAllPluginUnmappedAbstractPropsAndMethods().Except(this.ImplementableSymbols, RoslynAnalysisAndGenerationUtils.TheSymbolByNameAndSignatureComparer);
+
             this.PropBuilderInfos =
                  this.ImplementableSymbols.GetSymbolsOfType<IPropertySymbol>()
-                     .Select(symbol => new PropertyWrapperMemberBuilderInfo(symbol, this.TheCore)).ToList();
+                     .Select(symbol => new PropertyWrapperMemberBuilderInfo(symbol, this.TheCore))
+                     .Union
+                     (
+                        unmappedAbstractPluginPropsAndMethods.GetSymbolsOfType<IPropertySymbol>()
+                                                            .Select(symbol => new PropertyWrapperMemberBuilderInfo(symbol, this.TheCore, true))).ToList();
 
             this.MethodBuilderInfos =
                 this.ImplementableSymbols.GetSymbolsOfType<IMethodSymbol>()
                     .Where(symbol => symbol.AssociatedSymbol == null)
-                    .Select(symbol => new MethodWrapperMemberBuilderInfo(symbol, this.TheCore)).ToList();
+                    .Select(symbol => new MethodWrapperMemberBuilderInfo(symbol, this.TheCore))
+                    .Union
+                    (
+                        unmappedAbstractPluginPropsAndMethods.GetSymbolsOfType<IMethodSymbol>()
+                                        .Select(symbol => new MethodWrapperMemberBuilderInfo(symbol, this.TheCore, true))
+                    ).ToList();
+
+            this.ImplementableSymbols = ImplementableSymbols.Union(unmappedAbstractPluginPropsAndMethods);
         }
 
         void SetMissingMaps()
@@ -511,9 +535,6 @@ namespace NP.Roxy.TypeConfigImpl
 
         IEnumerable<MethodWrapperMemberBuilderInfo> MethodBuilderInfos { get; set; }
 
-        IEnumerable<WrapperMemberBuilderInfoBase> AllWrapperMemberInfos =>
-            EventBuilderInfos.NullToEmpty().Cast<WrapperMemberBuilderInfoBase>().Union(PropBuilderInfos.NullToEmpty()).Union(MethodBuilderInfos.NullToEmpty());
-
         void OpenClassDeclaration(RoslynCodeBuilder roslynCodeBuilder)
         {
             INamedTypeSymbol[] allSymbols = { ImplementorTypeSymbol, TypeToImplementSymbol };
@@ -532,7 +553,7 @@ namespace NP.Roxy.TypeConfigImpl
             );
         }
 
-        private IEnumerable<MemberMapInfoBase>
+        private IEnumerable<MemberMapInfo>
             GetWrappedMemberInfos(ISymbol wrapperSymbol)
         {
             return

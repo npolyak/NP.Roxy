@@ -962,6 +962,15 @@ namespace NP.Roxy
             return ClassMemberType.None;
         }
 
+        public static IEnumerable<ISymbol> GetAbstractMethodsAndProps(this INamedTypeSymbol typeSymbol)
+        {
+            return
+                typeSymbol
+                    ?.GetAllMembers()
+                    ?.EliminateDups()
+                    ?.Where(member => member.IsAbstract && ((member is IPropertySymbol) || (member is IMethodSymbol))).ToList();
+        }
+
         public static bool ShouldOverride(this ISymbol symbol)
         {
             return (symbol.IsAbstract && (symbol.ContainingType.TypeKind != TypeKind.Interface)) ||
