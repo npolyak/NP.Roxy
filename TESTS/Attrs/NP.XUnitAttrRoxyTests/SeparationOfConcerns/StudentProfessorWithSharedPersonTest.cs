@@ -111,7 +111,7 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorWithSharedPersonTest
         public interface IProfessorImplementor
         {
             [Plugin]
-            Person ThePersonPart { get; }
+            Person ThePerson { get; }
 
             [Plugin]
             Teacher TheTeacher { get; }
@@ -126,7 +126,7 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorWithSharedPersonTest
             [Plugin(typeof(IStudentImplementor))]
             IStudent TheStudent { get; }
 
-            [ShareSubPlugin(nameof(IProfessorImplementor.ThePersonPart), nameof(ThePerson))]
+            //[ShareSubPlugin(nameof(IProfessorImplementor.ThePersonPart), nameof(ThePerson))]
             [Plugin(typeof(IProfessorImplementor))]
             IProfessor TheProfessor { get; }
         }

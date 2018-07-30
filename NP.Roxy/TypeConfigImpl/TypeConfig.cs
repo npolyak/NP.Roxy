@@ -670,7 +670,7 @@ namespace NP.Roxy.TypeConfigImpl
             if (paramsLine.IsNullOrEmpty())
                 return;
 
-            roslynCodeBuilder.PushRegion("Wrappers Constructor");
+            roslynCodeBuilder.PushRegion("Plugins Constructor");
 
             roslynCodeBuilder.AddLine($"public {this.ClassName}({paramsLine})");
             roslynCodeBuilder.Push();

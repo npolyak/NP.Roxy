@@ -15,11 +15,11 @@ namespace NP.XUnitAttrRoxyTests.PersonTest
 
     public class Person
     {
-        public string PersonName { get; set; }
+        public string Name { get; set; }
 
         public void Walk()
         {
-            Console.WriteLine($"&&&&The Person {PersonName} is walking");
+            Console.WriteLine($"The Person {Name} is walking");
         }
     }
 
@@ -31,32 +31,45 @@ namespace NP.XUnitAttrRoxyTests.PersonTest
 
         }
 
+        // generate class called PersonImplementation
         [ImplementationClassName("PersonImplementation")]
         public abstract class PersonImplementor
         {
-            [PullMember(WrappedMemberName = "PersonName", WrapperMemberName = "Name")]
+            //[PullMember(WrappedMemberName = "PersonName", WrapperMemberName = "Name")]
             [Plugin]
-            protected abstract Person ThePerson { get; set; }
+            protected abstract Person ThePersonPlugin { get; set; }
 
-            public void Walk()
-            {
-                Console.WriteLine($"Overridden The Person {ThePerson.PersonName} is walking");
-            }
+            //public void Walk()
+            //{
+            //    Console.WriteLine($"Overridden The Person {ThePersonPlugin.Name} is walking");
+            //}
         }
 
         [Fact]
         public void RunPersonTest()
         {
+            // make Roxy save the generated code under
+            // <Executable>/GeneratedCode folder
+            // in case of Roxy error
             Core.SetSaveOnErrorPath("GeneratedCode");
 
-            IPerson personImplementation =
+            // make roxy generate IPerson implementation
+            // based on PersonImplementor
+            IPerson person =
                 Core.CreateImplementedInstance<IPerson, PersonImplementor>();
 
+            // set name to Bruce on the object
+            // of the Roxy generated class
+            person.Name = "Bruce";
+
+            // call method work on the object
+            // of the Roxy generated class
+            person.Walk();
+
+            // make Roxy save the generated code under
+            // <Executable>/GeneratedCode folder
+            // in case of successful completion
             Core.Save("GeneratedCode");
-
-            personImplementation.Name = "Bruce";
-
-            personImplementation.Walk();
         }
     }
 }

@@ -66,8 +66,8 @@ namespace NP.XUnitAttrRoxyTests.PersonWithAbstractMethodTest
             [Plugin]
             Person ThePerson { get;  }
 
-            [Plugin(InitType = typeof(AnotherConsoleLogger))]
-            //[Plugin(InitType = typeof(ConsoleLogger))]
+            //[Plugin(InitType = typeof(AnotherConsoleLogger))]
+            [Plugin(InitType = typeof(ConsoleLogger))]
             ILog TheLog { get; }
         }
 

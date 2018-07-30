@@ -44,6 +44,11 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorPersonTest
 
     }
 
+    public interface IStudentAndProfessor : IStudent, IProfessor
+    {
+
+    }
+
     // learning concern implementation
     public abstract class Learner : ILearner
     {
@@ -64,11 +69,6 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorPersonTest
         {
             Console.WriteLine($"Professor {Name} is teaching");
         }
-    }
-
-    public interface IStudentAndProfessor : IStudent, IProfessor
-    {
-
     }
 
 
@@ -97,11 +97,14 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorPersonTest
         [ImplementationClassName("StudentAndProfessorSharedImplementor")]
         public interface IStudentAndProfessorImplementor
         {
+            // shared plugin
+            //[Plugin(IsShared = true)]
+            //Person ThePerson { get; }
+
             [Plugin(typeof(IStudentImplementor))]
             IStudent TheStudent { get; }
 
             [Plugin(typeof(IProfessorImplementor))]
-            [SuppressWrapping(nameof(IProfessor.Walk))]
             IProfessor TheProfessor { get; }
         }
 
