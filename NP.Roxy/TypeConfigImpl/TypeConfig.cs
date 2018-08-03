@@ -199,14 +199,25 @@ namespace NP.Roxy.TypeConfigImpl
 
         void SetImplementableSymbols()
         {
+            // get all interface (abstract class) members
+            // to be implemented
             var stage1 = this.TypeToImplementSymbol
                     ?.GetAllMembers();
 
+            // eliminate the duplicates
+            // so that the least abstract will stay in the 
+            // resulting collection. 
             var stage2 = stage1
                     ?.EliminateDups();
 
+            // get all members that can be overridden.
+            // (abstract or virtual or interface members)
+            var overridableState = stage2?.Where(member => member.IsOverridable());
+
+            // remove members that were implemented
+            // by Implementor
             var stageImplemetableSymbols = 
-                (stage2?.Where(member => member.IsOverridable()))
+                overridableState
                         .NullToEmpty<ISymbol>()
                         .Except
                         (
@@ -214,6 +225,9 @@ namespace NP.Roxy.TypeConfigImpl
                             RoslynAnalysisAndGenerationUtils.TheSymbolByNameAndSignatureComparer
                         );
 
+            // add implementor members that can be overriden
+            // I do not quite understand - why do we need to get virtual members of 
+            // Implementor - I do not think we'd override them anyways?
             ImplementableSymbols =
                 stageImplemetableSymbols
                     .Union(ImplementorTypeSymbol.GetAllMembers().EliminateDups().Where(member => member.IsOverridable())).ToList();
@@ -485,8 +499,8 @@ namespace NP.Roxy.TypeConfigImpl
                                                             .Select(symbol => new PropertyWrapperMemberBuilderInfo(symbol, this.TheCore, true))).ToList();
 
             this.MethodBuilderInfos =
-                this.ImplementableSymbols.GetSymbolsOfType<IMethodSymbol>()
-                    .Where(symbol => symbol.AssociatedSymbol == null)
+                this.ImplementableSymbols
+                    .GetRealMethods()
                     .Select(symbol => new MethodWrapperMemberBuilderInfo(symbol, this.TheCore))
                     .Union
                     (

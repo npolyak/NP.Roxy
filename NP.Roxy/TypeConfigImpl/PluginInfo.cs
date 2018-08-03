@@ -258,11 +258,17 @@ namespace NP.Roxy.TypeConfigImpl
                 {
                     if (pullAttr.WrapperMemberName != RoslynAnalysisAndGenerationUtils.THIS)
                     {
-                        wrapperMemberSymbol = implementableSymbols.GetImplementableSymbolByName(pullAttr.WrapperMemberName);
+                        wrapperMemberSymbol = 
+                            implementableSymbols
+                                .GetImplementableSymbolByName(pullAttr.WrapperMemberName);
                     }
                 }
 
-                this.SetMap(pullAttr.WrappedMemberName, wrapperMemberSymbol, pullAttr.AllowNonPublic);
+                this.SetMap
+                (
+                    pullAttr.WrappedMemberName, 
+                    wrapperMemberSymbol, 
+                    pullAttr.AllowNonPublic);
             }
         }
 

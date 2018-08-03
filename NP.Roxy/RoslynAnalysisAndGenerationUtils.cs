@@ -1188,6 +1188,14 @@ namespace NP.Roxy
             where TSymbol : class, ISymbol
             => symbols.Where(symb => symb is TSymbol).Cast<TSymbol>();
 
+        public static IEnumerable<IMethodSymbol> GetRealMethods(this IEnumerable<ISymbol> symbols)
+        {
+            // symb.AssociatedSymbol == null -- means it is a real method
+            // not e.g. a property method
+            return symbols.GetSymbolsOfType<IMethodSymbol>()
+                          .Where(symb => symb.AssociatedSymbol == null);
+        }
+
         public static IEqualityComparer<ISymbol> TheSymbolByNameAndSignatureComparer { get; } =
             new SymbolByNameAndSignatureComparer();
 
