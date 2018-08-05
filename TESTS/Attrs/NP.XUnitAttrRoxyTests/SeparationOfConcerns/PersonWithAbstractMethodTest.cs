@@ -60,14 +60,14 @@ namespace NP.XUnitAttrRoxyTests.PersonWithAbstractMethodTest
 
         }
 
-        [ImplementationClassName("PersonImplementation")]
+        [ImplementationClassName("PersonImplementation2")]
         public interface IPersonImplementor
         {
             [Plugin]
             Person ThePerson { get;  }
 
-            //[Plugin(InitType = typeof(AnotherConsoleLogger))]
-            [Plugin(InitType = typeof(ConsoleLogger))]
+            [Plugin(InitType = typeof(AnotherConsoleLogger))]
+            //[Plugin(InitType = typeof(ConsoleLogger))]
             ILog TheLog { get; }
         }
 

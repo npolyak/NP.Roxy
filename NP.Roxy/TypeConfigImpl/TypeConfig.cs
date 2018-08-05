@@ -199,8 +199,8 @@ namespace NP.Roxy.TypeConfigImpl
 
         void SetImplementableSymbols()
         {
-            // get all interface (abstract class) members
-            // to be implemented
+            // get all public members
+            // from the  to be implemented
             var stage1 = this.TypeToImplementSymbol
                     ?.GetAllMembers();
 
@@ -214,11 +214,11 @@ namespace NP.Roxy.TypeConfigImpl
             // (abstract or virtual or interface members)
             var overridableState = stage2?.Where(member => member.IsOverridable());
 
-            // remove members that were implemented
-            // by Implementor
+            // remove members that are implemented 
+            // or specified by the Implementor 
             var stageImplemetableSymbols = 
                 overridableState
-                        .NullToEmpty<ISymbol>()
+                        .NullToEmpty()
                         .Except
                         (
                             this.ImplementorTypeSymbol.GetAllMembers(),
@@ -232,6 +232,12 @@ namespace NP.Roxy.TypeConfigImpl
                 stageImplemetableSymbols
                     .Union(ImplementorTypeSymbol.GetAllMembers().EliminateDups().Where(member => member.IsOverridable())).ToList();
 
+            //remove plugins from ImplementableSymbols
+            ImplementableSymbols = ImplementableSymbols.Except
+                        (
+                            PluginInfos.Select(pI => pI.PluginPropSymbol),
+                            RoslynAnalysisAndGenerationUtils.TheSymbolByNameAndSignatureComparer
+                        );
             //var implSymbs = stageImplemetableSymbols
             //        .Union(ImplementorTypeSymbol.GetAllSuperMembers().EliminateDups().Where(member => member.IsOverridable())).ToList();
         }
@@ -312,13 +318,6 @@ namespace NP.Roxy.TypeConfigImpl
 
             PluginInfos?.DoForEach(pluginInfo => pluginInfo.SetMaps(ImplementableSymbols));
 
-            //remove plugins from ImplementableSymbols
-            ImplementableSymbols = ImplementableSymbols.Except
-                        (
-                            PluginInfos.Select(pI => pI.PluginPropSymbol),
-                            RoslynAnalysisAndGenerationUtils.TheSymbolByNameAndSignatureComparer
-                        );
-
             SetMemberSymbols();
         }
 
@@ -395,6 +394,7 @@ namespace NP.Roxy.TypeConfigImpl
             return ImplementableSymbols.GetImplementableSymbolByName(wrapperMemberName);
         }
 
+        // set maps in code (without pull attrs).
         public void SetMemberMap
         (
             string wrappedObjPropName,

@@ -245,7 +245,8 @@ namespace NP.Roxy
             INamedTypeSymbol typeToConcretizeSymbol,
             string concreteClassName = null)
         {
-            concreteClassName = concreteClassName ?? typeToConcretizeSymbol.Name.GetConcretizationName();
+            concreteClassName = 
+                concreteClassName ?? typeToConcretizeSymbol.UnwrapNestedType().GetConcretizationName();
 
             ITypeConfig typeConfig =
                 this.FindOrCreateTypeConf(concreteClassName, typeToConcretizeSymbol, null);

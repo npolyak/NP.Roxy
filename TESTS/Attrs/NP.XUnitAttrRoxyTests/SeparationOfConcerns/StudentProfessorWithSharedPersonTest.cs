@@ -94,7 +94,7 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorWithSharedPersonTest
 
     }
 
-
+    [Collection("Sequential")]
     public class Test : XUnitTestBase
     {
         [ImplementationClassName("Student1")]
@@ -117,7 +117,7 @@ namespace NP.XUnitAttrRoxyTests.StudentProfessorWithSharedPersonTest
             Teacher TheTeacher { get; }
         }
 
-        [ImplementationClassName("StudentAndProfessorSharedImplementor")]
+        [ImplementationClassName("StudentAndProfessorSharedImplementor3")]
         public interface IStudentAndProfessorImplementor
         {
             [Plugin(IsShared = true)]

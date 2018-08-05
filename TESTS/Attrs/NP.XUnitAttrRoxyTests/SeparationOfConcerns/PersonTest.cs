@@ -32,7 +32,7 @@ namespace NP.XUnitAttrRoxyTests.PersonTest
         }
 
         // generate class called PersonImplementation
-        [ImplementationClassName("PersonImplementation")]
+        [ImplementationClassName("PersonImplementation1")]
         public abstract class PersonImplementor
         {
             //[PullMember(WrappedMemberName = "PersonName", WrapperMemberName = "Name")]
