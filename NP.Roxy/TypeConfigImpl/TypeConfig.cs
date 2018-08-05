@@ -232,12 +232,6 @@ namespace NP.Roxy.TypeConfigImpl
                 stageImplemetableSymbols
                     .Union(ImplementorTypeSymbol.GetAllMembers().EliminateDups().Where(member => member.IsOverridable())).ToList();
 
-            //remove plugins from ImplementableSymbols
-            ImplementableSymbols = ImplementableSymbols.Except
-                        (
-                            PluginInfos.Select(pI => pI.PluginPropSymbol),
-                            RoslynAnalysisAndGenerationUtils.TheSymbolByNameAndSignatureComparer
-                        );
             //var implSymbs = stageImplemetableSymbols
             //        .Union(ImplementorTypeSymbol.GetAllSuperMembers().EliminateDups().Where(member => member.IsOverridable())).ToList();
         }
@@ -317,6 +311,14 @@ namespace NP.Roxy.TypeConfigImpl
             SetImplementableSymbols();
 
             PluginInfos?.DoForEach(pluginInfo => pluginInfo.SetMaps(ImplementableSymbols));
+
+            // this should be here - otherwise AttrsMultiConcersRoxyTest is breaking.
+            //remove plugins from ImplementableSymbols
+            ImplementableSymbols = ImplementableSymbols.Except
+                        (
+                            PluginInfos.Select(pI => pI.PluginPropSymbol),
+                            RoslynAnalysisAndGenerationUtils.TheSymbolByNameAndSignatureComparer
+                        );
 
             SetMemberSymbols();
         }
